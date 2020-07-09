@@ -10,12 +10,6 @@
 
 <br/>
 
-<div align="center">
-  
-  [![Demo](https://img.shields.io/badge/7min%20intro-📺-7fd4ff.svg?style=flat-square)](https://flekschas.github.io/enhancer-promoter-vis)
-  
-</div>
-
 <div id="teaser" align="center">
   
   ![Teaser](https://user-images.githubusercontent.com/932103/87063410-53232700-c1dc-11ea-99b4-b56f6eec290f.png)
