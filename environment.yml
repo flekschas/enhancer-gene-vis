@@ -1,0 +1,19 @@
+name: higlass-scalable-arcs
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - python>=3.7
+  - nodejs>=12
+  - cytoolz
+  - pysam
+  - pip
+  - pip:
+    - clodius
+    - cooler
+    - higlass-python
+    - ipywidgets>=7.5.1
+    - jupyterlab>=1.1.1
+    - matplotlib
