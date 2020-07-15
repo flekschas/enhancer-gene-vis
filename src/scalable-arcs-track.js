@@ -357,15 +357,14 @@ const createScalableArcs1dTrack = (HGC, ...args) => {
 
       if (!fetchedTiles.length) return;
 
-      const is2d = fetchedTiles[0].tileData.yStart !== undefined;
       const [, height] = this.dimensions;
       const markSizeHalf = this.markSize / 2;
 
-      this.maxWidth = getMaxWidth(this.fetchedTiles, is2d);
+      this.maxWidth = getMaxWidth(this.fetchedTiles);
 
       this.heightScale = scaleLinear()
         .domain([0, this.maxWidth])
-        .range([Math.min(12, this.dimensions[1] / 10), height]);
+        .range([Math.min(12, height / 10), height]);
 
       this.fullHeightScale = scaleLinear()
         .domain([this.maxWidth, 0])
@@ -900,7 +899,6 @@ const createScalableArcs1dTrack = (HGC, ...args) => {
 
       this.refreshTiles();
       this.draw();
-      // this.animate();
     }
 
     /**
