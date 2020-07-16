@@ -160,6 +160,7 @@ const createStackedBarTrack = (HGC, ...args) => {
   const { PIXI } = HGC.libraries;
   const { scaleLinear, scaleLog } = HGC.libraries.d3Scale;
   const { tileProxy } = HGC.services;
+  const { colorToHex } = HGC.utils;
 
   const opacityLogScale = scaleLog()
     .domain([1, 10])
@@ -316,10 +317,10 @@ const createStackedBarTrack = (HGC, ...args) => {
       let k = 0;
       this.options.stratification.groups.forEach((group, i) => {
         this.groupToColor.set(i, [
-          HGC.utils.colorToHex(
+          colorToHex(
             group.color || DEFAULT_COLOR_MAP[i % DEFAULT_COLOR_MAP.length]
           ),
-          HGC.utils.colorToHex(
+          colorToHex(
             group.backgroundColor ||
               DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP_LIGHT.length]
           ),
@@ -337,7 +338,7 @@ const createStackedBarTrack = (HGC, ...args) => {
             fontSize: this.labelSize,
             // fill: this.labelColor,
             align: this.axisAlign === 'right' ? 'right' : 'left',
-            fill: HGC.utils.colorToHex(
+            fill: colorToHex(
               this.options.stratification.groups[i].axisLabelColor ||
                 DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
             ),
@@ -348,9 +349,7 @@ const createStackedBarTrack = (HGC, ...args) => {
     updateOptions() {
       this.axisAlign = this.options.axisAlign || 'left';
 
-      this.labelColor = HGC.utils.colorToHex(
-        this.options.labelColor || 'black'
-      );
+      this.labelColor = colorToHex(this.options.labelColor || 'black');
 
       this.labelSize = this.options.labelSize || 12;
 
@@ -374,7 +373,7 @@ const createStackedBarTrack = (HGC, ...args) => {
         this.colorMapFocusRgbNorm
       );
 
-      this.markColor = HGC.utils.colorToHex(this.options.markColor || 'black');
+      this.markColor = colorToHex(this.options.markColor || 'black');
 
       this.markColorRgbNorm = this.options.markColor
         ? toRgbNorm(this.options.markColor)
@@ -386,9 +385,7 @@ const createStackedBarTrack = (HGC, ...args) => {
 
       this.markSize = this.options.markSize || 2;
 
-      this.markColorFocus = HGC.utils.colorToHex(
-        this.options.markColorFocus || 'red'
-      );
+      this.markColorFocus = colorToHex(this.options.markColorFocus || 'red');
 
       this.markColorFocusRgbNorm = this.options.markColorFocus
         ? toRgbNorm(this.options.markColorFocus)
@@ -632,7 +629,7 @@ const createStackedBarTrack = (HGC, ...args) => {
         const colorHex = `#${color.toString(16)}`;
         const bgHex = `#${bg.toString(16)}`;
         const value = row[group].toFixed(2);
-        return `<div style="background: ${bgHex}"><strong style="color: ${colorHex};">${this.groupLabels[group]}:</strong> ${value}</div>`;
+        return `<div style="margin: 0 -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${this.groupLabels[group]}:</strong> ${value}</div>`;
       }
 
       return '';
