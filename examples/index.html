@@ -158,11 +158,32 @@ const viewConfig = {
             tilesetUid: 'VF5-RDXWTxidGMJU7FeaxA',
             height: 36,
             options: {
-              fillColor: 'black',
-              fillOpacity: 0.3,
+              markColor: 'black',
+              markColorFocus: '#cc0078',
+              markSize: 2,
+              markOpacity: 0.33,
+              markOpacityFocus: 0.66,
               axisPositionHorizontal: 'right',
               valueColumn: 7,
+              focusRegion: [
+                1680373143 + 81046453 - 25,
+                1680373143 + 81046453 + 25
+              ],
               name: 'IBD SNPs',
+              toolTip: {
+                name: {
+                  field: 3
+                },
+                value: {
+                  field: 6,
+                  numDecimals: 2,
+                },
+                other: [{
+                  label: 'Post. Prob.',
+                  field: 7,
+                  numDecimals: 2,
+                }]
+              }
             }
           },
           {
@@ -801,6 +822,10 @@ window.hglib.ChromosomeInfo(
   function higlassClickHandler(event) {
     if (event.type === 'gene-annotation') {
       setFocusGene(event.payload.name, event.payload.xStart, event.payload.xEnd);
+    } else if (event.type === 'snp') {
+      setFocusRegion(event.payload.xStart, event.payload.xStart + 1);
+      focusRegionStart.value = event.payload.fields[0] + ':' + event.payload.fields[1];
+      focusRegionEnd.value = '';
     }
   }
 
@@ -815,6 +840,7 @@ window.hglib.ChromosomeInfo(
       focusRegion[1] -= 0.5;
     }
 
+    viewConfig.views[0].tracks.top[2].options.focusRegion = focusRegion;
     viewConfig.views[0].tracks.top[4].options.focusRegion = focusRegion;
     viewConfig.views[0].tracks.top[n - 1].options.focusRegion = focusRegion;
     viewConfig.views[0].overlays[0].options.extent = [focusRegion];

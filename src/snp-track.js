@@ -1,3 +1,6 @@
+const MAX_RADIUS = 2;
+const MAX_RADIUS_EXTENSION = 2;
+
 // const VS = `
 //   attribute vec2 aPosition;
 
@@ -96,6 +99,11 @@
 // };
 
 const createSnpTrack = (HGC, ...args) => {
+  const { range } = HGC.libraries.d3Array;
+  const { scaleBand } = HGC.libraries.d3Scale;
+  const { tileProxy } = HGC.services;
+  const { colorToHex } = HGC.utils;
+
   class SnpTrack extends HGC.tracks.BedLikeTrack {
     setValueScale() {
       this.valueScale = null;
@@ -118,7 +126,11 @@ const createSnpTrack = (HGC, ...args) => {
       }
     }
 
-    drawPoly(tile, xStartPos, xEndPos, rectY) {
+    finalDotYPos(y, r) {
+      return Math.max(r, Math.min(this.dimensions[1] - r, y));
+    }
+
+    drawPoly(tile, xStartPos, xEndPos, rectY, doubleRadius = false) {
       // prettier-ignore
       const drawnPoly = [
         // left top
@@ -131,23 +143,218 @@ const createSnpTrack = (HGC, ...args) => {
         xStartPos, this.dimensions[1]
       ];
 
-      // if (this.valueScale) {
-      //   tile.tileData.forEach((td) => {
-      //     const v = +td.fields[+this.options.valueColumn - 1];
-      //     const y = this.valueScale(v);
-      //   });
-      // }
+      const anchorRadius = Math.max(MAX_RADIUS, xEndPos - xStartPos);
+      const radius = anchorRadius * (1 + MAX_RADIUS_EXTENSION * doubleRadius);
 
-      const radius = Math.max(2, xEndPos - xStartPos);
-
-      // tile.rectGraphics.drawPolygon(drawnPoly);
       tile.rectGraphics.drawCircle(
         xStartPos,
-        Math.max(radius, Math.min(this.dimensions[1] - radius, rectY)),
+        this.finalDotYPos(rectY, anchorRadius),
         radius
       );
 
       return drawnPoly;
+    }
+
+    renderRows(tile, rows, maxRows, startY, endY, fill) {
+      const zoomLevel = +tile.tileId.split('.')[0];
+
+      this.initialize();
+
+      const rowScale = scaleBand()
+        .domain(range(maxRows))
+        .range([startY, endY])
+        .paddingInner(0);
+
+      const focusRegion = this.options.focusRegion || [Infinity, Infinity];
+
+      const circleDraws = [];
+      const circleFocusDraws = [];
+
+      for (let j = 0; j < rows.length; j++) {
+        for (let i = 0; i < rows[j].length; i++) {
+          const td = rows[j][i].value;
+          const geneInfo = td.fields;
+
+          // the returned positions are chromosome-based and they need to
+          // be converted to genome-based
+          const chrOffset = +td.chrOffset;
+          const txStart = +geneInfo[1] + chrOffset;
+          const txEnd = +geneInfo[2] + chrOffset;
+          let yMiddle = rowScale(j) + rowScale.step() / 2;
+
+          if (this.valueScale) {
+            yMiddle = this.valueScale(+geneInfo[+this.options.valueColumn - 1]);
+          }
+
+          const rectY = yMiddle;
+          const xStartPos = this._xScale(txStart);
+          const xEndPos = this._xScale(txEnd);
+
+          // don't draw anything that has already been drawn
+          if (
+            !(
+              zoomLevel in this.drawnRects &&
+              td.uid in this.drawnRects[zoomLevel]
+            )
+          ) {
+            if (!this.drawnRects[zoomLevel]) this.drawnRects[zoomLevel] = {};
+
+            const circleDraw = [xStartPos, xEndPos, rectY, td, txStart, txEnd];
+
+            if (txStart <= focusRegion[1] && txEnd >= focusRegion[0]) {
+              circleFocusDraws.push(circleDraw);
+            } else {
+              circleDraws.push(circleDraw);
+            }
+          }
+        }
+
+        // 1. draw white background to make clicking easier
+        tile.rectGraphics.lineStyle(0);
+        tile.rectGraphics.beginFill(0xffffff);
+        circleDraws.forEach((circleDraw) => {
+          this.drawPoly(
+            tile,
+            circleDraw[0],
+            circleDraw[1],
+            circleDraw[2],
+            true
+          );
+        });
+
+        // 2. Now draw the normal circles
+        let color = this.options.markColor || 'black';
+        let opacity = this.options.fillOpacity || 0.3;
+        tile.rectGraphics.lineStyle(1, colorToHex(color), opacity);
+        tile.rectGraphics.beginFill(colorToHex(color), opacity);
+        circleDraws.forEach((circleDraw) => {
+          const drawnPoly = this.drawPoly(
+            tile,
+            circleDraw[0],
+            circleDraw[1],
+            circleDraw[2]
+          );
+          this.drawnRects[zoomLevel][circleDraw[4].uid] = [
+            drawnPoly,
+            {
+              start: circleDraw[4],
+              end: circleDraw[5],
+              value: circleDraw[3],
+              tile,
+              fill,
+            },
+            tile.tileId,
+          ];
+        });
+
+        // 2. Now draw the focused circles
+        color = this.options.markColorFocus || 'red';
+        opacity = this.options.markOpacityFocus || 0.6;
+        tile.rectGraphics.lineStyle(1, colorToHex(color), opacity);
+        tile.rectGraphics.beginFill(colorToHex(color), opacity);
+        circleFocusDraws.forEach((circleDraw) => {
+          const drawnPoly = this.drawPoly(
+            tile,
+            circleDraw[0],
+            circleDraw[1],
+            circleDraw[2]
+          );
+          this.drawnRects[zoomLevel][circleDraw[4].uid] = [
+            drawnPoly,
+            {
+              start: circleDraw[4],
+              end: circleDraw[5],
+              value: circleDraw[3],
+              tile,
+              fill,
+            },
+            tile.tileId,
+          ];
+        });
+        tile.rectGraphics.endFill();
+      }
+
+      tile.rectGraphics.interactive = true;
+      tile.rectGraphics.buttonMode = true;
+      tile.rectGraphics.mouseup = (event) => {
+        if (this.hoveringSnp) {
+          this.pubSub.publish('app.click', {
+            type: 'snp',
+            event,
+            payload: this.hoveringSnp,
+          });
+        }
+      };
+    }
+
+    /**
+     * Shows value and type for each bar
+     *
+     * @param trackX relative x-coordinate of mouse
+     * @param trackY relative y-coordinate of mouse
+     * @returns string with embedded values and svg square for color
+     */
+    getMouseOverHtml(trackX, trackY) {
+      this.hoveringSnp = undefined;
+
+      if (!this.tilesetInfo && !this.options.toolTip) return '';
+
+      const zoomLevel = this.calculateZoomLevel();
+      const tileWidth = tileProxy.calculateTileWidth(
+        this.tilesetInfo,
+        zoomLevel,
+        this.tilesetInfo.tile_size
+      );
+
+      // the position of the tile containing the query position
+      const genomePos = this._xScale.invert(trackX);
+      const relTilePos = genomePos / tileWidth;
+      const tilePos = Math.floor(relTilePos);
+      const tileId = this.tileToLocalId([zoomLevel, tilePos]);
+      const fetchedTile = this.fetchedTiles[tileId];
+
+      if (!fetchedTile) return '';
+
+      let minDist = 3;
+      fetchedTile.tileData.forEach((item) => {
+        const dist = Math.abs(this._xScale(item.xStart) - trackX);
+        if (dist < minDist) {
+          this.hoveringSnp = item;
+          minDist = dist;
+        }
+      });
+
+      if (!this.hoveringSnp) return '';
+
+      const itemY = this.finalDotYPos(
+        this.valueScale(this.hoveringSnp.importance),
+        2
+      );
+
+      if (
+        Math.abs(itemY - (trackY - 1)) >
+        MAX_RADIUS * (MAX_RADIUS_EXTENSION + 1)
+      )
+        return '';
+
+      const name = this.hoveringSnp.fields[this.options.toolTip.name.field];
+      const value = (+this.hoveringSnp.fields[
+        this.options.toolTip.value.field
+      ]).toFixed(this.options.toolTip.value.numDecimals || 2);
+      let otherStr = '';
+
+      if (this.options.toolTip.other) {
+        this.options.toolTip.other.forEach((other) => {
+          const label = other.label || '';
+          const v = (+this.hoveringSnp.fields[other.field]).toFixed(
+            other.numDecimals || 2
+          );
+          otherStr += `${label}: ${v};`;
+        });
+        otherStr = ` (${otherStr.substr(0, otherStr.length - 1)})`;
+      }
+
+      return `<div><strong>${name}:</strong> ${value}${otherStr}</div>`;
     }
 
     /**
