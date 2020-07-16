@@ -112,8 +112,8 @@ const get1dEnd = (item) => item.xEnd;
 const get2dEnd = (item) => item.yStart + (item.yEnd - item.yStart) / 2;
 
 const getHistMax = (fetchedTiles) =>
-  Object.values(fetchedTiles).reduce(
-    (histMax, tile) => Math.max(histMax, tile.histogramMax || 0),
+  fetchedTiles.reduce(
+    (histMax, tile) => Math.max(histMax, tile.histogramMax),
     0
   );
 
@@ -159,6 +159,7 @@ const segmentToFocused = (segment) => [
 const createStackedBarTrack = (HGC, ...args) => {
   const { PIXI } = HGC.libraries;
   const { scaleLinear, scaleLog } = HGC.libraries.d3Scale;
+  const { tileProxy } = HGC.services;
 
   const opacityLogScale = scaleLog()
     .domain([1, 10])
@@ -186,9 +187,10 @@ const createStackedBarTrack = (HGC, ...args) => {
       tile.tileData.forEach((item) => {
         item.start = getStart(item);
         item.end = getEnd(item);
-        tile.histogramMax = 0;
         item.isLeftToRight = item.start < item.end;
       });
+
+      tile.histogramMax = 0;
 
       this.updateTileFocusMap(tile);
     }
@@ -215,13 +217,14 @@ const createStackedBarTrack = (HGC, ...args) => {
         const group = this.categoryToGroup.get(
           item.fields[this.categoryField].toLowerCase()
         );
+        const maxBinId = this.numBins - 1;
         const binStart = Math.max(
           0,
-          Math.round((item.xStart - tileX) / binSize)
+          Math.min(maxBinId, Math.round((item.xStart - tileX) / binSize))
         );
-        const binEnd = Math.min(
-          this.numBins - 1,
-          Math.round((item.xEnd - tileX) / binSize)
+        const binEnd = Math.max(
+          0,
+          Math.min(maxBinId, Math.round((item.xEnd - tileX) / binSize))
         );
         const numBins = Math.abs(binEnd - binStart);
         const score = this.getImportance(item);
@@ -431,8 +434,8 @@ const createStackedBarTrack = (HGC, ...args) => {
 
       this.updateStratificationOption();
 
-      this.updateHistograms();
       this.updateFocusMap();
+      this.updateHistograms();
       this.updateScales();
     }
 
@@ -461,7 +464,7 @@ const createStackedBarTrack = (HGC, ...args) => {
 
       const [, height] = this.dimensions;
 
-      this.histMax = getHistMax(this.fetchedTiles);
+      this.histMax = getHistMax(fetchedTiles);
 
       this.heightScale = scaleLinear()
         .domain([0, this.histMax])
@@ -582,12 +585,58 @@ const createStackedBarTrack = (HGC, ...args) => {
     // Called whenever a new tile comes in
     updateExistingGraphics() {
       this.updateHistograms();
-      this.updateHistograms();
       this.updateScales();
       this.renderTrack();
     }
 
-    getMouseOverHtml() {}
+    /**
+     * Shows value and type for each bar
+     *
+     * @param trackX relative x-coordinate of mouse
+     * @param trackY relative y-coordinate of mouse
+     * @returns string with embedded values and svg square for color
+     */
+    getMouseOverHtml(trackX, trackY) {
+      if (!this.tilesetInfo) return '';
+
+      const zoomLevel = this.calculateZoomLevel();
+      const tileWidth = tileProxy.calculateTileWidth(
+        this.tilesetInfo,
+        zoomLevel,
+        this.tilesetInfo.tile_size
+      );
+
+      // the position of the tile containing the query position
+      const relTilePos = this._xScale.invert(trackX) / tileWidth;
+      const tilePos = Math.floor(relTilePos);
+      const tileId = this.tileToLocalId([zoomLevel, tilePos]);
+      const fetchedTile = this.fetchedTiles[tileId];
+
+      if (!fetchedTile) return '';
+
+      const relPos = relTilePos - tilePos;
+      const binXPos = Math.floor(this.numBins * relPos);
+
+      const row = [];
+      let sum = 0;
+      for (let i = 0; i < this.numGroups; i++) {
+        sum += fetchedTile.histogram2d[i * this.numBins + binXPos];
+        row.push(sum);
+      }
+
+      const relYPos = this.heightScale.invert(trackY);
+      const group = row.findIndex((cumHeight) => cumHeight > relYPos);
+
+      if (group >= 0) {
+        const [color, bg] = this.groupToColor.get(group);
+        const colorHex = `#${color.toString(16)}`;
+        const bgHex = `#${bg.toString(16)}`;
+        const value = row[group].toFixed(2);
+        return `<div style="background: ${bgHex}"><strong style="color: ${colorHex};">${this.groupLabels[group]}:</strong> ${value}</div>`;
+      }
+
+      return '';
+    }
 
     setPosition(newPosition) {
       super.setPosition(newPosition);
