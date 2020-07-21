@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { HiGlassComponent } from 'higlass';
 import { debounce, deepClone } from '@flekschas/utils';
 
+import { RadioButton, RadioGroup } from './radio';
 import { toAbsPosition } from './utils';
 
 import 'higlass/dist/hglib.css';
@@ -38,14 +39,14 @@ const DEFAULT_VIEW_CONFIG = {
               mousePositionColor: '#000000',
             },
             tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
-            height: 14,
+            height: 12,
             server: 'https://resgen.io/api/v1',
             uid: 'chroms',
           },
           {
             type: 'horizontal-gene-annotations',
             uid: 'genes',
-            height: 46,
+            height: 48,
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
             options: {
@@ -65,6 +66,7 @@ const DEFAULT_VIEW_CONFIG = {
             tilesetUid: 'VF5-RDXWTxidGMJU7FeaxA',
             height: 36,
             options: {
+              axisPositionHorizontal: 'right',
               markColor: 'black',
               markColorFocus: '#cc0078',
               markSize: 2,
@@ -132,6 +134,7 @@ const DEFAULT_VIEW_CONFIG = {
             options: {
               binSize: 4,
               axisAlign: 'right',
+              axisPositionHorizontal: 'right',
               labelPosition: 'hidden',
               markColor: 'black',
               markColorFocus: '#cc0078',
@@ -150,7 +153,6 @@ const DEFAULT_VIEW_CONFIG = {
                 1680373143 + 81046453 + 25,
               ],
               name: 'By Celltype',
-              axisPositionHorizontal: 'right',
               stratification: {
                 categoryField: 10,
                 axisShowGroupSeparator: true,
@@ -598,6 +600,7 @@ const DEFAULT_HIGLASS_OPTIONS = {
 const Viewer = (props) => {
   const [focusGene, setFocusGene] = useState('');
   const [focusVariant, setFocusVariant] = useState('chr10:81046453');
+  const [variantYScale, setVariantYScale] = useState('pValue');
   const [options, setOptions] = useState(DEFAULT_HIGLASS_OPTIONS);
   const [viewConfig, setViewConfig] = useState(DEFAULT_VIEW_CONFIG);
   const higlassApi = useRef(null);
@@ -624,7 +627,7 @@ const Viewer = (props) => {
 
   const updateFocusVariantInHiglass = (variant) => {
     const newViewConfig = deepClone(viewConfig);
-    const n = newViewConfig.views.length;
+    // const n = newViewConfig.views.length;
 
     const absPosition = toAbsPosition(variant, props.chromInfo);
     const focusRegion = Number.isNaN(+absPosition)
@@ -654,6 +657,20 @@ const Viewer = (props) => {
     updateFocusVariantInHiglass('');
   };
 
+  const updateVariantYScaleInHiglass = (yScale) => {
+    const newViewConfig = deepClone(viewConfig);
+
+    newViewConfig.views[0].tracks.top[2].options.valueColumn =
+      yScale === 'pValue' ? 7 : 8;
+
+    setViewConfig(newViewConfig);
+  };
+
+  const variantYScaleChangeHandler = (event) => {
+    setVariantYScale(event.target.value);
+    updateVariantYScaleInHiglass(event.target.value);
+  };
+
   const higlassClickHandler = (event) => {
     if (event.type === 'gene-annotation') {
       setFocusGene(event.payload.name);
@@ -677,10 +694,12 @@ const Viewer = (props) => {
 
   return (
     <div className="Viewer">
-      <header>
-        <div className="flex-box">
-          <label className="flex-box">
-            <span className="label-text">Focus gene:</span>
+      <aside>
+        <div>
+          <label htmlFor="focus-gene" className="main-label">
+            Focus gene:
+          </label>
+          <div className="flex-box">
             <input
               type="text"
               id="focus-gene"
@@ -689,22 +708,43 @@ const Viewer = (props) => {
               disabled
               placeholder="Click on a gene"
             />
-          </label>
-          <button onClick={clearFocusGene}>clear</button>
+            <button onClick={clearFocusGene}>clear</button>
+          </div>
         </div>
-        <div className="flex-box">
-          <label className="flex-box">
-            <span className="label-text">Focus variant:</span>
+        <div>
+          <label htmlFor="focus-variant" className="main-label">
+            Focus variant:
+          </label>
+          <div className="flex-box">
             <input
               type="text"
+              id="focus-variant"
               value={focusVariant}
               onChange={focusVariantChangeHandler}
               placeholder="chr10:81046453"
             />
-          </label>
-          <button onClick={clearFocusVariant}>clear</button>
+            <button onClick={clearFocusVariant}>clear</button>
+          </div>
         </div>
-      </header>
+        <div>
+          <label className="main-label">Variant y-scale:</label>
+          <RadioGroup
+            name="variantYScale"
+            onChange={variantYScaleChangeHandler}
+          >
+            <RadioButton
+              label="p-value"
+              value="pValue"
+              checked={variantYScale === 'pValue'}
+            />
+            <RadioButton
+              label="Posterior probability"
+              value="posteriorProbability"
+              checked={variantYScale === 'posteriorProbability'}
+            />
+          </RadioGroup>
+        </div>
+      </aside>
       <div className="higlass-container">
         <HiGlassComponent
           ref={higlassInitHandler}

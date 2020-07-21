@@ -2,40 +2,46 @@
   font-weight: normal;
 }
 
-.Viewer header {
+.Viewer aside {
   position: absolute;
   left: 1rem;
   top: 1rem;
-  right: 1rem;
-  height: 5.5rem;
+  bottom: 1rem;
+  width: 24rem;
   padding: 0 10px;
+  border-right: 1px solid #eee;
 }
 
-.Viewer header label {
-  margin-bottom: 0.5rem;
+.Viewer aside label {
+  margin-bottom: 0.125rem;
 }
 
-.Viewer header input,
-.Viewer header button,
-.Viewer header .label-text {
+.Viewer aside .main-label {
+  margin-top: 1rem;
+}
+
+.Viewer aside input[type='text'],
+.Viewer aside button {
   display: block;
   height: 2.5rem;
   line-height: 2.5rem;
 }
 
-.Viewer header button {
-  padding: 0 0.25rem;
-  margin-left: 0.25rem;
+.Viewer aside input[type='text'] {
+  width: 18rem;
 }
 
-.Viewer header .label-text {
-  min-width: 10rem;
+.Viewer aside button {
+  width: 5.75rem;
+  padding: 0 0.25rem;
+  margin-left: 0.25rem;
+  line-height: 1rem;
 }
 
 .Viewer .higlass-container {
   position: absolute;
-  left: 1rem;
-  top: 7rem;
+  left: 25rem;
+  top: 1rem;
   bottom: 1rem;
   right: 1rem;
 }

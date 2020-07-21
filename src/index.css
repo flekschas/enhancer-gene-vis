@@ -12,8 +12,13 @@ code {
     monospace;
 }
 
-.flex-box {
+.flex-box,
+.fb {
   display: flex;
+}
+
+.fb-align-center {
+  align-items: center;
 }
 
 .full-wh {
