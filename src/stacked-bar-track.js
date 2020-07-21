@@ -212,6 +212,7 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       tile.binXPos = new Float32Array(this.numBins + 1);
       tile.histogram1d = new Float32Array(this.numBins);
       tile.histogram2d = new Float32Array(this.numBins * this.numGroups);
+      tile.histogram2dNumPred = new Uint8Array(this.numBins * this.numGroups);
 
       let max = 0;
 
@@ -219,6 +220,8 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       for (let i = 0; i <= this.numBins; i++) {
         tile.binXPos[i] = tileX + binSize * i;
       }
+
+      const categoryBinHash = new Map();
 
       tile.tileData.forEach((item) => {
         const group = this.categoryToGroup.get(
@@ -235,11 +238,21 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         );
         const numBins = Math.abs(binEnd - binStart);
         const score = this.getImportance(item);
+        const category = this.getCategory(item);
         const base = group * this.numBins;
 
         for (let i = 0; i <= numBins; i++) {
           const bin = binStart + i;
           const histIdx = base + bin;
+
+          const binHash = categoryBinHash.get(category) || {};
+
+          // Make sure we count multiple enhancer predictions of the same biosample and bin only once (i.e., summing up)
+          if (!binHash[bin]) {
+            binHash[bin] = binHash[bin] || score > 0;
+            tile.histogram2dNumPred[histIdx] += binHash[bin];
+            categoryBinHash.set(category, binHash);
+          }
 
           tile.histogram2d[histIdx] += score;
           tile.histogram1d[bin] += score;
@@ -305,6 +318,8 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       }
 
       this.categoryField = this.options.stratification.categoryField;
+      this.getCategory = (item) =>
+        item.fields[this.categoryField].toLowerCase();
       this.categoryToGroup = new Map();
       this.categoryToY = new Map();
       this.groupToColor = new Map();
@@ -620,22 +635,29 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       const relPos = relTilePos - tilePos;
       const binXPos = Math.floor(this.numBins * relPos);
 
-      const row = [];
+      const rowCumSum = [];
+      const rowNumPred = [];
+      let totalPred = 0;
       let sum = 0;
       for (let i = 0; i < this.numGroups; i++) {
         sum += fetchedTile.histogram2d[i * this.numBins + binXPos];
-        row.push(sum);
+        const numPred =
+          fetchedTile.histogram2dNumPred[i * this.numBins + binXPos];
+        rowNumPred.push(numPred);
+        totalPred += numPred;
+        rowCumSum.push(sum);
       }
 
       const relYPos = this.heightScale.invert(trackY);
-      const group = row.findIndex((cumHeight) => cumHeight > relYPos);
+      const group = rowCumSum.findIndex((cumHeight) => cumHeight > relYPos);
 
       if (group >= 0) {
         const [color, bg] = this.groupToColor.get(group);
         const colorHex = `#${color.toString(16)}`;
         const bgHex = `#${bg.toString(16)}`;
-        const value = row[group].toFixed(2);
-        return `<div style="margin: 0 -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${this.groupLabels[group]}:</strong> ${value}</div>`;
+        const value =
+          fetchedTile.histogram2dNumPred[group * this.numBins + binXPos];
+        return `<div style="margin: 0 -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${this.groupLabels[group]}:</strong> ${value} of ${totalPred} samples</div>`;
       }
 
       return '';
