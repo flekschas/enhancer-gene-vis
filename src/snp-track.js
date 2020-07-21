@@ -98,7 +98,13 @@ const MAX_RADIUS_EXTENSION = 2;
 //   graphics.position.x = -posOffset * tileK;
 // };
 
-const createSnpTrack = (HGC, ...args) => {
+const createSnpTrack = function createSnpTrack(HGC, ...args) {
+  if (!new.target) {
+    throw new Error(
+      'Uncaught TypeError: Class constructor cannot be invoked without "new"'
+    );
+  }
+
   const { range } = HGC.libraries.d3Array;
   const { scaleBand } = HGC.libraries.d3Scale;
   const { tileProxy } = HGC.services;

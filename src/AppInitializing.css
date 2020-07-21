@@ -1,0 +1,7 @@
+.app-initializing {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #bbbbbb;
+  background: #eeeeee;
+}

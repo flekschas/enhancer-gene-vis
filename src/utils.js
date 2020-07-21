@@ -27,4 +27,15 @@ const dashedXLineTo = (graphics, xStart, xEnd, y, dashSize) => {
   }
 };
 
-export { createColorTexture, dashedXLineTo };
+const toAbsPosition = (position, chromInfo) => {
+  let absPosition;
+  if (position.indexOf && position.indexOf(':') >= 0) {
+    const [chrom, pos] = position.split(':');
+    absPosition = chromInfo.chrPositions[chrom].pos + +pos;
+  } else {
+    absPosition = +position;
+  }
+  return absPosition;
+};
+
+export { createColorTexture, dashedXLineTo, toAbsPosition };

@@ -152,7 +152,16 @@ const scaleScalableGraphics = (graphics, xScale, drawnAtScale) => {
   graphics.position.x = -posOffset * tileK;
 };
 
-const createScalableArcs1dTrack = (HGC, ...args) => {
+const createScalableArcs1dTrack = function createScalableArcs1dTrack(
+  HGC,
+  ...args
+) {
+  if (!new.target) {
+    throw new Error(
+      'Uncaught TypeError: Class constructor cannot be invoked without "new"'
+    );
+  }
+
   const { PIXI } = HGC.libraries;
   const { scaleLinear, scaleLog } = HGC.libraries.d3Scale;
 

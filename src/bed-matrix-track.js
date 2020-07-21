@@ -1,56 +1,39 @@
-import { createColorTexture } from './utils';
-
-const DEFAULT_TILE_SIZE = 1024;
-
-const DEFAULT_BIN_SIZE = 8; // 8 "tile-pixels" make up one bin by default
+import createIntervalTree from 'interval-tree-1d';
+import { dashedXLineTo } from './utils';
 
 const VS = `
-precision mediump float;
-attribute vec2 aPosition;
-attribute float aColorIdx;
-attribute float aFocused;
+  precision mediump float;
+  attribute vec2 aPosition;
+  attribute float aOpacity;
+  attribute float aFocused;
 
-uniform mat3 projectionMatrix;
-uniform mat3 translationMatrix;
-uniform sampler2D uColorMapTex;
-uniform float uColorMapTexRes;
-uniform sampler2D uColorMapFocusTex;
-uniform float uColorMapFocusTexRes;
+  uniform mat3 projectionMatrix;
+  uniform mat3 translationMatrix;
+  uniform float uPointSize;
+  uniform vec4 uColor;
+  uniform vec4 uColorFocused;
 
-varying vec4 vColor;
-varying vec4 vColorFocused;
-varying float vFocused;
+  varying vec4 vColor;
+  varying vec4 vColorFocused;
+  varying float vOpacity;
+  varying float vFocused;
 
-void main(void)
-{
-  // Half a texel (i.e., pixel in texture coordinates)
-  float eps = 0.5 / uColorMapTexRes;
-  float colorRowIndex = floor((aColorIdx + eps) / uColorMapTexRes);
-  vec2 colorTexIndex = vec2(
-    (aColorIdx / uColorMapTexRes) - colorRowIndex + eps,
-    (colorRowIndex / uColorMapTexRes) + eps
-  );
-  vColor = texture2D(uColorMapTex, colorTexIndex);
-
-  float eps2 = 0.5 / uColorMapFocusTexRes;
-  float colorRowIndex2 = floor((aColorIdx + eps2) / uColorMapFocusTexRes);
-  vec2 colorTexIndex2 = vec2(
-    (aColorIdx / uColorMapFocusTexRes) - colorRowIndex2 + eps2,
-    (colorRowIndex2 / uColorMapFocusTexRes) + eps2
-  );
-  vColorFocused = texture2D(uColorMapFocusTex, colorTexIndex2);
-
-  vFocused = aFocused;
-
-  gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
-}
+  void main(void)
+  {
+    vColor = uColor;
+    vColorFocused = uColorFocused;
+    vOpacity = aOpacity;
+    vFocused = aFocused;
+    gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
+    gl_PointSize = uPointSize;
+  }
 `;
 
 const FS = `
   precision mediump float;
-
   varying vec4 vColor;
   varying vec4 vColorFocused;
+  varying float vOpacity;
   varying float vFocused;
 
   void main() {
@@ -60,11 +43,11 @@ const FS = `
     float g = vColor.g * isNotFocused + vColorFocused.g * vFocused;
     float b = vColor.b * isNotFocused + vColorFocused.b * vFocused;
 
-    gl_FragColor = vec4(r, g, b, 1.0);
+    gl_FragColor = vec4(r, g, b, 1.0) * vOpacity;
   }
 `;
 
-const DEFAULT_COLOR_MAP = [
+const DEFAULT_GROUP_COLORS = [
   // '#c17da5',
   '#c76526',
   '#dca237',
@@ -76,7 +59,7 @@ const DEFAULT_COLOR_MAP = [
   '#999999',
 ];
 
-const DEFAULT_COLOR_MAP_DARK = [
+const DEFAULT_GROUP_COLORS_DARK = [
   // '#a1688a',
   '#a65420',
   '#b7872e',
@@ -88,7 +71,7 @@ const DEFAULT_COLOR_MAP_DARK = [
   '#666666',
 ];
 
-const DEFAULT_COLOR_MAP_LIGHT = [
+const DEFAULT_GROUP_COLORS_LIGHT = [
   // '#f5e9f0',
   '#f6e5db',
   '#f9f0de',
@@ -100,8 +83,54 @@ const DEFAULT_COLOR_MAP_LIGHT = [
   '#ffffff',
 ];
 
+// prettier-ignore
+const pointToPosition = (pt) => [
+  // top-left
+  pt.cX - pt.widthHalf, pt.y,
+  // top-right
+  pt.cX + pt.widthHalf, pt.y,
+  // bottom-right
+  pt.cX + pt.widthHalf, pt.y + pt.height,
+  // pt.cX + pt.widthHalf, pt.y + pt.height,
+  // bottom-left
+  pt.cX - pt.widthHalf, pt.y + pt.height,
+  // pt.cX - pt.widthHalf, pt.y,
+];
+
+const pointToIndex = (pt, i) => {
+  const base = i * 4;
+  return [base, base + 1, base + 2, base + 2, base + 3, base];
+};
+
+const pointToOpacity = (pt) => [
+  pt.opacity,
+  pt.opacity,
+  pt.opacity,
+  pt.opacity,
+  // pt.opacity,
+  // pt.opacity,
+];
+
+const pointToFocused = (pt) => [
+  pt.focused,
+  pt.focused,
+  pt.focused,
+  pt.focused,
+  // pt.focused,
+  // pt.focused,
+];
+
 const getIs2d = (tile) =>
   tile.tileData.length && tile.tileData[0].yStart !== undefined;
+
+const get1dItemWidth = (item) => item.xEnd - item.xStart;
+
+const get2dItemWidth = (item) =>
+  Math.abs(
+    item.xStart +
+      (item.xEnd - item.xStart) / 2 -
+      (item.yStart + (item.yEnd - item.yStart) / 2)
+  );
 
 const get1dStart = (item) => item.xStart;
 
@@ -111,9 +140,16 @@ const get1dEnd = (item) => item.xEnd;
 
 const get2dEnd = (item) => item.yStart + (item.yEnd - item.yStart) / 2;
 
-const getHistMax = (fetchedTiles) =>
-  fetchedTiles.reduce(
-    (histMax, tile) => Math.max(histMax, tile.histogramMax),
+const getMaxWidth = (fetchedTiles) =>
+  Object.values(fetchedTiles).reduce(
+    (maxWidth, tile) =>
+      Math.max(
+        maxWidth,
+        tile.tileData.reduce(
+          (maxWidthItem, item) => Math.max(maxWidthItem, item.width),
+          0
+        )
+      ),
     0
   );
 
@@ -128,35 +164,7 @@ const scaleScalableGraphics = (graphics, xScale, drawnAtScale) => {
   graphics.position.x = -posOffset * tileK;
 };
 
-// prettier-ignore
-const segmentToPosition = (segment) => [
-  segment.xStart, segment.yStart,
-  segment.xEnd, segment.yStart,
-  segment.xEnd, segment.yEnd,
-  segment.xStart, segment.yStart,
-  segment.xStart, segment.yEnd,
-  segment.xEnd, segment.yEnd,
-];
-
-const segmentToColorIdx = (segment) => [
-  segment.colorIdx,
-  segment.colorIdx,
-  segment.colorIdx,
-  segment.colorIdx,
-  segment.colorIdx,
-  segment.colorIdx,
-];
-
-const segmentToFocused = (segment) => [
-  segment.focused,
-  segment.focused,
-  segment.focused,
-  segment.focused,
-  segment.focused,
-  segment.focused,
-];
-
-const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
+const createBedMatrixTrack = function createBedMatrixTrack(HGC, ...args) {
   if (!new.target) {
     throw new Error(
       'Uncaught TypeError: Class constructor cannot be invoked without "new"'
@@ -166,20 +174,13 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
   const { PIXI } = HGC.libraries;
   const { scaleLinear, scaleLog } = HGC.libraries.d3Scale;
   const { tileProxy } = HGC.services;
-  const { colorToHex } = HGC.utils;
 
   const opacityLogScale = scaleLog()
     .domain([1, 10])
     .range([0.1, 1])
     .clamp(true);
 
-  const toRgbNorm = (color) =>
-    HGC.utils
-      .colorToRgba(color)
-      .slice(0, 3)
-      .map((x) => Math.min(1, Math.max(0, x / 255)));
-
-  class StackedBarTrack extends HGC.tracks.HorizontalLine1DPixiTrack {
+  class BedMatrixTrack extends HGC.tracks.HorizontalLine1DPixiTrack {
     constructor(context, options) {
       super(context, options);
 
@@ -188,109 +189,21 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
     initTile(tile) {
       const is2d = getIs2d(tile);
+      const getItemWidth = is2d ? get2dItemWidth : get1dItemWidth;
       const getStart = is2d ? get2dStart : get1dStart;
       const getEnd = is2d ? get2dEnd : get1dEnd;
 
-      tile.tileData.forEach((item) => {
+      const intervals = [];
+
+      tile.tileData.forEach((item, i) => {
+        item.width = getItemWidth(item);
         item.start = getStart(item);
         item.end = getEnd(item);
         item.isLeftToRight = item.start < item.end;
+        intervals.push([item.xStart, item.xEnd, i]);
       });
 
-      tile.histogramMax = 0;
-
-      this.updateTileFocusMap(tile);
-    }
-
-    updateTileHistogram(tile) {
-      const { tileX, tileWidth } = this.getTilePosAndDimensions(
-        tile.tileData.zoomLevel,
-        tile.tileData.tilePos
-      );
-      const binSize = tileWidth / this.numBins;
-
-      tile.binXPos = new Float32Array(this.numBins + 1);
-      tile.histogram1d = new Float32Array(this.numBins);
-      tile.histogram2d = new Float32Array(this.numBins * this.numGroups);
-
-      let max = 0;
-
-      // Determine bin boundaries
-      for (let i = 0; i <= this.numBins; i++) {
-        tile.binXPos[i] = tileX + binSize * i;
-      }
-
-      tile.tileData.forEach((item) => {
-        const group = this.categoryToGroup.get(
-          item.fields[this.categoryField].toLowerCase()
-        );
-        const maxBinId = this.numBins - 1;
-        const binStart = Math.max(
-          0,
-          Math.min(maxBinId, Math.round((item.xStart - tileX) / binSize))
-        );
-        const binEnd = Math.max(
-          0,
-          Math.min(maxBinId, Math.round((item.xEnd - tileX) / binSize))
-        );
-        const numBins = Math.abs(binEnd - binStart);
-        const score = this.getImportance(item);
-        const base = group * this.numBins;
-
-        for (let i = 0; i <= numBins; i++) {
-          const bin = binStart + i;
-          const histIdx = base + bin;
-
-          tile.histogram2d[histIdx] += score;
-          tile.histogram1d[bin] += score;
-
-          max = Math.max(max, tile.histogram1d[bin]);
-        }
-      });
-
-      tile.histogramMax = max;
-    }
-
-    updateHistograms() {
-      Object.values(this.fetchedTiles).forEach(
-        this.updateTileHistogram.bind(this)
-      );
-    }
-
-    updateTileFocusMap(tile) {
-      tile.focusMap = new Float32Array(this.numBins);
-
-      const { tileX, tileWidth } = this.getTilePosAndDimensions(
-        tile.tileData.zoomLevel,
-        tile.tileData.tilePos
-      );
-
-      if (
-        tileX <= this.focusRegion[1] &&
-        tileX + tileWidth >= this.focusRegion[0]
-      ) {
-        const binSize = tileWidth / this.numBins;
-
-        const binStart = Math.max(
-          0,
-          Math.round((this.focusRegion[0] - tileX) / binSize)
-        );
-        const binEnd = Math.min(
-          this.numBins - 1,
-          Math.round((this.focusRegion[1] - tileX) / binSize)
-        );
-        const numBins = Math.abs(binEnd - binStart);
-
-        for (let i = 0; i <= numBins; i++) {
-          tile.focusMap[i] = 1;
-        }
-      }
-    }
-
-    updateFocusMap() {
-      Object.values(this.fetchedTiles).forEach(
-        this.updateTileFocusMap.bind(this)
-      );
+      tile.intervalTree = createIntervalTree(intervals);
     }
 
     updateStratificationOption() {
@@ -305,8 +218,11 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       }
 
       this.categoryField = this.options.stratification.categoryField;
+      this.getCategory = (item) =>
+        item.fields[this.categoryField].toLowerCase();
       this.categoryToGroup = new Map();
       this.categoryToY = new Map();
+      this.yToCategory = new Map();
       this.groupToColor = new Map();
       this.numGroups = this.options.stratification.groups.length;
       this.groupSizes = this.options.stratification.groups.map(
@@ -323,17 +239,19 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       let k = 0;
       this.options.stratification.groups.forEach((group, i) => {
         this.groupToColor.set(i, [
-          colorToHex(
-            group.color || DEFAULT_COLOR_MAP[i % DEFAULT_COLOR_MAP.length]
+          HGC.utils.colorToHex(
+            group.color || DEFAULT_GROUP_COLORS[i % DEFAULT_GROUP_COLORS.length]
           ),
-          colorToHex(
+          HGC.utils.colorToHex(
             group.backgroundColor ||
-              DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP_LIGHT.length]
+              DEFAULT_GROUP_COLORS_LIGHT[i % DEFAULT_GROUP_COLORS.length]
           ),
         ]);
         group.categories.forEach((category, j) => {
-          this.categoryToGroup.set(category.toLowerCase(), i);
-          this.categoryToY.set(category.toLowerCase(), k + j);
+          const cat = category.toLowerCase();
+          this.categoryToGroup.set(cat, i);
+          this.categoryToY.set(cat, k + j);
+          this.yToCategory.set(k + j, cat);
         });
         k += group.categories.length;
       });
@@ -344,9 +262,9 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
             fontSize: this.labelSize,
             // fill: this.labelColor,
             align: this.axisAlign === 'right' ? 'right' : 'left',
-            fill: colorToHex(
+            fill: HGC.utils.colorToHex(
               this.options.stratification.groups[i].axisLabelColor ||
-                DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
+                DEFAULT_GROUP_COLORS_DARK[i % DEFAULT_GROUP_COLORS_DARK.length]
             ),
           })
       );
@@ -355,34 +273,19 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
     updateOptions() {
       this.axisAlign = this.options.axisAlign || 'left';
 
-      this.labelColor = colorToHex(this.options.labelColor || 'black');
+      this.labelColor = HGC.utils.colorToHex(
+        this.options.labelColor || 'black'
+      );
 
       this.labelSize = this.options.labelSize || 12;
 
-      this.colorMap = this.options.colorMap || [...DEFAULT_COLOR_MAP];
-
-      this.colorMapRgbNorm = this.colorMap.map(toRgbNorm);
-
-      [this.colorMapTex, this.colorMapTexRes] = createColorTexture(
-        PIXI,
-        this.colorMapRgbNorm
-      );
-
-      this.colorMapFocus = this.options.colorMapFocus || [
-        ...DEFAULT_COLOR_MAP_DARK,
-      ];
-
-      this.colorMapFocusRgbNorm = this.colorMapFocus.map(toRgbNorm);
-
-      [this.colorMapFocusTex, this.colorMapFocusTexRes] = createColorTexture(
-        PIXI,
-        this.colorMapFocusRgbNorm
-      );
-
-      this.markColor = colorToHex(this.options.markColor || 'black');
+      this.markColor = HGC.utils.colorToHex(this.options.markColor || 'black');
 
       this.markColorRgbNorm = this.options.markColor
-        ? toRgbNorm(this.options.markColor)
+        ? HGC.utils
+            .colorToRgba(this.options.markColor)
+            .slice(0, 3)
+            .map((x) => Math.min(1, Math.max(0, x / 255)))
         : [0, 0, 0];
 
       this.markOpacity = Number.isNaN(+this.options.markOpacity)
@@ -390,28 +293,29 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         : Math.min(1, Math.max(0, +this.options.markOpacity));
 
       this.markSize = this.options.markSize || 2;
+      this.markMinWidth = this.options.markMinWidth || this.markSize;
+      this.markHeight = this.options.markHeight || this.markSize;
 
-      this.markColorFocus = colorToHex(this.options.markColorFocus || 'red');
+      this.rowHeight = this.options.rowHeight || this.markHeight;
+
+      this.markColorFocus = HGC.utils.colorToHex(
+        this.options.markColorFocus || 'red'
+      );
 
       this.markColorFocusRgbNorm = this.options.markColorFocus
-        ? toRgbNorm(this.options.markColorFocus)
+        ? HGC.utils
+            .colorToRgba(this.options.markColorFocus)
+            .slice(0, 3)
+            .map((x) => Math.min(1, Math.max(0, x / 255)))
         : [1, 0, 0];
 
       this.markOpacityFocus = Number.isNaN(+this.options.markOpacityFocus)
         ? this.markOpacity
         : Math.min(1, Math.max(0, +this.options.markOpacityFocus));
 
-      this.markSizeFocus = this.options.markSizeFocus || this.markSize;
-
-      this.binSize = this.options.binSize || DEFAULT_BIN_SIZE;
-
-      this.numBins = this.tilesetInfo
-        ? Math.round(this.tilesetInfo.tile_size / this.binSize)
-        : DEFAULT_TILE_SIZE / this.binSize;
-
       this.getImportance = this.options.importanceField
         ? (item) => +item.fields[this.options.importanceField]
-        : () => 1;
+        : (item) => item.width;
 
       const importanceDomain = this.options.importanceDomain || [1000, 1];
 
@@ -436,22 +340,6 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       this.minImportance = this.options.minImportance || 0;
 
       this.updateStratificationOption();
-
-      this.updateFocusMap();
-      this.updateHistograms();
-      this.updateScales();
-    }
-
-    refreshTiles(...brgs) {
-      super.refreshTiles(...brgs);
-      if (this.tilesetInfo) {
-        const oldNumBins = this.numBins;
-        this.numBins = Math.round(this.tilesetInfo.tile_size / this.binSize);
-        if (oldNumBins !== this.numBins) {
-          this.updateHistograms();
-          this.updateScales();
-        }
-      }
     }
 
     rerender(newOptions) {
@@ -467,95 +355,89 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
       const [, height] = this.dimensions;
 
-      this.histMax = getHistMax(fetchedTiles);
+      this.maxWidth = getMaxWidth(this.fetchedTiles);
 
       this.heightScale = scaleLinear()
-        .domain([0, this.histMax])
+        .domain([0, this.maxWidth])
+        .range([Math.min(12, height / 10), height]);
+
+      this.categoryHeightScale = scaleLinear()
+        .domain([0, this.numCategories])
+        .range([0, this.numCategories * this.rowHeight]);
+
+      this.valueScale = scaleLinear()
+        .domain([0, this.maxWidth])
         .range([height, 0]);
 
-      this.valueScale = this.heightScale;
-
       this.valueScaleInverted = scaleLinear()
-        .domain([0, this.histMax])
+        .domain([0, this.maxWidth])
         .range([0, height]);
     }
 
-    itemToPoint(item) {
+    itemToIndicatorCategory(item) {
       return {
-        xStart: this._xScale(item.start),
-        xEnd: this._xScale(item.start),
-        yStart: this.heightScale(
-          this.categoryToY.get(item.fields[this.categoryField].toLowerCase())
+        cX: this._xScale(item.start),
+        y: this.categoryHeightScale(
+          this.categoryToY.get(this.getCategory(item))
         ),
-        yEnd: () => {},
         opacity: this.opacityScale(this.getImportance(item)),
         focused:
           item.xStart <= this.focusRegion[1] &&
           item.xEnd >= this.focusRegion[0],
+        widthHalf: Math.max(
+          this.markMinWidth / 2,
+          Math.abs(this._xScale(item.xStart) - this._xScale(item.xEnd)) / 2
+        ),
+        height: this.markHeight,
       };
     }
 
-    histToSegments(tile) {
-      const segments = [];
-
-      for (let i = 0; i < this.numBins; i++) {
-        let cumHeight = 0;
-        if (tile.histogram1d[i] > 0) {
-          for (let j = 0; j < this.numGroups; j++) {
-            const height = tile.histogram2d[j * this.numBins + i];
-
-            if (height) {
-              segments.push({
-                xStart: this._xScale(tile.binXPos[i]),
-                xEnd: this._xScale(tile.binXPos[i + 1]),
-                yStart: this.heightScale(cumHeight),
-                yEnd: this.heightScale(cumHeight + height),
-                colorIdx: j % this.colorMap.length,
-                focused: tile.focusMap[i],
-              });
-
-              cumHeight += height;
-            }
-          }
-        }
+    itemToIndicatorReducer(mapFn) {
+      if (this.getGene && this.focusGene) {
+        return (filteredItems, item) => {
+          const gene = this.getGene(item);
+          if (gene === this.focusGene) filteredItems.push(mapFn(item));
+          return filteredItems;
+        };
       }
-
-      return segments;
+      return (filteredItems, item) => {
+        filteredItems.push(mapFn(item));
+        return filteredItems;
+      };
     }
 
-    renderStackedBars() {
+    renderIndicatorPoints() {
       this.drawnAtScale = scaleLinear()
         .domain([...this.xScale().domain()])
         .range([...this.xScale().range()]);
 
-      const segments = Object.values(this.fetchedTiles).flatMap(
-        this.histToSegments.bind(this)
+      const dataToPoint = this.itemToIndicatorReducer(
+        this.itemToIndicatorCategory.bind(this)
       );
 
-      const positions = new Float32Array(segments.flatMap(segmentToPosition));
-      const colorIdxs = new Float32Array(segments.flatMap(segmentToColorIdx));
-      const focused = new Float32Array(segments.flatMap(segmentToFocused));
+      const points = Object.values(this.fetchedTiles).flatMap((tile) =>
+        tile.tileData.reduce(dataToPoint, [])
+      );
+
+      const positions = new Float32Array(points.flatMap(pointToPosition));
+      const indices = new Uint16Array(points.flatMap(pointToIndex));
+      const opacities = new Float32Array(points.flatMap(pointToOpacity));
+      const focused = new Float32Array(points.flatMap(pointToFocused));
 
       const uniforms = new PIXI.UniformGroup({
-        uColorMapTex: this.colorMapTex,
-        uColorMapTexRes: this.colorMapTexRes,
-        uColorMapFocus: this.colorMapFocusTex,
-        uColorMapFocusTexRes: this.colorMapFocusTexRes,
+        uColor: [...this.markColorRgbNorm, this.markOpacity],
+        uColorFocused: [...this.markColorFocusRgbNorm, this.markOpacity],
       });
 
       const shader = PIXI.Shader.from(VS, FS, uniforms);
 
       const geometry = new PIXI.Geometry();
       geometry.addAttribute('aPosition', positions, 2);
-      geometry.addAttribute('aColorIdx', colorIdxs, 1);
+      geometry.addAttribute('aOpacity', opacities, 1);
       geometry.addAttribute('aFocused', focused, 1);
+      geometry.addIndex(indices);
 
-      const mesh = new PIXI.Mesh(
-        geometry,
-        shader,
-        new PIXI.State(),
-        PIXI.DRAW_MODES.TRIANGLES
-      );
+      const mesh = new PIXI.Mesh(geometry, shader);
 
       const newGraphics = new PIXI.Graphics();
       newGraphics.addChild(mesh);
@@ -580,16 +462,92 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       this.animate();
     }
 
-    renderTrack() {
-      this.drawAxis(this.valueScaleInverted);
-      this.renderStackedBars();
+    renderIndicatorDistanceAxis(valueScale) {
+      this.drawAxis(valueScale);
+    }
+
+    renderIndicatorCategoryAxis() {
+      const [width] = this.dimensions;
+      const [left, top] = this.position;
+
+      this.pAxis.position.x = this.axisAlign === 'right' ? left + width : left;
+      this.pAxis.position.y = top;
+
+      this.pAxis.clear();
+      let yStart = 0;
+      let yEnd = 0;
+
+      const xTickOffset = this.axisAlign === 'right' ? -5 : 5;
+      const xTickEnd = this.axisAlign === 'right' ? -width : width;
+      const xLabelOffset = this.axisAlign === 'right' ? -3 : 3;
+      const numAxisLabels = this.pAxis.children.length;
+
+      this.pAxis.lineStyle(1, 0x000000, 1.0, 0.0);
+
+      this.groupLabelsPixiText.forEach((labelPixiText, i) => {
+        const height = this.categoryHeightScale(this.groupSizes[i]);
+        yEnd += height;
+        labelPixiText.x = xLabelOffset;
+        labelPixiText.y = yStart + height / 2;
+        labelPixiText.anchor.x = this.axisAlign === 'right' ? 1 : 0;
+        labelPixiText.anchor.y = 0.5;
+
+        if (numAxisLabels < i + 1) {
+          this.pAxis.addChild(labelPixiText);
+        }
+
+        this.pAxis.moveTo(0, yStart);
+        this.pAxis.lineTo(xTickOffset, yStart);
+        if (this.options.stratification.axisShowGroupSeparator) {
+          dashedXLineTo(this.pAxis, 0, xTickEnd, yStart, 5);
+        }
+
+        yStart = yEnd;
+      });
+
+      this.pAxis.moveTo(0, 0);
+      this.pAxis.lineTo(0, yEnd);
+      this.pAxis.lineTo(xTickOffset, yEnd);
+      if (this.options.stratification.axisShowGroupSeparator) {
+        dashedXLineTo(this.pAxis, 0, xTickEnd, yEnd, 5);
+      }
+    }
+
+    updateIndicators() {
+      this.renderIndicatorCategoryAxis(this.valueScaleInverted);
+      this.renderIndicatorPoints();
     }
 
     // Called whenever a new tile comes in
     updateExistingGraphics() {
-      this.updateHistograms();
       this.updateScales();
-      this.renderTrack();
+      this.updateIndicators();
+    }
+
+    // Gets called on every draw call
+    drawTile(tile, storePolyStr) {
+      tile.graphics.clear();
+
+      if (!tile.tileData.length) return;
+
+      if (!this.options.stratification.axisNoGroupColor) {
+        let yStart = 0;
+        let yEnd = 0;
+        this.groupSizes.forEach((size, i) => {
+          yEnd += this.categoryHeightScale(size);
+
+          tile.graphics.beginFill(this.groupToColor.get(i)[1]);
+          tile.graphics.drawRect(
+            0,
+            yStart,
+            this.dimensions[0],
+            Math.abs(yEnd - yStart)
+          );
+
+          yStart = yEnd;
+        });
+        tile.graphics.endFill();
+      }
     }
 
     /**
@@ -610,32 +568,39 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       );
 
       // the position of the tile containing the query position
-      const relTilePos = this._xScale.invert(trackX) / tileWidth;
-      const tilePos = Math.floor(relTilePos);
-      const tileId = this.tileToLocalId([zoomLevel, tilePos]);
+      const tileId = this.tileToLocalId([
+        zoomLevel,
+        Math.floor(this._xScale.invert(trackX) / tileWidth),
+      ]);
       const fetchedTile = this.fetchedTiles[tileId];
 
       if (!fetchedTile) return '';
 
-      const relPos = relTilePos - tilePos;
-      const binXPos = Math.floor(this.numBins * relPos);
+      const category = this.yToCategory.get(
+        Math.floor(this.categoryHeightScale.invert(trackY))
+      );
 
-      const row = [];
-      let sum = 0;
-      for (let i = 0; i < this.numGroups; i++) {
-        sum += fetchedTile.histogram2d[i * this.numBins + binXPos];
-        row.push(sum);
-      }
+      const xAbsLo = this._xScale.invert(trackX - 1);
+      const xAbsHi = this._xScale.invert(trackX + 1);
 
-      const relYPos = this.heightScale.invert(trackY);
-      const group = row.findIndex((cumHeight) => cumHeight > relYPos);
+      let foundItem;
+      fetchedTile.intervalTree.queryInterval(xAbsLo, xAbsHi, (interval) => {
+        const item = fetchedTile.tileData[interval[2]];
+        if (this.getCategory(item) === category) {
+          foundItem = item;
+          return true;
+        }
+        return false;
+      });
 
-      if (group >= 0) {
-        const [color, bg] = this.groupToColor.get(group);
+      if (foundItem) {
+        const [color, bg] = this.groupToColor.get(
+          this.categoryToGroup.get(category)
+        );
         const colorHex = `#${color.toString(16)}`;
         const bgHex = `#${bg.toString(16)}`;
-        const value = row[group].toFixed(2);
-        return `<div style="margin: 0 -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${this.groupLabels[group]}:</strong> ${value}</div>`;
+        const value = this.getImportance(foundItem).toFixed(2);
+        return `<div style="margin: 0 -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${category}:</strong> ${value}</div>`;
       }
 
       return '';
@@ -686,13 +651,6 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         `translate(${this.position[0]},${this.position[1]})`
       );
 
-      const strokeColor = this.options.strokeColor
-        ? this.options.strokeColor
-        : 'blue';
-      const strokeWidth = this.options.strokeWidth
-        ? this.options.strokeWidth
-        : 2;
-
       this.visibleAndFetchedTiles().forEach((tile) => {
         this.polys = [];
 
@@ -703,8 +661,6 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         for (const { polyStr, opacity } of this.polys) {
           const g = document.createElement('path');
           g.setAttribute('fill', 'transparent');
-          g.setAttribute('stroke', strokeColor);
-          g.setAttribute('stroke-width', strokeWidth);
           g.setAttribute('opacity', opacity);
 
           g.setAttribute('d', polyStr);
@@ -715,15 +671,15 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
     }
   }
 
-  return new StackedBarTrack(...args);
+  return new BedMatrixTrack(...args);
 };
 
 const icon =
   '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="1.5"><path d="M4 2.1L.5 3.5v12l5-2 5 2 5-2v-12l-5 2-3.17-1.268" fill="none" stroke="currentColor"/><path d="M10.5 3.5v12" fill="none" stroke="currentColor" stroke-opacity=".33" stroke-dasharray="1,2,0,0"/><path d="M5.5 13.5V6" fill="none" stroke="currentColor" stroke-opacity=".33" stroke-width=".9969299999999999" stroke-dasharray="1.71,3.43,0,0"/><path d="M9.03 5l.053.003.054.006.054.008.054.012.052.015.052.017.05.02.05.024 4 2 .048.026.048.03.046.03.044.034.042.037.04.04.037.04.036.042.032.045.03.047.028.048.025.05.022.05.02.053.016.053.014.055.01.055.007.055.005.055v.056l-.002.056-.005.055-.008.055-.01.055-.015.054-.017.054-.02.052-.023.05-.026.05-.028.048-.03.046-.035.044-.035.043-.038.04-4 4-.04.037-.04.036-.044.032-.045.03-.046.03-.048.024-.05.023-.05.02-.052.016-.052.015-.053.012-.054.01-.054.005-.055.003H8.97l-.053-.003-.054-.006-.054-.008-.054-.012-.052-.015-.052-.017-.05-.02-.05-.024-4-2-.048-.026-.048-.03-.046-.03-.044-.034-.042-.037-.04-.04-.037-.04-.036-.042-.032-.045-.03-.047-.028-.048-.025-.05-.022-.05-.02-.053-.016-.053-.014-.055-.01-.055-.007-.055L4 10.05v-.056l.002-.056.005-.055.008-.055.01-.055.015-.054.017-.054.02-.052.023-.05.026-.05.028-.048.03-.046.035-.044.035-.043.038-.04 4-4 .04-.037.04-.036.044-.032.045-.03.046-.03.048-.024.05-.023.05-.02.052-.016.052-.015.053-.012.054-.01.054-.005L8.976 5h.054zM5 10l4 2 4-4-4-2-4 4z" fill="currentColor"/><path d="M7.124 0C7.884 0 8.5.616 8.5 1.376v3.748c0 .76-.616 1.376-1.376 1.376H3.876c-.76 0-1.376-.616-1.376-1.376V1.376C2.5.616 3.116 0 3.876 0h3.248zm.56 5.295L5.965 1H5.05L3.375 5.295h.92l.354-.976h1.716l.375.975h.945zm-1.596-1.7l-.592-1.593-.58 1.594h1.172z" fill="currentColor"/></svg>';
 
-createStackedBarTrack.config = {
-  type: 'stacked-bar',
-  datatype: ['bedlike'],
+createBedMatrixTrack.config = {
+  type: 'bed-matrix',
+  datatype: ['arcs', 'bedlike'],
   orientation: '1d',
   name: 'Arcs1D',
   thumbnail: new DOMParser().parseFromString(icon, 'text/xml').documentElement,
@@ -734,8 +690,6 @@ createStackedBarTrack.config = {
     'labelColor',
     'labelTextOpacity',
     'labelBackgroundOpacity',
-    'strokeColor',
-    'strokeWidth',
     'trackBorderWidth',
     'trackBorderColor',
   ],
@@ -744,8 +698,6 @@ createStackedBarTrack.config = {
     flip1D: 'no',
     labelColor: 'black',
     labelPosition: 'hidden',
-    strokeColor: 'black',
-    strokeWidth: 1,
     trackBorderWidth: 0,
     trackBorderColor: 'black',
   },
@@ -766,4 +718,4 @@ createStackedBarTrack.config = {
   },
 };
 
-export default createStackedBarTrack;
+export default createBedMatrixTrack;

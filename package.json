@@ -1,62 +1,51 @@
 {
-  "name": "higlass-scalable-arcs",
+  "name": "enhancer-promoter-vis",
   "version": "0.1.0",
-  "description": "Scalable arc track for HiGlass",
-  "keywords": [
-    "HiGlass",
-    "Track",
-    "Arcs"
-  ],
   "author": "Fritz Lekschas",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/flekschas/higlass-scalable-arcs.git"
+    "url": "git://github.com/flekschas/enhancer-promoter-vis.git"
   },
-  "main": "src/index.js",
-  "unpkg": "dist/higlass-scalable-arcs.min.js",
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "webpack --mode production",
-    "build-demo": "webpack --mode production --demo",
-    "start": "webpack-dev-server --mode development --open",
-    "prerelease": "rm -rf dist/*; npm run build; zip -r dist.zip dist"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "deploy": "npm run build; touch build/.nojekyll; gh-pages -d build -t --git git"
   },
   "dependencies": {
-    "higlass-register": "^0.1.0"
+    "@flekschas/utils": "^0.23.0",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^7.2.1",
+    "higlass": "^1.10.2",
+    "higlass-register": "^0.1.0",
+    "interval-tree-1d": "^1.0.3",
+    "pixi.js": "^5.3.0",
+    "prop-types": "^15.7.2",
+    "react": "^16.13.1",
+    "react-bootstrap": "0.32.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.10.4",
-    "@babel/preset-env": "^7.10.4",
-    "autoprefixer": "^9.8.4",
-    "babel-eslint": "^10.1.0",
-    "babel-loader": "^8.1.0",
-    "css-loader": "^3.6.0",
-    "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^6.11.0",
-    "eslint-loader": "^4.0.2",
-    "eslint-plugin-import": "^2.22.0",
-    "eslint-plugin-jsx-a11y": "^6.3.1",
     "eslint-plugin-prettier": "^3.1.4",
-    "eslint-plugin-react": "^7.20.3",
-    "file-loader": "^6.0.0",
-    "higlass": "^1.10.1",
-    "html-loader": "^1.1.0",
-    "html-webpack-plugin": "^4.3.0",
-    "node-sass": "^4.13.0",
-    "optimize-css-assets-webpack-plugin": "^5.0.3",
-    "postcss-flexbugs-fixes": "^4.2.1",
-    "postcss-loader": "^3.0.0",
-    "prettier": "^2.0.5",
-    "sass-loader": "^9.0.2",
-    "style-loader": "^1.2.1",
-    "terser-webpack-plugin": "^3.0.6",
-    "unminified-webpack-plugin": "^2.0.0",
-    "webpack": "^4.25.1",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.1.1"
+    "gh-pages": "^3.1.0",
+    "prettier": "^2.0.5"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
