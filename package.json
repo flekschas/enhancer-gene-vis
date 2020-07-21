@@ -7,6 +7,7 @@
     "type": "git",
     "url": "git://github.com/flekschas/enhancer-promoter-vis.git"
   },
+  "homepage": "https://flekschas.github.io/enhancer-promoter-vis",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
