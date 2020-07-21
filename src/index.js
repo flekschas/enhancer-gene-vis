@@ -5,7 +5,7 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-import createBedMatrixTrack from './bed-matrix-track';
+import createStratifiedBedTrack from './stratified-bed-track';
 import createScalableArcs1dTrack from './scalable-arcs-track';
 import createSnpTrack from './snp-track';
 import createStackedBarTrack from './stacked-bar-track';
@@ -17,9 +17,9 @@ register({
 });
 
 register({
-  name: 'BedMatrixTrack',
-  track: createBedMatrixTrack,
-  config: createBedMatrixTrack.config,
+  name: 'StratifiedBedTrack',
+  track: createStratifiedBedTrack,
+  config: createStratifiedBedTrack.config,
 });
 
 register({
