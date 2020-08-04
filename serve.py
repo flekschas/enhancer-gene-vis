@@ -15,6 +15,17 @@ def bedpedb(filepath, uuid=None, **kwargs):
     )
 
 
+def multivec(filepath, uuid=None, **kwargs):
+    from clodius.tiles.multivec import tileset_info, tiles
+
+    return hg.Tileset(
+        uuid=uuid,
+        tileset_info=lambda: tileset_info(filepath),
+        tiles=lambda tile_ids: tiles(filepath, tile_ids),
+        **kwargs
+    )
+
+
 def get_filename_assembly(filepath):
     _, filenameext = os.path.split(filepath)
     parts = filenameext.split('.')
@@ -77,6 +88,20 @@ def bedpedb_to_tileset(filepath):
         )
 
 
+def multivec_to_tileset(filepath):
+    filename, assembly = get_filename_assembly(filepath)
+
+    if assembly is not None:
+        chromsizes = negspy.coordinates.get_chromsizes(assembly)
+        return multivec(
+            filepath=filepath,
+            chromsizes=chromsizes,
+            name=filename,
+            uuid=filename,
+            datatype='multivec',
+        )
+
+
 def is_not_none(x):
     return x is not None
 
@@ -91,6 +116,7 @@ def serve(dir, host, port, verbose):
     bigbeds = []
     beddbs = []
     bedpedbs = []
+    multivecs = []
 
     for file in os.listdir(dir):
         if file.endswith('.bigwig'):
@@ -101,17 +127,21 @@ def serve(dir, host, port, verbose):
             beddbs.append(os.path.join(dir, file))
         if file.endswith('.bedpedb'):
             bedpedbs.append(os.path.join(dir, file))
+        if file.endswith('.multivec'):
+            multivecs.append(os.path.join(dir, file))
 
     if verbose > 0:
         print(f'Found {len(bigwigs)} .bigwig files')
         print(f'Found {len(bigbeds)} .bigbed files')
         print(f'Found {len(beddbs)} .beddb files')
         print(f'Found {len(bedpedbs)} .bedpedb files')
+        print(f'Found {len(multivecs)} .multivec files')
 
     tilesets = [
         *list(filter(is_not_none, map(bigwig_to_tileset, bigwigs))),
         *list(filter(is_not_none, map(beddb_to_tileset, beddbs))),
-        *list(filter(is_not_none, map(bedpedb_to_tileset, bedpedbs)))
+        *list(filter(is_not_none, map(bedpedb_to_tileset, bedpedbs))),
+        *list(filter(is_not_none, map(multivec_to_tileset, multivecs))),
     ]
 
     if len(tilesets) > 0:
