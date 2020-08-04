@@ -11,9 +11,10 @@ dependencies:
   - pysam
   - pip
   - pip:
-    - clodius
-    - cooler
-    - higlass-python
-    - ipywidgets>=7.5.1
-    - jupyterlab>=1.1.1
-    - matplotlib
+      - clodius
+      - cooler
+      - higlass-python
+      - ipywidgets>=7.5.1
+      - jupyterlab>=1.1.1
+      - matplotlib
+      - pybbi>=0.2.3
