@@ -52,12 +52,8 @@ def download(base: str = ".", dir: str = "data", overwrite: bool = False):
 
     file_urls = get_file_urls()
 
-    k = 0
     for file_url in file_urls:
         download_file_from_ftp(file_url, base=base, dir=dir, overwrite=overwrite)
-        k += 1
-        if k > 2:
-            break
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Download bigwigs.')
