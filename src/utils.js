@@ -1,4 +1,7 @@
-const createColorTexture = (PIXI, colors) => {
+import { identity } from '@flekschas/utils';
+import queryString from 'query-string';
+
+export const createColorTexture = (PIXI, colors) => {
   const colorTexRes = Math.max(2, Math.ceil(Math.sqrt(colors.length)));
   const rgba = new Float32Array(colorTexRes ** 2 * 4);
   colors.forEach((color, i) => {
@@ -15,7 +18,7 @@ const createColorTexture = (PIXI, colors) => {
   return [PIXI.Texture.fromBuffer(rgba, colorTexRes, colorTexRes), colorTexRes];
 };
 
-const dashedXLineTo = (graphics, xStart, xEnd, y, dashSize) => {
+export const dashedXLineTo = (graphics, xStart, xEnd, y, dashSize) => {
   const diff = xEnd - xStart;
   const direction = Math.sign(diff);
   const width = Math.abs(diff);
@@ -27,7 +30,23 @@ const dashedXLineTo = (graphics, xStart, xEnd, y, dashSize) => {
   }
 };
 
-const toAbsPosition = (position, chromInfo) => {
+export const getQueryStringValue = (key, decoder = identity) =>
+  decoder(queryString.parse(window.location.search)[key]);
+
+export const setQueryStringValue = (key, value, encoder = identity) => {
+  const values = queryString.parse(window.location.search);
+  const newQsValue = queryString.stringify(
+    {
+      ...values,
+      [key]: encoder(value),
+    },
+    { strict: false }
+  );
+  const url = `${window.location.origin}${window.location.pathname}?${newQsValue}`;
+  window.history.pushState({ path: url }, '', url);
+};
+
+export const toAbsPosition = (position, chromInfo) => {
   let absPosition;
   if (position.indexOf && position.indexOf(':') >= 0) {
     const [chrom, pos] = position.split(':');
@@ -37,5 +56,3 @@ const toAbsPosition = (position, chromInfo) => {
   }
   return absPosition;
 };
-
-export { createColorTexture, dashedXLineTo, toAbsPosition };
