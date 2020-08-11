@@ -1,12 +1,73 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { HiGlassComponent } from 'higlass';
-import { debounce, deepClone } from '@flekschas/utils';
+import { debounce, deepClone, isString, pipe } from '@flekschas/utils';
+import AppBar from '@material-ui/core/AppBar';
+// import Autocomplete from '@material-ui/core/Autocomplete';
+import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
+import ClearIcon from '@material-ui/icons/Clear';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import Divider from '@material-ui/core/Divider';
+import Drawer from '@material-ui/core/Drawer';
+import FormControl from '@material-ui/core/FormControl';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormLabel from '@material-ui/core/FormLabel';
+import IconButton from '@material-ui/core/IconButton';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import InputLabel from '@material-ui/core/InputLabel';
+import OutlinedInput from '@material-ui/core/OutlinedInput';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import { makeStyles } from '@material-ui/core/styles';
 
-import { RadioButton, RadioGroup } from './radio';
+import useQueryString from './use-query-string';
 import { toAbsPosition } from './utils';
 
 import 'higlass/dist/hglib.css';
 import './Viewer.css';
+
+const drawerWidth = 240;
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    position: 'absolute',
+    display: 'flex',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+  appBar: {
+    width: `calc(100% - ${drawerWidth}px)`,
+    marginLeft: drawerWidth,
+    color: theme.palette.common.black,
+    backgroundColor: theme.palette.common.white,
+    boxShadow: `0 1px 0 0 ${theme.palette.grey['300']}`,
+  },
+  drawer: {
+    width: drawerWidth,
+    flexShrink: 0,
+  },
+  drawerPaper: {
+    width: drawerWidth,
+  },
+  textInput: {
+    minWidth: '100%',
+  },
+  toolbar: theme.mixins.toolbar,
+  content: {
+    display: 'flex',
+    flexDirection: 'column',
+    flexGrow: 1,
+    padding: theme.spacing(1),
+    backgroundColor: 'white',
+  },
+  higlass: {
+    flexGrow: 1,
+  },
+}));
 
 const DEFAULT_STRATIFICATION = {
   categoryField: 10,
@@ -184,15 +245,70 @@ const DEFAULT_STRATIFICATION = {
   ],
 };
 
+const DEFAULT_X_DOMAIN_START = 1761366260;
+const DEFAULT_X_DOMAIN_END = 1761603836;
+
 const DEFAULT_VIEW_CONFIG = {
-  editable: true,
+  editable: false,
   trackSourceServers: [
     '//higlass.io/api/v1',
     'https://resgen.io/api/v1/gt/paper-data',
   ],
   views: [
+    // {
+    //   uid: 'overview',
+    //   chromInfoPath: '//s3.amazonaws.com/pkerp/data/hg19/chromSizes.tsv',
+    //   layout: {
+    //     w: 12,
+    //     h: 24,
+    //     x: 0,
+    //     y: 0,
+    //   },
+    //   initialXDomain: [0, 3095693983],
+    //   initialYDomain: [0, 3095693983],
+    //   tracks: {
+    //     top: [
+    //       {
+    //         type: 'combined',
+    //         uid: 'chroms-viewport',
+    //         height: 24,
+    //         contents: [
+    //           {
+    //             type: 'horizontal-chromosome-labels',
+    //             tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
+    //             height: 24,
+    //             server: 'https://resgen.io/api/v1',
+    //             uid: 'chroms',
+    //             options: {
+    //               // tickPositions: 'ends',
+    //               color: '#999999',
+    //               stroke: 'white',
+    //               fontSize: 12,
+    //               fontIsLeftAligned: false,
+    //               showMousePosition: true,
+    //               mousePositionColor: '#000000',
+    //             },
+    //           },
+    //           {
+    //             uid: 'viewport-details-chroms',
+    //             type: 'viewport-projection-horizontal',
+    //             fromViewUid: 'context',
+    //             height: 24,
+    //             options: {
+    //               projectionFillColor: '#cc0078',
+    //               projectionStrokeColor: '#cc0078',
+    //               projectionFillOpacity: 0.3,
+    //               projectionStrokeOpacity: 0.3,
+    //               strokeWidth: 1,
+    //             },
+    //           },
+    //         ],
+    //       },
+    //     ],
+    //   },
+    // },
     {
-      uid: 'view1',
+      uid: 'context',
       genomePositionSearchBox: {
         autocompleteServer: '//higlass.io/api/v1',
         autocompleteId: 'OHJakQICQD6gTD7skx4EWA',
@@ -204,34 +320,92 @@ const DEFAULT_VIEW_CONFIG = {
       tracks: {
         top: [
           {
-            type: 'horizontal-chromosome-labels',
-            options: {
-              // tickPositions: 'ends',
-              color: '#999999',
-              stroke: 'white',
-              fontSize: 10,
-              fontIsLeftAligned: true,
-              showMousePosition: false,
-              mousePositionColor: '#000000',
-            },
-            tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
+            type: 'combined',
+            uid: 'chroms-viewport',
             height: 12,
-            server: 'https://resgen.io/api/v1',
-            uid: 'chroms',
+            contents: [
+              {
+                type: 'horizontal-chromosome-labels',
+                options: {
+                  // tickPositions: 'ends',
+                  color: '#999999',
+                  stroke: 'white',
+                  fontSize: 10,
+                  fontIsLeftAligned: true,
+                  showMousePosition: false,
+                  mousePositionColor: '#000000',
+                },
+                tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
+                height: 12,
+                server: 'https://resgen.io/api/v1',
+                uid: 'chroms',
+              },
+              {
+                uid: 'viewport-details-chroms',
+                type: 'viewport-projection-horizontal',
+                fromViewUid: 'details',
+                height: 12,
+                options: {
+                  projectionFillColor: '#cc0078',
+                  projectionStrokeColor: '#cc0078',
+                  projectionFillOpacity: 0.3,
+                  projectionStrokeOpacity: 0.3,
+                  strokeWidth: 1,
+                },
+              },
+            ],
           },
           {
-            type: 'horizontal-gene-annotations',
-            uid: 'genes',
-            height: 48,
-            server: 'https://resgen.io/api/v1',
-            tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
-            options: {
-              fontSize: 9,
-              labelColor: 'black',
-              geneAnnotationHeight: 12,
-              geneLabelPosition: 'outside',
-              geneStrandSpacing: 2,
-            },
+            type: 'combined',
+            uid: 'genes-tss-viewport',
+            height: 50,
+            contents: [
+              {
+                type: 'horizontal-gene-annotations',
+                uid: 'genes',
+                height: 50,
+                server: 'https://resgen.io/api/v1',
+                tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
+                options: {
+                  fontSize: 9,
+                  plusStrandColor: 'black',
+                  minusStrandColor: 'black',
+                  geneAnnotationHeight: 12,
+                  geneLabelPosition: 'outside',
+                  geneStrandSpacing: 2,
+                },
+              },
+              {
+                type: 'tss',
+                uid: 'tss',
+                height: 50,
+                // server: 'http://localhost:9876/api/v1',
+                // tilesetUid: 'RefSeqCurated170308bedCollapsedGeneBoundsTSS500bp',
+                server: 'https://resgen.io/api/v1',
+                tilesetUid: 'VMZDLKrtQDmJMSjg7Ds4yA',
+                options: {
+                  fontSize: 9,
+                  plusStrandColor: 'black',
+                  minusStrandColor: 'black',
+                  geneAnnotationHeight: 12,
+                  geneLabelPosition: 'outside',
+                  geneStrandSpacing: 2,
+                },
+              },
+              {
+                uid: 'viewport-details-genes',
+                type: 'viewport-projection-horizontal',
+                fromViewUid: 'details',
+                height: 50,
+                options: {
+                  projectionFillColor: '#cc0078',
+                  projectionStrokeColor: '#cc0078',
+                  projectionFillOpacity: 0.3,
+                  projectionStrokeOpacity: 0.3,
+                  strokeWidth: 1,
+                },
+              },
+            ],
           },
           {
             type: 'point-annotation',
@@ -301,10 +475,10 @@ const DEFAULT_VIEW_CONFIG = {
           // },
           {
             type: 'stacked-bar',
-            // server: 'http://localhost:9876/api/v1',
-            // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2chr10',
-            server: 'https://resgen.io/api/v1',
-            tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ',
+            server: 'http://localhost:9876/api/v1',
+            tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2chr10',
+            // server: 'https://resgen.io/api/v1',
+            // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA',
             height: 96,
             uid: 'stacked-bars',
             options: {
@@ -334,10 +508,10 @@ const DEFAULT_VIEW_CONFIG = {
           },
           {
             type: 'stratified-bed',
-            // server: 'http://localhost:9876/api/v1',
-            // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2chr10',
-            server: 'https://resgen.io/api/v1',
-            tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ',
+            server: 'http://localhost:9876/api/v1',
+            tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2chr10',
+            // server: 'https://resgen.io/api/v1',
+            // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA',
             height: 403,
             uid: 'indicatorByCellTypes',
             options: {
@@ -374,12 +548,8 @@ const DEFAULT_VIEW_CONFIG = {
           uid: 'region-focus',
           includes: [
             'chroms',
-            'genes',
+            'genes-tss-viewport',
             'ibd-snps',
-            'microglia',
-            // 'indicatorStart',
-            // 'indicatorEnd',
-            // 'arcs',
             'stacked-bars',
             'indicatorByCellTypes',
           ],
@@ -397,7 +567,7 @@ const DEFAULT_VIEW_CONFIG = {
         },
         {
           uid: 'gene-focus',
-          includes: ['genes'],
+          includes: ['genes-tss-viewport'],
           options: {
             extent: [],
             minWidth: 3,
@@ -408,6 +578,37 @@ const DEFAULT_VIEW_CONFIG = {
             outlineWidth: 0,
           },
         },
+        {
+          uid: 'tss-overlays',
+          includes: [
+            'chroms',
+            'genes-tss-viewport',
+            'ibd-snps',
+            'stacked-bars',
+            'indicatorByCellTypes',
+          ],
+          options: {
+            extent: [],
+            minWidth: 1,
+            fill: 'black',
+            fillOpacity: 0.05,
+            strokeWidth: 0,
+            outline: 'black',
+            outlineOpacity: 0.1,
+            outlineWidth: 1,
+            outlinePos: ['left'],
+          },
+        },
+      ],
+      metaTracks: [
+        {
+          uid: 'tss-overlays-meta',
+          type: 'annotation-overlay',
+          overlaysTrack: 'tss-overlays',
+          options: {
+            annotationTracks: ['tss'],
+          },
+        },
       ],
       layout: {
         w: 12,
@@ -415,37 +616,386 @@ const DEFAULT_VIEW_CONFIG = {
         x: 0,
         y: 0,
       },
-      initialXDomain: [1761366260, 1761603836],
-      initialYDomain: [1761257024, 1761318261],
+      initialXDomain: [DEFAULT_X_DOMAIN_START, DEFAULT_X_DOMAIN_END],
+      initialYDomain: [DEFAULT_X_DOMAIN_START, DEFAULT_X_DOMAIN_END],
     },
+    //   {
+    //     uid: 'details',
+    //     chromInfoPath: '//s3.amazonaws.com/pkerp/data/hg19/chromSizes.tsv',
+    //     tracks: {
+    //       top: [
+    //         {
+    //           type: 'horizontal-chromosome-labels',
+    //           options: {
+    //             // tickPositions: 'ends',
+    //             color: '#999999',
+    //             stroke: 'white',
+    //             fontSize: 10,
+    //             fontIsLeftAligned: true,
+    //             showMousePosition: false,
+    //             mousePositionColor: '#000000',
+    //           },
+    //           tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
+    //           height: 12,
+    //           server: 'https://resgen.io/api/v1',
+    //           uid: 'chroms',
+    //         },
+    //         {
+    //           type: 'horizontal-gene-annotations',
+    //           uid: 'genes',
+    //           height: 48,
+    //           server: 'https://resgen.io/api/v1',
+    //           tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
+    //           options: {
+    //             fontSize: 9,
+    //             plusStrandColor: 'black',
+    //             minusStrandColor: 'black',
+    //             geneAnnotationHeight: 12,
+    //             geneLabelPosition: 'outside',
+    //             geneStrandSpacing: 2,
+    //           },
+    //         },
+    //         {
+    //           type: 'point-annotation',
+    //           uid: 'ibd-snps',
+    //           // server: 'http://localhost:9876/api/v1',
+    //           // tilesetUid: 'IBDCombinedset1-2variantonly-pval',
+    //           server: 'https://resgen.io/api/v1',
+    //           tilesetUid: 'VF5-RDXWTxidGMJU7FeaxA',
+    //           height: 132,
+    //           options: {
+    //             axisPositionHorizontal: 'right',
+    //             markColor: 'black',
+    //             markColorFocus: '#cc0078',
+    //             markSize: 2,
+    //             markOpacity: 0.33,
+    //             markOpacityFocus: 0.66,
+    //             // axisPositionHorizontal: 'right',
+    //             valueColumn: 7,
+    //             focusRegion: [
+    //               1680373143 + 81046453 - 25,
+    //               1680373143 + 81046453 + 25,
+    //             ],
+    //             name: 'IBD SNPs',
+    //             toolTip: {
+    //               name: {
+    //                 field: 3,
+    //               },
+    //               value: {
+    //                 field: 6,
+    //                 numDecimals: 2,
+    //               },
+    //               other: [
+    //                 {
+    //                   label: 'Post. Prob.',
+    //                   field: 7,
+    //                   numDecimals: 2,
+    //                 },
+    //               ],
+    //             },
+    //           },
+    //         },
+    //         {
+    //           type: 'multivec',
+    //           uid: 'dna-accessibility',
+    //           height: 403,
+    //           // server: 'http://localhost:9876/api/v1',
+    //           // tilesetUid: 'test',
+    //           server: 'https://resgen.io/api/v1',
+    //           tilesetUid: 'Uz1_tEABQf-uzktblvBKSQ',
+    //           options: {
+    //             name: 'DNA Accessibility',
+    //             labelPosition: 'outerBottom',
+    //             labelShowResolution: false,
+    //             labelShowAssembly: false,
+    //             valueScaling: 'exponential',
+    //             colorRange: ['#ffffff', '#000000'],
+    //             selectRows: [
+    //               120,
+    //               36,
+    //               54,
+    //               20,
+    //               80,
+    //               35,
+    //               101,
+    //               49,
+    //               44,
+    //               23,
+    //               30,
+    //               66,
+    //               5,
+    //               26,
+    //               15,
+    //               105,
+    //               57,
+    //               56,
+    //               74,
+    //               84,
+    //               79,
+    //               93,
+    //               106,
+    //               107,
+    //               34,
+    //               28,
+    //               25,
+    //               55,
+    //               121,
+    //               94,
+    //               58,
+    //               69,
+    //               67,
+    //               63,
+    //               126,
+    //               71,
+    //               72,
+    //               47,
+    //               11,
+    //               46,
+    //               39,
+    //               113,
+    //               29,
+    //               60,
+    //               45,
+    //               76,
+    //               21,
+    //               103,
+    //               129,
+    //               13,
+    //               128,
+    //               90,
+    //               104,
+    //               32,
+    //               109,
+    //               27,
+    //               9,
+    //               130,
+    //               95,
+    //               86,
+    //               53,
+    //               73,
+    //               50,
+    //               48,
+    //               78,
+    //               14,
+    //               92,
+    //               124,
+    //               31,
+    //               114,
+    //               64,
+    //               88,
+    //               12,
+    //               10,
+    //               38,
+    //               68,
+    //               3,
+    //               111,
+    //               70,
+    //               22,
+    //               61,
+    //               98,
+    //               6,
+    //               123,
+    //               118,
+    //               43,
+    //               37,
+    //               65,
+    //               81,
+    //               62,
+    //               33,
+    //               1,
+    //               24,
+    //               122,
+    //               83,
+    //               75,
+    //               112,
+    //               40,
+    //               97,
+    //               16,
+    //               117,
+    //               87,
+    //               19,
+    //               125,
+    //               7,
+    //               102,
+    //               116,
+    //               77,
+    //               8,
+    //               17,
+    //               82,
+    //               115,
+    //               89,
+    //               119,
+    //               18,
+    //               4,
+    //               108,
+    //               59,
+    //               127,
+    //               91,
+    //               0,
+    //               100,
+    //               85,
+    //               110,
+    //               99,
+    //               2,
+    //               96,
+    //               51,
+    //               41,
+    //               52,
+    //               42,
+    //             ],
+    //           },
+    //         },
+    //       ],
+    //     },
+    //     layout: {
+    //       w: 4,
+    //       h: 11,
+    //       x: 8,
+    //       y: 1,
+    //     },
+    //     initialXDomain: [
+    //       1680373143 + 81046453 - 500,
+    //       1680373143 + 81046454 + 500,
+    //     ],
+    //     initialYDomain: [
+    //       1680373143 + 81046453 - 500,
+    //       1680373143 + 81046454 + 500,
+    //     ],
+    //   },
   ],
 };
 
 const DEFAULT_HIGLASS_OPTIONS = {
   sizeMode: 'bounded',
+  // pixelPreciseMarginPadding: true,
+  // containerPaddingX: 0,
+  // containerPaddingY: 0,
+  // viewMarginTop: 0,
+  // viewMarginBottom: 6,
+  // viewMarginLeft: 0,
+  // viewMarginRight: 0,
+  // viewPaddingTop: 3,
+  // viewPaddingBottom: 3,
+  // viewPaddingLeft: 0,
+  // viewPaddingRight: 0,
+};
+
+const chrPosUrlEncoder = (chrPos) =>
+  chrPos ? chrPos.replace(':', '.') : chrPos;
+
+const chrPosUrlDecoder = (chrPos) =>
+  chrPos ? chrPos.replace('.', ':') : chrPos;
+
+const updateXDomainViewConfig = (newXDomainStart, newXDomainEnd) => (
+  viewConfig
+) => {
+  const xDomain = [...viewConfig.views[0].initialXDomain];
+
+  if (!Number.isNaN(+newXDomainStart)) {
+    xDomain[0] = newXDomainStart;
+  }
+  if (!Number.isNaN(+newXDomainEnd)) {
+    xDomain[1] = newXDomainEnd;
+  }
+
+  viewConfig.views[0].initialXDomain = xDomain;
+
+  return viewConfig;
+};
+
+const updateFocusGeneViewConfig = (gene, start, end) => (viewConfig) => {
+  const n = viewConfig.views[0].tracks.top.length;
+
+  if (gene) {
+    viewConfig.views[0].tracks.top[n - 1].options.focusGene = gene;
+    viewConfig.views[0].overlays[1].options.extent = [[start, end]];
+  } else {
+    delete viewConfig.views[0].tracks.top[n - 1].options.focusGene;
+    delete viewConfig.views[0].overlays[1].options.extent;
+  }
+
+  return viewConfig;
+};
+
+const updateFocusVariantViewConfig = (variantAbsPosition) => (viewConfig) => {
+  // const n = viewConfig.views.length;
+
+  const focusRegion = Number.isNaN(+variantAbsPosition)
+    ? []
+    : [variantAbsPosition - 0.5, variantAbsPosition + 0.5];
+
+  viewConfig.views[0].tracks.top[2].options.focusRegion = focusRegion;
+  viewConfig.views[0].tracks.top[4].options.focusRegion = focusRegion;
+  // viewConfig.views[0].tracks.top[n - 1].options.focusRegion = focusRegion;
+  viewConfig.views[0].overlays[0].options.extent = [focusRegion];
+
+  // const focusDomain = Number.isNaN(+variantAbsPosition)
+  //   ? viewConfig.views[1].initialXDomain
+  //   : [variantAbsPosition - 500, variantAbsPosition + 500];
+
+  // viewConfig.views[1].initialXDomain = focusDomain;
+  // viewConfig.views[1].initialYDomain = focusDomain;
+
+  return viewConfig;
+};
+
+const updateVariantYScaleViewConfig = (yScale) => (viewConfig) => {
+  viewConfig.views[0].tracks.top[2].options.valueColumn =
+    yScale === 'pValue' ? 7 : 8;
+  // viewConfig.views[1].tracks.top[2].options.valueColumn =
+  //   yScale === 'pValue' ? 7 : 8;
+
+  return viewConfig;
 };
 
 const Viewer = (props) => {
-  const [focusGene, setFocusGene] = useState('');
-  const [focusVariant, setFocusVariant] = useState('chr10:81046453');
-  const [variantYScale, setVariantYScale] = useState('pValue');
+  const [focusGene, setFocusGene] = useQueryString('gene', '');
+  const [focusVariant, setFocusVariant] = useQueryString(
+    'variant',
+    'chr10:81046453',
+    {
+      encoder: chrPosUrlEncoder,
+      decoder: chrPosUrlDecoder,
+    }
+  );
+  const [variantYScale, setVariantYScale] = useQueryString(
+    'varient-scale',
+    'pValue'
+  );
+  const [xDomainStart, setXDomainStart] = useQueryString(
+    'start',
+    DEFAULT_X_DOMAIN_START,
+    {
+      encoder: chrPosUrlEncoder,
+      decoder: chrPosUrlDecoder,
+    }
+  );
+  const [xDomainEnd, setXDomainEnd] = useQueryString(
+    'end',
+    DEFAULT_X_DOMAIN_END,
+    {
+      encoder: chrPosUrlEncoder,
+      decoder: chrPosUrlDecoder,
+    }
+  );
+  const defaultViewConfig = pipe(
+    updateFocusGeneViewConfig(focusGene),
+    updateFocusVariantViewConfig(toAbsPosition(focusVariant, props.chromInfo)),
+    updateVariantYScaleViewConfig(variantYScale),
+    updateXDomainViewConfig(
+      toAbsPosition(xDomainStart, props.chromInfo),
+      toAbsPosition(xDomainEnd, props.chromInfo)
+    )
+  )(deepClone(DEFAULT_VIEW_CONFIG));
+
   const [options, setOptions] = useState(DEFAULT_HIGLASS_OPTIONS);
-  const [viewConfig, setViewConfig] = useState(DEFAULT_VIEW_CONFIG);
+  const [viewConfig, setViewConfig] = useState(defaultViewConfig);
   const higlassApi = useRef(null);
 
   const updateFocusGeneInHiglass = (name, start, end) => {
-    const newViewConfig = JSON.parse(JSON.stringify(viewConfig));
-    const n = newViewConfig.views[0].tracks.top.length;
-
-    if (name) {
-      newViewConfig.views[0].tracks.top[n - 1].options.focusGene = name;
-      newViewConfig.views[0].overlays[1].options.extent = [[start, end]];
-    } else {
-      delete newViewConfig.views[0].tracks.top[n - 1].options.focusGene;
-      delete newViewConfig.views[0].overlays[1].options.extent;
-    }
-
-    setViewConfig(newViewConfig);
+    setViewConfig(
+      updateFocusGeneViewConfig(name, start, end)(deepClone(viewConfig))
+    );
   };
 
   const clearFocusGene = () => {
@@ -454,20 +1004,11 @@ const Viewer = (props) => {
   };
 
   const updateFocusVariantInHiglass = (variant) => {
-    const newViewConfig = deepClone(viewConfig);
-    // const n = newViewConfig.views.length;
-
-    const absPosition = toAbsPosition(variant, props.chromInfo);
-    const focusRegion = Number.isNaN(+absPosition)
-      ? []
-      : [absPosition - 0.5, absPosition + 0.5];
-
-    newViewConfig.views[0].tracks.top[2].options.focusRegion = focusRegion;
-    newViewConfig.views[0].tracks.top[4].options.focusRegion = focusRegion;
-    // newViewConfig.views[0].tracks.top[n - 1].options.focusRegion = focusRegion;
-    newViewConfig.views[0].overlays[0].options.extent = [focusRegion];
-
-    setViewConfig(newViewConfig);
+    setViewConfig(
+      updateFocusVariantViewConfig(toAbsPosition(variant, props.chromInfo))(
+        deepClone(viewConfig)
+      )
+    );
   };
 
   const updateFocusVariantInHiglassDb = debounce(
@@ -486,12 +1027,7 @@ const Viewer = (props) => {
   };
 
   const updateVariantYScaleInHiglass = (yScale) => {
-    const newViewConfig = deepClone(viewConfig);
-
-    newViewConfig.views[0].tracks.top[2].options.valueColumn =
-      yScale === 'pValue' ? 7 : 8;
-
-    setViewConfig(newViewConfig);
+    setViewConfig(updateVariantYScaleViewConfig(yScale)(deepClone(viewConfig)));
   };
 
   const variantYScaleChangeHandler = (event) => {
@@ -513,73 +1049,222 @@ const Viewer = (props) => {
     }
   };
 
+  const higlassLocationChangeHandler = (event) => {
+    const [newXDomainStart, newXDomainEnd] = event.xDomain.map((absPos) =>
+      props.chromInfo.absToChr(absPos).slice(0, 2).join(':')
+    );
+    setXDomainStart(newXDomainStart);
+    setXDomainEnd(newXDomainEnd);
+  };
+  const higlassLocationChangeHandlerDb = debounce(
+    higlassLocationChangeHandler,
+    250
+  );
+
   const higlassInitHandler = useCallback((higlassInstance) => {
     if (higlassInstance !== null) {
       higlassApi.current = higlassInstance.api;
       higlassInstance.api.on('click', higlassClickHandler);
+      higlassInstance.api.on(
+        'location',
+        higlassLocationChangeHandlerDb,
+        'context'
+      );
     }
   }, []);
 
+  const numericalXDomainStart =
+    isString(xDomainStart) && xDomainStart.indexOf(':') >= 0
+      ? props.chromInfo.chrToAbs([
+          xDomainStart.split(':')[0],
+          +xDomainStart.split(':')[1],
+        ])
+      : +xDomainStart;
+
+  const numericalXDomainEnd =
+    isString(xDomainEnd) && xDomainEnd.indexOf(':') >= 0
+      ? props.chromInfo.chrToAbs([
+          xDomainEnd.split(':')[0],
+          +xDomainEnd.split(':')[1],
+        ])
+      : +xDomainEnd;
+
+  const xDomainStartChangeHandler = (event) => {
+    setXDomainStart(event.target.value);
+  };
+
+  const xDomainEndChangeHandler = (event) => {
+    setXDomainEnd(event.target.value);
+  };
+
+  const updateXDomain = (event) => {
+    if (!higlassApi.current) return;
+
+    const newViewConfig = deepClone(viewConfig);
+
+    const xDomain = [...newViewConfig.views[0].initialXDomain];
+
+    if (!Number.isNaN(+numericalXDomainStart)) {
+      xDomain[0] = numericalXDomainStart;
+    }
+    if (!Number.isNaN(+numericalXDomainEnd)) {
+      xDomain[1] = numericalXDomainEnd;
+    }
+
+    higlassApi.current.zoomTo(
+      'context',
+      xDomain[0],
+      xDomain[1],
+      xDomain[0],
+      xDomain[1],
+      2000
+    );
+  };
+
+  const classes = useStyles();
+
   return (
-    <div className="Viewer">
-      <aside>
-        <div>
-          <label htmlFor="focus-gene" className="main-label">
-            Focus gene:
-          </label>
-          <div className="flex-box">
-            <input
-              type="text"
-              id="focus-gene"
-              value={focusGene}
-              readOnly
-              disabled
-              placeholder="Click on a gene"
-            />
-            <button onClick={clearFocusGene}>clear</button>
-          </div>
+    <div className={classes.root}>
+      <CssBaseline />
+      <AppBar position="fixed" className={classes.appBar}>
+        <Toolbar>
+          <Typography variant="h6" noWrap>
+            Enhancer-Promoter Vis
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        className={classes.drawer}
+        variant="permanent"
+        classes={{
+          paper: classes.drawerPaper,
+        }}
+        anchor="left"
+      >
+        <div className={classes.toolbar} />
+        <Divider />
+        <Box m={1}>
+          <Box m={0}>
+            <FormControl variant="outlined" margin="dense" fullWidth>
+              <InputLabel htmlFor="x-domain-start">Region Start</InputLabel>
+              <OutlinedInput
+                id="x-domain-start"
+                label="Region Start"
+                onChange={xDomainStartChangeHandler}
+                value={xDomainStart}
+              />
+            </FormControl>
+          </Box>
+          <Box m={0}>
+            <FormControl variant="outlined" margin="dense" fullWidth>
+              <InputLabel htmlFor="x-domain-end">Region End</InputLabel>
+              <OutlinedInput
+                id="x-domain-end"
+                label="Region End"
+                onChange={xDomainEndChangeHandler}
+                value={xDomainEnd}
+              />
+            </FormControl>
+          </Box>
+          <Box m={0}>
+            <Button
+              variant="contained"
+              margin="dense"
+              onClick={updateXDomain}
+              fullWidth
+              disableElevation
+            >
+              Go
+            </Button>
+          </Box>
+        </Box>
+        <Divider />
+        <Box m={1}>
+          <Box m={0}>
+            <FormControl variant="outlined" margin="dense" fullWidth>
+              <InputLabel htmlFor="focus-gene">Focus Gene</InputLabel>
+              <OutlinedInput
+                id="focus-gene"
+                value={focusGene}
+                default=""
+                label="Focus Gene"
+                endAdornment={
+                  focusGene && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="clear input"
+                        onClick={clearFocusGene}
+                        edge="end"
+                        size="small"
+                      >
+                        <ClearIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }
+              />
+            </FormControl>
+          </Box>
+          <Box m={0}>
+            <FormControl variant="outlined" margin="dense" fullWidth>
+              <InputLabel htmlFor="focus-variant">Focus Variant</InputLabel>
+              <OutlinedInput
+                id="focus-variant"
+                value={focusVariant}
+                onChange={focusVariantChangeHandler}
+                label="Focus Variant"
+                default="chr10:81046453"
+                endAdornment={
+                  focusVariant && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="clear input"
+                        onClick={clearFocusVariant}
+                        edge="end"
+                        size="small"
+                      >
+                        <ClearIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }
+              />
+            </FormControl>
+          </Box>
+        </Box>
+        <Box m={1}>
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Variant y-scale</FormLabel>
+            <RadioGroup
+              aria-label="variantYScale"
+              name="variantYScale"
+              value={variantYScale}
+              onChange={variantYScaleChangeHandler}
+            >
+              <FormControlLabel
+                label="p-value"
+                control={<Radio size="small" />}
+                value="pValue"
+              />
+              <FormControlLabel
+                label="Posterior probability"
+                control={<Radio size="small" />}
+                value="posteriorProbability"
+              />
+            </RadioGroup>
+          </FormControl>
+        </Box>
+      </Drawer>
+      <main className={classes.content}>
+        <div className={classes.toolbar} />
+        <div className={classes.higlass}>
+          <HiGlassComponent
+            ref={higlassInitHandler}
+            viewConfig={viewConfig}
+            options={options}
+          />
         </div>
-        <div>
-          <label htmlFor="focus-variant" className="main-label">
-            Focus variant:
-          </label>
-          <div className="flex-box">
-            <input
-              type="text"
-              id="focus-variant"
-              value={focusVariant}
-              onChange={focusVariantChangeHandler}
-              placeholder="chr10:81046453"
-            />
-            <button onClick={clearFocusVariant}>clear</button>
-          </div>
-        </div>
-        <div>
-          <label className="main-label">Variant y-scale:</label>
-          <RadioGroup
-            name="variantYScale"
-            onChange={variantYScaleChangeHandler}
-          >
-            <RadioButton
-              label="p-value"
-              value="pValue"
-              checked={variantYScale === 'pValue'}
-            />
-            <RadioButton
-              label="Posterior probability"
-              value="posteriorProbability"
-              checked={variantYScale === 'posteriorProbability'}
-            />
-          </RadioGroup>
-        </div>
-      </aside>
-      <div className="higlass-container">
-        <HiGlassComponent
-          ref={higlassInitHandler}
-          viewConfig={viewConfig}
-          options={options}
-        />
-      </div>
+      </main>
     </div>
   );
 };

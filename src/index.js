@@ -1,14 +1,18 @@
 import register from 'higlass-register';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
+import createAnnotationOverlayMetaTrack from './annotation-overlay-meta-track';
 import createStratifiedBedTrack from './stratified-bed-track';
 import createScalableArcs1dTrack from './scalable-arcs-track';
 import createSnpTrack from './snp-track';
 import createStackedBarTrack from './stacked-bar-track';
+import createTssTrack from './tss-track';
+
+import './index.css';
 
 register({
   name: 'ScalableArcs1dTrack',
@@ -32,6 +36,19 @@ register({
   name: 'StackedBarTrack',
   track: createStackedBarTrack,
   config: createStackedBarTrack.config,
+});
+
+register({
+  name: 'TssTrack',
+  track: createTssTrack,
+  config: createTssTrack.config,
+});
+
+register({
+  name: 'AnnotationsToInsetsMetaTrack',
+  track: createAnnotationOverlayMetaTrack,
+  isMetaTrack: true,
+  config: createAnnotationOverlayMetaTrack.config,
 });
 
 ReactDOM.render(<App />, document.getElementById('root'));

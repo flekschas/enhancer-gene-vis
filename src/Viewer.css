@@ -1,7 +1,3 @@
-.Viewer input {
-  font-weight: normal;
-}
-
 .Viewer aside {
   position: absolute;
   left: 1rem;
@@ -20,28 +16,18 @@
   margin-top: 1rem;
 }
 
-.Viewer aside input[type='text'],
-.Viewer aside button {
-  display: block;
-  height: 2.5rem;
-  line-height: 2.5rem;
-}
-
-.Viewer aside input[type='text'] {
-  width: 18rem;
-}
-
-.Viewer aside button {
-  width: 5.75rem;
-  padding: 0 0.25rem;
-  margin-left: 0.25rem;
-  line-height: 1rem;
-}
-
 .Viewer .higlass-container {
   position: absolute;
   left: 25rem;
   top: 1rem;
   bottom: 1rem;
   right: 1rem;
+}
+
+.track-mouseover-menu {
+  padding: 0.25rem;
+}
+
+.track-mouseover-menu p {
+  margin: 0 !important;
 }
