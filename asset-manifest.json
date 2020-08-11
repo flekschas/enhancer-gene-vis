@@ -1,25 +1,25 @@
 {
   "files": {
-    "main.css": "/enhancer-promoter-vis/static/css/main.c06ba6fb.chunk.css",
-    "main.js": "/enhancer-promoter-vis/static/js/main.3497b0ac.chunk.js",
-    "main.js.map": "/enhancer-promoter-vis/static/js/main.3497b0ac.chunk.js.map",
+    "main.css": "/enhancer-promoter-vis/static/css/main.cd5cc64c.chunk.css",
+    "main.js": "/enhancer-promoter-vis/static/js/main.cb8a595b.chunk.js",
+    "main.js.map": "/enhancer-promoter-vis/static/js/main.cb8a595b.chunk.js.map",
     "runtime-main.js": "/enhancer-promoter-vis/static/js/runtime-main.63aa7f26.js",
     "runtime-main.js.map": "/enhancer-promoter-vis/static/js/runtime-main.63aa7f26.js.map",
     "static/css/2.99e59d71.chunk.css": "/enhancer-promoter-vis/static/css/2.99e59d71.chunk.css",
-    "static/js/2.2f57f6b4.chunk.js": "/enhancer-promoter-vis/static/js/2.2f57f6b4.chunk.js",
-    "static/js/2.2f57f6b4.chunk.js.map": "/enhancer-promoter-vis/static/js/2.2f57f6b4.chunk.js.map",
+    "static/js/2.a0aec8d0.chunk.js": "/enhancer-promoter-vis/static/js/2.a0aec8d0.chunk.js",
+    "static/js/2.a0aec8d0.chunk.js.map": "/enhancer-promoter-vis/static/js/2.a0aec8d0.chunk.js.map",
     "index.html": "/enhancer-promoter-vis/index.html",
-    "precache-manifest.2ec07cf7a6fbe069738f801c5a3a9242.js": "/enhancer-promoter-vis/precache-manifest.2ec07cf7a6fbe069738f801c5a3a9242.js",
+    "precache-manifest.ff4f778bbc7311aed07b42c8118e38e1.js": "/enhancer-promoter-vis/precache-manifest.ff4f778bbc7311aed07b42c8118e38e1.js",
     "service-worker.js": "/enhancer-promoter-vis/service-worker.js",
     "static/css/2.99e59d71.chunk.css.map": "/enhancer-promoter-vis/static/css/2.99e59d71.chunk.css.map",
-    "static/css/main.c06ba6fb.chunk.css.map": "/enhancer-promoter-vis/static/css/main.c06ba6fb.chunk.css.map",
-    "static/js/2.2f57f6b4.chunk.js.LICENSE.txt": "/enhancer-promoter-vis/static/js/2.2f57f6b4.chunk.js.LICENSE.txt"
+    "static/css/main.cd5cc64c.chunk.css.map": "/enhancer-promoter-vis/static/css/main.cd5cc64c.chunk.css.map",
+    "static/js/2.a0aec8d0.chunk.js.LICENSE.txt": "/enhancer-promoter-vis/static/js/2.a0aec8d0.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.63aa7f26.js",
     "static/css/2.99e59d71.chunk.css",
-    "static/js/2.2f57f6b4.chunk.js",
-    "static/css/main.c06ba6fb.chunk.css",
-    "static/js/main.3497b0ac.chunk.js"
+    "static/js/2.a0aec8d0.chunk.js",
+    "static/css/main.cd5cc64c.chunk.css",
+    "static/js/main.cb8a595b.chunk.js"
   ]
 }
