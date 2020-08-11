@@ -351,6 +351,10 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.updateExistingGraphics();
     }
 
+    hasFetchedTiles() {
+      return Object.values(this.fetchedTiles).length;
+    }
+
     updateScales() {
       const fetchedTiles = Object.values(this.fetchedTiles);
 
@@ -523,6 +527,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
     // Called whenever a new tile comes in
     updateExistingGraphics() {
+      if (!this.hasFetchedTiles()) return;
       this.updateScales();
       this.updateIndicators();
     }
@@ -530,8 +535,6 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
     // Gets called on every draw call
     drawTile(tile, storePolyStr) {
       tile.graphics.clear();
-
-      if (!tile.tileData.length) return;
 
       if (!this.options.stratification.axisNoGroupColor) {
         let yStart = 0;
@@ -603,7 +606,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         const colorHex = `#${color.toString(16)}`;
         const bgHex = `#${bg.toString(16)}`;
         const value = this.getImportance(foundItem).toFixed(2);
-        return `<div style="margin: 0 -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${category}:</strong> ${value}</div>`;
+        return `<div style="margin: -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${category}:</strong> ${value}</div>`;
       }
 
       return '';
