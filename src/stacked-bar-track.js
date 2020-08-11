@@ -600,8 +600,13 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       this.renderStackedBars();
     }
 
+    hasFetchedTiles() {
+      return Object.values(this.fetchedTiles).length;
+    }
+
     // Called whenever a new tile comes in
     updateExistingGraphics() {
+      if (!this.hasFetchedTiles()) return;
       this.updateHistograms();
       this.updateScales();
       this.renderTrack();
