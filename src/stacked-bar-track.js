@@ -662,7 +662,7 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         const bgHex = `#${bg.toString(16)}`;
         const value =
           fetchedTile.histogram2dNumPred[group * this.numBins + binXPos];
-        return `<div style="margin: 0 -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${this.groupLabels[group]}:</strong> ${value} of ${totalPred} samples</div>`;
+        return `<div style="margin: -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${this.groupLabels[group]}:</strong> ${value} of ${totalPred} samples</div>`;
       }
 
       return '';
