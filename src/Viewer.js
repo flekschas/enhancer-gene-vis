@@ -126,13 +126,6 @@ const updateFocusGeneViewConfig = (gene, start, end) => (viewConfig) => {
     delete viewConfig.views[0].overlays[1].options.extent;
   }
 
-  console.log(
-    'updateFocusGeneViewConfig',
-    start,
-    end,
-    viewConfig.views[0].overlays[1].options.extent
-  );
-
   return viewConfig;
 };
 
@@ -233,13 +226,8 @@ const Viewer = (props) => {
   const higlassApi = useRef(null);
 
   const updateFocusGeneInHiglass = (name, start, end) => {
-    console.log('updateFocusGeneInHiglass', name, start, end);
-    setViewConfig(
-      updateFocusGeneViewConfig(name, start, end)(deepClone(viewConfig))
-    );
-    console.log(
-      'updateFocusGeneInHiglass DONE',
-      deepClone(viewConfig).views[0].overlays[1].options.extent
+    setViewConfig((currentViewConfig) =>
+      updateFocusGeneViewConfig(name, start, end)(deepClone(currentViewConfig))
     );
   };
 
@@ -268,13 +256,8 @@ const Viewer = (props) => {
   };
 
   const updateFocusVariantInHiglass = (absPosition) => {
-    console.log(
-      'updateFocusVariantInHiglass',
-      absPosition,
-      deepClone(viewConfig).views[0].overlays[1].options.extent
-    );
-    setViewConfig(
-      updateFocusVariantViewConfig(absPosition)(deepClone(viewConfig))
+    setViewConfig((currentViewConfig) =>
+      updateFocusVariantViewConfig(absPosition)(deepClone(currentViewConfig))
     );
   };
 
@@ -298,23 +281,14 @@ const Viewer = (props) => {
         const r = await fetch(`${GENE_SEARCH_URL}&ac=${focusGene}`);
         const results = await r.json();
         focusGeneChangeHandler(results[0]);
-        console.log('focus gene applied', results[0]);
       }
       if (focusVariant && !focusVariantOption) {
         const r = await fetch(`${VARIANT_SEARCH_URL}&ac=${focusVariant}`);
         const results = await r.json();
-        console.log('apply focus variant', results[0]);
         focusVariantChangeHandler(results[0]);
       }
     })();
-  }, [
-    focusGene,
-    focusGeneOption,
-    focusVariant,
-    focusVariantOption,
-    focusGeneChangeHandler,
-    focusVariantChangeHandler,
-  ]);
+  }, []);
 
   const clearFocusVariant = () => {
     setFocusVariant('');
@@ -322,7 +296,9 @@ const Viewer = (props) => {
   };
 
   const updateVariantYScaleInHiglass = (yScale) => {
-    setViewConfig(updateVariantYScaleViewConfig(yScale)(deepClone(viewConfig)));
+    setViewConfig((currentViewConfig) =>
+      updateVariantYScaleViewConfig(yScale)(deepClone(currentViewConfig))
+    );
   };
 
   const variantYScaleChangeHandler = (event) => {
@@ -423,11 +399,6 @@ const Viewer = (props) => {
   };
 
   const classes = useStyles();
-
-  console.log(
-    '------------viewConfig',
-    deepClone(viewConfig).views[0].overlays[1].options.extent
-  );
 
   return (
     <div className={classes.root}>
