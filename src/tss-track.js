@@ -102,6 +102,10 @@ function createTssTrack(HGC, ...args) {
       this.draw();
       this.pubSub.publish('TiledPixiTrack.tilesDrawnEnd', { uuid: this.uuid });
     }
+
+    getMouseOverHtml() {
+      return '';
+    }
   }
 
   return new TssTrack(...args);
