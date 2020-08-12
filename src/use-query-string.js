@@ -10,7 +10,7 @@ function useQueryString(key, initialValue, { encoder, decoder } = {}) {
       setValue(newValue);
       setQueryStringValue(key, newValue, encoder);
     },
-    [key]
+    [key, encoder]
   );
 
   // Set initial value
