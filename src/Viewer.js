@@ -1,18 +1,21 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { HiGlassComponent } from 'higlass';
 import { debounce, deepClone, isString, pipe } from '@flekschas/utils';
 import AppBar from '@material-ui/core/AppBar';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import ClearIcon from '@material-ui/icons/Clear';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
 import Drawer from '@material-ui/core/Drawer';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormLabel from '@material-ui/core/FormLabel';
-import IconButton from '@material-ui/core/IconButton';
-import InputAdornment from '@material-ui/core/InputAdornment';
 import InputLabel from '@material-ui/core/InputLabel';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
 import Radio from '@material-ui/core/Radio';
@@ -98,7 +101,7 @@ const chrPosUrlEncoder = (chrPos) =>
 const chrPosUrlDecoder = (chrPos) =>
   chrPos ? chrPos.replace('.', ':') : chrPos;
 
-const updateXDomainViewConfig = (newXDomainStart, newXDomainEnd) => (
+const updateViewConfigXDomain = (newXDomainStart, newXDomainEnd) => (
   viewConfig
 ) => {
   const xDomain = [...viewConfig.views[0].initialXDomain];
@@ -115,7 +118,7 @@ const updateXDomainViewConfig = (newXDomainStart, newXDomainEnd) => (
   return viewConfig;
 };
 
-const updateFocusGeneViewConfig = (gene, start, end) => (viewConfig) => {
+const updateViewConfigFocusGene = (gene, start, end) => (viewConfig) => {
   const n = viewConfig.views[0].tracks.top.length;
 
   if (gene) {
@@ -129,29 +132,33 @@ const updateFocusGeneViewConfig = (gene, start, end) => (viewConfig) => {
   return viewConfig;
 };
 
-const updateFocusVariantViewConfig = (variantAbsPosition) => (viewConfig) => {
+const updateViewConfigFocusVariant = (position) => (viewConfig) => {
   // const n = viewConfig.views.length;
 
-  const focusRegion = Number.isNaN(+variantAbsPosition)
-    ? []
-    : [variantAbsPosition - 0.5, variantAbsPosition + 0.5];
+  if (Number.isNaN(+position) || position === null) {
+    delete viewConfig.views[0].tracks.top[2].options.focusRegion;
+    delete viewConfig.views[0].tracks.top[4].options.focusRegion;
+    // viewConfig.views[0].tracks.top[n - 1].options.focusRegion = focusRegion;
+    viewConfig.views[0].overlays[0].options.extent = [];
+  } else {
+    const focusRegion = [position - 0.5, position + 0.5];
+    viewConfig.views[0].tracks.top[2].options.focusRegion = focusRegion;
+    viewConfig.views[0].tracks.top[4].options.focusRegion = focusRegion;
+    // viewConfig.views[0].tracks.top[n - 1].options.focusRegion = focusRegion;
+    viewConfig.views[0].overlays[0].options.extent = [focusRegion];
 
-  viewConfig.views[0].tracks.top[2].options.focusRegion = focusRegion;
-  viewConfig.views[0].tracks.top[4].options.focusRegion = focusRegion;
-  // viewConfig.views[0].tracks.top[n - 1].options.focusRegion = focusRegion;
-  viewConfig.views[0].overlays[0].options.extent = [focusRegion];
+    // const focusDomain = Number.isNaN(+variantAbsPosition)
+    //   ? viewConfig.views[1].initialXDomain
+    //   : [variantAbsPosition - 500, variantAbsPosition + 500];
 
-  // const focusDomain = Number.isNaN(+variantAbsPosition)
-  //   ? viewConfig.views[1].initialXDomain
-  //   : [variantAbsPosition - 500, variantAbsPosition + 500];
-
-  // viewConfig.views[1].initialXDomain = focusDomain;
-  // viewConfig.views[1].initialYDomain = focusDomain;
+    // viewConfig.views[1].initialXDomain = focusDomain;
+    // viewConfig.views[1].initialYDomain = focusDomain;
+  }
 
   return viewConfig;
 };
 
-const updateVariantYScaleViewConfig = (yScale) => (viewConfig) => {
+const updateViewConfigVariantYScale = (yScale) => (viewConfig) => {
   viewConfig.views[0].tracks.top[2].options.valueColumn =
     yScale === 'pValue' ? 7 : 8;
   // viewConfig.views[1].tracks.top[2].options.valueColumn =
@@ -160,11 +167,20 @@ const updateVariantYScaleViewConfig = (yScale) => (viewConfig) => {
   return viewConfig;
 };
 
+const updateViewConfigMatrixColoring = (coloring) => (viewConfig) => {
+  viewConfig.views[0].tracks.top[4].options.opacityEncoding = coloring;
+  return viewConfig;
+};
+
 const Viewer = (props) => {
   const [focusGene, setFocusGene] = useQueryString('gene', '');
   const [focusVariant, setFocusVariant] = useQueryString(
     'variant',
     'rs1250566'
+  );
+  const [matrixColoring, setMatrixColoring] = useQueryString(
+    'matrix-coloring',
+    'solid'
   );
   const [variantYScale, setVariantYScale] = useQueryString(
     'varient-scale',
@@ -190,122 +206,120 @@ const Viewer = (props) => {
   const [focusGeneOption, setFocusGeneOption] = useState(null);
   const [focusVariantOption, setFocusVariantOption] = useState(null);
   const [options, setOptions] = useState(DEFAULT_HIGLASS_OPTIONS);
-
-  const defaultViewConfig = pipe(
-    updateFocusGeneViewConfig(
-      focusGeneOption,
-      focusGeneOption
-        ? toAbsPosition(
-            `${focusGeneOption.chr}:${focusGeneOption.txStart}`,
-            props.chromInfo
-          )
-        : null,
-      focusGeneOption
-        ? toAbsPosition(
-            `${focusGeneOption.chr}:${focusGeneOption.txEnd}`,
-            props.chromInfo
-          )
-        : null
-    ),
-    updateFocusVariantViewConfig(
-      focusVariantOption
-        ? toAbsPosition(
-            `${focusVariantOption.chr}:${focusVariantOption.txStart}`,
-            props.chromInfo
-          )
-        : null
-    ),
-    updateVariantYScaleViewConfig(variantYScale),
-    updateXDomainViewConfig(
-      toAbsPosition(xDomainStart, props.chromInfo),
-      toAbsPosition(xDomainEnd, props.chromInfo)
-    )
-  )(deepClone(DEFAULT_VIEW_CONFIG));
-
-  const [viewConfig, setViewConfig] = useState(defaultViewConfig);
   const higlassApi = useRef(null);
 
-  const updateFocusGeneInHiglass = (name, start, end) => {
-    setViewConfig((currentViewConfig) =>
-      updateFocusGeneViewConfig(name, start, end)(deepClone(currentViewConfig))
-    );
-  };
+  // Derived State
+  const viewConfig = useMemo(
+    () =>
+      pipe(
+        updateViewConfigFocusGene(
+          focusGeneOption ? focusGeneOption.geneName : null,
+          focusGeneOption
+            ? toAbsPosition(
+                `${focusGeneOption.chr}:${focusGeneOption.txStart}`,
+                props.chromInfo
+              )
+            : null,
+          focusGeneOption
+            ? toAbsPosition(
+                `${focusGeneOption.chr}:${focusGeneOption.txEnd}`,
+                props.chromInfo
+              )
+            : null
+        ),
+        updateViewConfigFocusVariant(
+          focusVariantOption
+            ? toAbsPosition(
+                `${focusVariantOption.chr}:${focusVariantOption.txStart}`,
+                props.chromInfo
+              )
+            : null,
+          focusVariantOption
+        ),
+        updateViewConfigMatrixColoring(matrixColoring),
+        updateViewConfigVariantYScale(variantYScale),
+        updateViewConfigXDomain(
+          toAbsPosition(xDomainStart, props.chromInfo),
+          toAbsPosition(xDomainEnd, props.chromInfo)
+        )
+      )(deepClone(DEFAULT_VIEW_CONFIG)),
+    [
+      // `xDomainStart` and `xDomainEnd` are ommitted on purpose
+      focusGeneOption,
+      focusVariantOption,
+      matrixColoring,
+      variantYScale,
+      props.chromInfo,
+    ]
+  );
+
+  const numericalXDomainStart = useMemo(
+    () =>
+      isString(xDomainStart) && xDomainStart.indexOf(':') >= 0
+        ? props.chromInfo.chrToAbs([
+            xDomainStart.split(':')[0],
+            +xDomainStart.split(':')[1],
+          ])
+        : +xDomainStart,
+    [xDomainStart, props.chromInfo]
+  );
+
+  const numericalXDomainEnd = useMemo(
+    () =>
+      isString(xDomainEnd) && xDomainEnd.indexOf(':') >= 0
+        ? props.chromInfo.chrToAbs([
+            xDomainEnd.split(':')[0],
+            +xDomainEnd.split(':')[1],
+          ])
+        : +xDomainEnd,
+    [xDomainEnd, props.chromInfo]
+  );
 
   const clearFocusGene = () => {
     setFocusGene('');
     setFocusGeneOption(null);
-    updateFocusGeneInHiglass();
   };
 
   const focusGeneChangeHandler = (newValue) => {
     if (newValue) {
       setFocusGene(newValue.geneName);
       setFocusGeneOption(newValue);
-      const start = toAbsPosition(
-        `${newValue.chr}:${newValue.txStart}`,
-        props.chromInfo
-      );
-      const end = toAbsPosition(
-        `${newValue.chr}:${newValue.txEnd}`,
-        props.chromInfo
-      );
-      updateFocusGeneInHiglass(newValue.geneName, start, end);
     } else {
       clearFocusGene();
     }
   };
 
-  const updateFocusVariantInHiglass = (absPosition) => {
-    setViewConfig((currentViewConfig) =>
-      updateFocusVariantViewConfig(absPosition)(deepClone(currentViewConfig))
-    );
+  const clearFocusVariant = () => {
+    setFocusVariant('');
+    setFocusVariantOption(null);
   };
 
   const focusVariantChangeHandler = (newValue) => {
     if (newValue) {
       setFocusVariant(newValue.geneName);
       setFocusVariantOption(newValue);
-      const absPosition = toAbsPosition(
-        `${newValue.chr}:${newValue.txStart}`,
-        props.chromInfo
-      );
-      updateFocusVariantInHiglass(absPosition);
     } else {
       clearFocusVariant();
     }
   };
 
-  useEffect(() => {
-    (async () => {
-      if (focusGene && !focusGeneOption) {
-        const r = await fetch(`${GENE_SEARCH_URL}&ac=${focusGene}`);
-        const results = await r.json();
-        focusGeneChangeHandler(results[0]);
-      }
-      if (focusVariant && !focusVariantOption) {
-        const r = await fetch(`${VARIANT_SEARCH_URL}&ac=${focusVariant}`);
-        const results = await r.json();
-        focusVariantChangeHandler(results[0]);
-      }
-    })();
-  }, []);
-
-  const clearFocusVariant = () => {
-    setFocusVariant('');
-    updateFocusVariantInHiglass('');
-  };
-
-  const updateVariantYScaleInHiglass = (yScale) => {
-    setViewConfig((currentViewConfig) =>
-      updateVariantYScaleViewConfig(yScale)(deepClone(currentViewConfig))
-    );
-  };
-
   const variantYScaleChangeHandler = (event) => {
     setVariantYScale(event.target.value);
-    updateVariantYScaleInHiglass(event.target.value);
   };
 
+  const matrixColoringChangeHandler = (event) => {
+    setMatrixColoring(event.target.value);
+  };
+
+  const xDomainStartChangeHandler = (event) => {
+    setXDomainStart(event.target.value);
+  };
+
+  const xDomainEndChangeHandler = (event) => {
+    setXDomainEnd(event.target.value);
+  };
+
+  // HiGlass Functions
   const higlassClickHandler = (event) => {
     if (event.type === 'gene-annotation') {
       setFocusGene(event.payload.name);
@@ -315,14 +329,15 @@ const Viewer = (props) => {
         txEnd: event.payload.fields[2],
         geneName: event.payload.name,
       });
-      updateFocusGeneInHiglass(
-        event.payload.name,
-        event.payload.xStart,
-        event.payload.xEnd
-      );
     } else if (event.type === 'snp') {
       setFocusVariant(`${event.payload.fields[0]}:${event.payload.fields[1]}`);
-      updateFocusVariantInHiglass(event.payload.xStart);
+      setFocusVariantOption({
+        chr: event.payload.fields[0],
+        txStart: event.payload.fields[1],
+        txEnd: event.payload.fields[2],
+        geneName: event.payload.name,
+        score: event.payload.importance,
+      });
     }
   };
 
@@ -338,43 +353,7 @@ const Viewer = (props) => {
     250
   );
 
-  const higlassInitHandler = useCallback((higlassInstance) => {
-    if (higlassInstance !== null) {
-      higlassApi.current = higlassInstance.api;
-      higlassInstance.api.on('click', higlassClickHandler);
-      higlassInstance.api.on(
-        'location',
-        higlassLocationChangeHandlerDb,
-        'context'
-      );
-    }
-  }, []);
-
-  const numericalXDomainStart =
-    isString(xDomainStart) && xDomainStart.indexOf(':') >= 0
-      ? props.chromInfo.chrToAbs([
-          xDomainStart.split(':')[0],
-          +xDomainStart.split(':')[1],
-        ])
-      : +xDomainStart;
-
-  const numericalXDomainEnd =
-    isString(xDomainEnd) && xDomainEnd.indexOf(':') >= 0
-      ? props.chromInfo.chrToAbs([
-          xDomainEnd.split(':')[0],
-          +xDomainEnd.split(':')[1],
-        ])
-      : +xDomainEnd;
-
-  const xDomainStartChangeHandler = (event) => {
-    setXDomainStart(event.target.value);
-  };
-
-  const xDomainEndChangeHandler = (event) => {
-    setXDomainEnd(event.target.value);
-  };
-
-  const updateXDomain = (event) => {
+  const higlassZoomToXDomain = (event) => {
     if (!higlassApi.current) return;
 
     const newViewConfig = deepClone(viewConfig);
@@ -398,6 +377,35 @@ const Viewer = (props) => {
     );
   };
 
+  // Initializations
+  useEffect(() => {
+    (async () => {
+      if (focusGene && !focusGeneOption) {
+        const r = await fetch(`${GENE_SEARCH_URL}&ac=${focusGene}`);
+        const results = await r.json();
+        focusGeneChangeHandler(results[0]);
+      }
+      if (focusVariant && !focusVariantOption) {
+        const r = await fetch(`${VARIANT_SEARCH_URL}&ac=${focusVariant}`);
+        const results = await r.json();
+        focusVariantChangeHandler(results[0]);
+      }
+    })();
+  }, []);
+
+  const higlassInitHandler = useCallback((higlassInstance) => {
+    if (higlassInstance !== null) {
+      higlassApi.current = higlassInstance.api;
+      higlassInstance.api.on('click', higlassClickHandler);
+      higlassInstance.api.on(
+        'location',
+        higlassLocationChangeHandlerDb,
+        'context'
+      );
+    }
+  }, []);
+
+  // Run on every render
   const classes = useStyles();
 
   return (
@@ -447,7 +455,7 @@ const Viewer = (props) => {
             <Button
               variant="contained"
               margin="dense"
-              onClick={updateXDomain}
+              onClick={higlassZoomToXDomain}
               fullWidth
               disableElevation
             >
@@ -498,6 +506,38 @@ const Viewer = (props) => {
                 label="Posterior probability"
                 control={<Radio size="small" />}
                 value="posteriorProbability"
+              />
+            </RadioGroup>
+          </FormControl>
+        </Box>
+        <Box m={1}>
+          <FormControl component="fieldset">
+            <FormLabel component="legend">Matrix coloring</FormLabel>
+            <RadioGroup
+              aria-label="matrixColoring"
+              name="matrixColoring"
+              value={matrixColoring}
+              onChange={matrixColoringChangeHandler}
+            >
+              <FormControlLabel
+                label="Solid"
+                control={<Radio size="small" />}
+                value="solid"
+              />
+              <FormControlLabel
+                label="Number of predictions"
+                control={<Radio size="small" />}
+                value="frequency"
+              />
+              <FormControlLabel
+                label="Highest prediction score"
+                control={<Radio size="small" />}
+                value="highestImportance"
+              />
+              <FormControlLabel
+                label="Prediction score of the closest TSS interaction"
+                control={<Radio size="small" />}
+                value="closestImportance"
               />
             </RadioGroup>
           </FormControl>
