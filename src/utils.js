@@ -1,6 +1,8 @@
 import { identity } from '@flekschas/utils';
 import queryString from 'query-string';
 
+export const contains = (a, b) => a[0] <= b[0] && a[1] >= b[1];
+
 export const createColorTexture = (PIXI, colors) => {
   const colorTexRes = Math.max(2, Math.ceil(Math.sqrt(colors.length)));
   const rgba = new Float32Array(colorTexRes ** 2 * 4);

@@ -1,5 +1,5 @@
 import createIntervalTree from 'interval-tree-1d';
-import { dashedXLineTo } from './utils';
+import { contains, dashedXLineTo } from './utils';
 
 const VS = `
   precision mediump float;
@@ -164,6 +164,9 @@ const scaleScalableGraphics = (graphics, xScale, drawnAtScale) => {
   graphics.position.x = -posOffset * tileK;
 };
 
+const getRegionId = (item) =>
+  `${item.fields[0]}:${item.fields[1]}-${item.fields[2]}`;
+
 const createStratifiedBedTrack = function createStratifiedBedTrack(
   HGC,
   ...args
@@ -202,6 +205,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         item.width = getItemWidth(item);
         item.start = getStart(item);
         item.end = getEnd(item);
+        item.regionId = getRegionId(item);
         item.isLeftToRight = item.start < item.end;
         intervals.push([item.xStart, item.xEnd, i]);
       });
@@ -320,17 +324,36 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         ? (item) => +item.fields[this.options.importanceField]
         : (item) => item.width;
 
-      const importanceDomain = this.options.importanceDomain || [1000, 1];
+      this.opacityEncoding = this.options.opacityEncoding || 'solid';
 
-      const opacityLinearScale = scaleLinear()
-        .domain(importanceDomain)
-        .range([1, 10]);
+      switch (this.opacityEncoding) {
+        case 'frequency':
+          this.opacityScale = () => 0.1;
+          break;
 
-      this.opacityScale = (x) => opacityLogScale(opacityLinearScale(x));
+        case 'highestImportance':
+        case 'closestImportance': {
+          const importanceDomain = this.options.importanceDomain || [1000, 1];
+          const opacityLinearScale = scaleLinear()
+            .domain(importanceDomain)
+            .range([1, 10]);
+          this.opacityScale = (x) => opacityLogScale(opacityLinearScale(x));
+          break;
+        }
+
+        case 'solid':
+        default:
+          this.opacityScale = () => 1;
+          break;
+      }
 
       this.focusRegion = this.options.focusRegion
         ? this.options.focusRegion
         : [Infinity, Infinity];
+
+      this.getRegion = this.options.focusRegion
+        ? (item) => [item.xStart, item.xEnd]
+        : undefined;
 
       this.focusGene = this.options.focusGene
         ? this.options.focusGene.toLowerCase()
@@ -388,27 +411,57 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
           this.categoryToY.get(this.getCategory(item))
         ),
         opacity: this.opacityScale(this.getImportance(item)),
-        focused:
-          item.xStart <= this.focusRegion[1] &&
-          item.xEnd >= this.focusRegion[0],
+        // focused:
+        //   item.xStart <= this.focusRegion[1] &&
+        //   item.xEnd >= this.focusRegion[0],
         widthHalf: Math.max(
           this.markMinWidth / 2,
           Math.abs(this._xScale(item.xStart) - this._xScale(item.xEnd)) / 2
         ),
         height: this.markHeight,
+        __item: item,
       };
     }
 
-    itemToIndicatorReducer(mapFn) {
-      if (this.getGene && this.focusGene) {
+    itemToIndicatorReducer(addFn) {
+      if (
+        this.getGene &&
+        this.focusGene &&
+        this.getRegion &&
+        this.focusRegion
+      ) {
         return (filteredItems, item) => {
           const gene = this.getGene(item);
-          if (gene === this.focusGene) filteredItems.push(mapFn(item));
+          const region = this.getRegion(item);
+          if (gene === this.focusGene && contains(region, this.focusRegion)) {
+            addFn(filteredItems, item);
+          }
           return filteredItems;
         };
       }
+
+      if (this.getGene && this.focusGene) {
+        return (filteredItems, item) => {
+          const gene = this.getGene(item);
+          if (gene === this.focusGene) {
+            addFn(filteredItems, item);
+          }
+          return filteredItems;
+        };
+      }
+
+      if (this.getRegion && this.focusRegion) {
+        return (filteredItems, item) => {
+          const region = this.getRegion(item);
+          if (contains(region, this.focusRegion)) {
+            addFn(filteredItems, item);
+          }
+          return filteredItems;
+        };
+      }
+
       return (filteredItems, item) => {
-        filteredItems.push(mapFn(item));
+        addFn(filteredItems, item);
         return filteredItems;
       };
     }
@@ -418,12 +471,39 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         .domain([...this.xScale().domain()])
         .range([...this.xScale().range()]);
 
-      const dataToPoint = this.itemToIndicatorReducer(
-        this.itemToIndicatorCategory.bind(this)
-      );
+      let reducerVar = [];
+      let addFn = (accumulator, item) =>
+        accumulator.push(this.itemToIndicatorCategory(item));
+
+      if (this.opacityEncoding === 'highestImportance') {
+        reducerVar = {};
+        addFn = (accumulator, item) => {
+          if (accumulator[item.regionId]) {
+            const i1 = this.getImportance(accumulator[item.regionId].__item);
+            const i2 = this.getImportance(item);
+            if (i2 > i1) {
+              accumulator[item.regionId] = this.itemToIndicatorCategory(item);
+            }
+          } else {
+            accumulator[item.regionId] = this.itemToIndicatorCategory(item);
+          }
+        };
+      } else if (this.opacityEncoding === 'closestImportance') {
+        reducerVar = {};
+        addFn = (accumulator, item) => {
+          if (
+            !accumulator[item.regionId] ||
+            item.width < accumulator[item.regionId].__item.width
+          ) {
+            accumulator[item.regionId] = this.itemToIndicatorCategory(item);
+          }
+        };
+      }
+
+      const dataToPoint = this.itemToIndicatorReducer(addFn);
 
       const points = Object.values(this.fetchedTiles).flatMap((tile) =>
-        tile.tileData.reduce(dataToPoint, [])
+        Object.values(tile.tileData.reduce(dataToPoint, reducerVar))
       );
 
       const positions = new Float32Array(points.flatMap(pointToPosition));
