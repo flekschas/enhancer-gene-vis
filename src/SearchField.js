@@ -23,7 +23,7 @@ export default function SearchField(props) {
 
     (async () => {
       const response = await fetch(
-        `${props.searchUrl}&ac=${debouncedSearchQuery}`
+        `${props.searchUrl}&ac=${debouncedSearchQuery || ''}`
       );
       const geneList = await response.json();
 
