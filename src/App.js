@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChromosomeInfo } from 'higlass';
 import { pipe } from '@flekschas/utils';
+import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 
 import AppInitializing from './AppInitializing';
 import AppError from './AppError';
@@ -8,6 +9,17 @@ import Viewer from './Viewer';
 import withEither from './with-either';
 
 import './App.css';
+
+const theme = createMuiTheme({
+  palette: {
+    primary: {
+      main: '#000',
+    },
+    secondary: {
+      main: '#000',
+    },
+  },
+});
 
 const App = () => {
   const [chromInfo, setChromInfo] = useState(null);
@@ -35,7 +47,9 @@ const App = () => {
 
   return (
     <div className="App">
-      <AppViewer chromInfo={chromInfo} />
+      <ThemeProvider theme={theme}>
+        <AppViewer chromInfo={chromInfo} />
+      </ThemeProvider>
     </div>
   );
 };
