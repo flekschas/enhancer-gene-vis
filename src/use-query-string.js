@@ -3,7 +3,9 @@ import { getQueryStringValue, setQueryStringValue } from './utils';
 
 function useQueryString(key, initialValue, { encoder, decoder } = {}) {
   const [value, setValue] = useState(
-    getQueryStringValue(key, decoder) || initialValue
+    getQueryStringValue(key, decoder) === undefined
+      ? initialValue
+      : getQueryStringValue(key, decoder)
   );
   const onSetValue = useCallback(
     (newValue) => {
