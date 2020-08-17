@@ -27,14 +27,14 @@ def multivec(filepath, uuid=None, **kwargs):
 
 
 def get_filename_assembly(filepath):
-    _, filenameext = os.path.split(filepath)
-    parts = filenameext.split('.')
+    _, filename_with_ext = os.path.split(filepath)
+    parts = filename_with_ext.split('.')
     assembly = parts[-2]
 
     if assembly in negspy.coordinates.available_chromsizes():
-        return ''.join(parts[:-2]), assembly
+        return ''.join(parts[:-2]), assembly, ''.join(parts)
 
-    return ''.join(parts[:-1]), None
+    return ''.join(parts[:-1]), None, ''.join(parts)
 
 
 def get_chromsizes(filename):
@@ -47,7 +47,7 @@ def get_chromsizes(filename):
 
 
 def bigwig_to_tileset(filepath):
-    filename, assembly = get_filename_assembly(filepath)
+    filename, assembly, uuid = get_filename_assembly(filepath)
 
     if assembly is not None:
         chromsizes = negspy.coordinates.get_chromsizes(assembly)
@@ -55,13 +55,13 @@ def bigwig_to_tileset(filepath):
             filepath=filepath,
             chromsizes=chromsizes,
             name=filename,
-            uuid=filename,
+            uuid=uuid,
             datatype='vector',
         )
 
 
 def beddb_to_tileset(filepath):
-    filename, assembly = get_filename_assembly(filepath)
+    filename, assembly, uuid = get_filename_assembly(filepath)
 
     if assembly is not None:
         chromsizes = negspy.coordinates.get_chromsizes(assembly)
@@ -69,13 +69,13 @@ def beddb_to_tileset(filepath):
             filepath=filepath,
             chromsizes=chromsizes,
             name=filename,
-            uuid=filename,
+            uuid=uuid,
             datatype='bedlike',
         )
 
 
 def bedpedb_to_tileset(filepath):
-    filename, assembly = get_filename_assembly(filepath)
+    filename, assembly, uuid = get_filename_assembly(filepath)
 
     if assembly is not None:
         chromsizes = negspy.coordinates.get_chromsizes(assembly)
@@ -83,13 +83,13 @@ def bedpedb_to_tileset(filepath):
             filepath=filepath,
             chromsizes=chromsizes,
             name=filename,
-            uuid=filename,
+            uuid=uuid,
             datatype='bedlike',
         )
 
 
 def multivec_to_tileset(filepath):
-    filename, assembly = get_filename_assembly(filepath)
+    filename, assembly, uuid = get_filename_assembly(filepath)
 
     if assembly is not None:
         chromsizes = negspy.coordinates.get_chromsizes(assembly)
@@ -97,7 +97,7 @@ def multivec_to_tileset(filepath):
             filepath=filepath,
             chromsizes=chromsizes,
             name=filename,
-            uuid=filename,
+            uuid=uuid,
             datatype='multivec',
         )
 
