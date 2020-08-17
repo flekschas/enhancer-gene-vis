@@ -411,9 +411,12 @@ export const DEFAULT_VIEW_CONFIG = {
           {
             type: 'stacked-bar',
             // server: 'http://localhost:9876/api/v1',
-            // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2chr10',
+            // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
             server: 'https://resgen.io/api/v1',
-            tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA',
+            // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
+            // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
+            // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
+            tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
             height: 96,
             uid: 'stacked-bars',
             options: {
@@ -444,9 +447,12 @@ export const DEFAULT_VIEW_CONFIG = {
           {
             type: 'stratified-bed',
             // server: 'http://localhost:9876/api/v1',
-            // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2chr10',
+            // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
             server: 'https://resgen.io/api/v1',
-            tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA',
+            // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
+            // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
+            // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
+            tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
             height: 403,
             uid: 'indicatorByCellTypes',
             options: {
