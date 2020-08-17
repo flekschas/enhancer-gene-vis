@@ -101,16 +101,41 @@ const chrPosUrlEncoder = (chrPos) =>
 const chrPosUrlDecoder = (chrPos) =>
   chrPos ? chrPos.replace('.', ':') : chrPos;
 
+const getFocusGeneRegion = (viewConfig) => {
+  const n = viewConfig.views[0].tracks.top.length;
+  return viewConfig.views[0].overlays[1].options.extent &&
+    viewConfig.views[0].overlays[1].options.extent.length
+    ? [...viewConfig.views[0].overlays[1].options.extent[0]]
+    : null;
+};
+
+const getFocusVariantRegion = (viewConfig) =>
+  viewConfig.views[0].tracks.top[2].options.focusRegion
+    ? [...viewConfig.views[0].tracks.top[2].options.focusRegion]
+    : null;
+
 const updateViewConfigXDomain = (newXDomainStart, newXDomainEnd) => (
   viewConfig
 ) => {
   const xDomain = [...viewConfig.views[0].initialXDomain];
+  const focusGeneRegion = getFocusGeneRegion(viewConfig);
+  const focusVariantRegion = getFocusVariantRegion(viewConfig);
 
   if (!Number.isNaN(+newXDomainStart)) {
     xDomain[0] = newXDomainStart;
   }
   if (!Number.isNaN(+newXDomainEnd)) {
     xDomain[1] = newXDomainEnd;
+  }
+
+  if (focusGeneRegion) {
+    xDomain[0] = focusGeneRegion[0] - 100000;
+    xDomain[1] = focusGeneRegion[1] + 100000;
+  }
+
+  if (focusVariantRegion) {
+    xDomain[0] = Math.min(xDomain[0], focusVariantRegion[0] - 100000);
+    xDomain[1] = Math.max(xDomain[1], focusVariantRegion[1] + 100000);
   }
 
   viewConfig.views[0].initialXDomain = xDomain;
@@ -330,7 +355,7 @@ const Viewer = (props) => {
         geneName: event.payload.name,
       });
     } else if (event.type === 'snp') {
-      setFocusVariant(`${event.payload.fields[0]}:${event.payload.fields[1]}`);
+      setFocusVariant(event.payload.name);
       setFocusVariantOption({
         chr: event.payload.fields[0],
         txStart: event.payload.fields[1],
