@@ -7,7 +7,7 @@ export const VARIANT_SEARCH_URL =
 export const DEFAULT_STRATIFICATION = {
   categoryField: 10,
   axisShowGroupSeparator: true,
-  // axisNoGroupColor: true,
+  axisNoGroupColor: false,
   groups: [
     {
       label: 'Mononuclear Phagocytes',
@@ -459,7 +459,8 @@ export const DEFAULT_VIEW_CONFIG = {
               axisAlign: 'right',
               labelPosition: 'hidden',
               markColor: 'black',
-              markColorFocus: '#cc0078',
+              markColorHighlight: '#bf0071',
+              markColorDehighlight: '#bbbbbb',
               markSize: 4,
               markMinWidth: 4,
               markHeight: 3,
@@ -468,8 +469,6 @@ export const DEFAULT_VIEW_CONFIG = {
               arcStyle: 'indicator',
               indicatorStyle: 'category-rect',
               labelColor: 'black',
-              trackBorderWidth: 0,
-              trackBorderColor: 'black',
               geneField: 6,
               importanceField: 7,
               importanceDomain: [0, 1],

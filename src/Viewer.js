@@ -20,6 +20,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
+import Switch from '@material-ui/core/Switch';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
@@ -183,6 +184,15 @@ const updateViewConfigFocusVariant = (position) => (viewConfig) => {
   return viewConfig;
 };
 
+const updateViewConfigFocusStyle = (hideUnfocused) => (viewConfig) => {
+  viewConfig.views[0].tracks.top[4].options.focusStyle =
+    hideUnfocused === 'true' ? 'filtering' : 'highlighting';
+  viewConfig.views[0].tracks.top[4].options.stratification.axisNoGroupColor =
+    hideUnfocused !== 'true';
+
+  return viewConfig;
+};
+
 const updateViewConfigVariantYScale = (yScale) => (viewConfig) => {
   viewConfig.views[0].tracks.top[2].options.valueColumn =
     yScale === 'pValue' ? 7 : 8;
@@ -203,6 +213,7 @@ const Viewer = (props) => {
     'variant',
     'rs1250566'
   );
+  const [hideUnfocused, setHideUnfocused] = useQueryString('hide-unfocused');
   const [matrixColoring, setMatrixColoring] = useQueryString(
     'matrix-coloring',
     'solid'
@@ -261,6 +272,7 @@ const Viewer = (props) => {
             : null,
           focusVariantOption
         ),
+        updateViewConfigFocusStyle(hideUnfocused),
         updateViewConfigMatrixColoring(matrixColoring),
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigXDomain(
@@ -272,6 +284,7 @@ const Viewer = (props) => {
       // `xDomainStart` and `xDomainEnd` are ommitted on purpose
       focusGeneOption,
       focusVariantOption,
+      hideUnfocused,
       matrixColoring,
       variantYScale,
       props.chromInfo,
@@ -326,6 +339,10 @@ const Viewer = (props) => {
     } else {
       clearFocusVariant();
     }
+  };
+
+  const hideUnfocusedChangeHandler = (event) => {
+    setHideUnfocused(event.target.checked.toString());
   };
 
   const variantYScaleChangeHandler = (event) => {
@@ -512,6 +529,18 @@ const Viewer = (props) => {
               />
             </FormControl>
           </Box>
+        </Box>
+        <Box m={1}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={hideUnfocused === 'true'}
+                onChange={hideUnfocusedChangeHandler}
+                name="hideUnfocused"
+              />
+            }
+            label="Hide unfocused"
+          />
         </Box>
         <Box m={1}>
           <FormControl component="fieldset">

@@ -5,25 +5,19 @@ const VS = `
   precision mediump float;
   attribute vec2 aPosition;
   attribute float aOpacity;
-  attribute float aFocused;
+  attribute float aHighlight;
 
   uniform mat3 projectionMatrix;
   uniform mat3 translationMatrix;
   uniform float uPointSize;
-  uniform vec4 uColor;
-  uniform vec4 uColorFocused;
 
-  varying vec4 vColor;
-  varying vec4 vColorFocused;
+  varying float vHighlight;
   varying float vOpacity;
-  varying float vFocused;
 
   void main(void)
   {
-    vColor = uColor;
-    vColorFocused = uColorFocused;
+    vHighlight = aHighlight;
     vOpacity = aOpacity;
-    vFocused = aFocused;
     gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aPosition, 1.0)).xy, 0.0, 1.0);
     gl_PointSize = uPointSize;
   }
@@ -31,17 +25,19 @@ const VS = `
 
 const FS = `
   precision mediump float;
-  varying vec4 vColor;
-  varying vec4 vColorFocused;
+
+  uniform vec4 uColor;
+  uniform vec4 uColorHighlight;
+
+  varying float vHighlight;
   varying float vOpacity;
-  varying float vFocused;
 
   void main() {
-    float isNotFocused = 1.0 - vFocused;
+    float isNotFocused = 1.0 - vHighlight;
 
-    float r = vColor.r * isNotFocused + vColorFocused.r * vFocused;
-    float g = vColor.g * isNotFocused + vColorFocused.g * vFocused;
-    float b = vColor.b * isNotFocused + vColorFocused.b * vFocused;
+    float r = uColor.r * isNotFocused + uColorHighlight.r * vHighlight;
+    float g = uColor.g * isNotFocused + uColorHighlight.g * vHighlight;
+    float b = uColor.b * isNotFocused + uColorHighlight.b * vHighlight;
 
     gl_FragColor = vec4(r, g, b, 1.0) * vOpacity;
   }
@@ -102,22 +98,13 @@ const pointToIndex = (pt, i) => {
   return [base, base + 1, base + 2, base + 2, base + 3, base];
 };
 
-const pointToOpacity = (pt) => [
-  pt.opacity,
-  pt.opacity,
-  pt.opacity,
-  pt.opacity,
-  // pt.opacity,
-  // pt.opacity,
-];
+const pointToOpacity = (pt) => [pt.opacity, pt.opacity, pt.opacity, pt.opacity];
 
-const pointToFocused = (pt) => [
-  pt.focused,
-  pt.focused,
-  pt.focused,
-  pt.focused,
-  // pt.focused,
-  // pt.focused,
+const pointToHighlight = (pt) => [
+  pt.highlight,
+  pt.highlight,
+  pt.highlight,
+  pt.highlight,
 ];
 
 const getIs2d = (tile) =>
@@ -305,16 +292,27 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.rowHeight = this.options.rowHeight || this.markHeight;
 
-      this.markColorFocus = HGC.utils.colorToHex(
-        this.options.markColorFocus || 'red'
+      this.markColorHighlight = HGC.utils.colorToHex(
+        this.options.markColorHighlight || 'red'
       );
 
-      this.markColorFocusRgbNorm = this.options.markColorFocus
+      this.markColorHighlightRgbNorm = this.options.markColorHighlight
         ? HGC.utils
-            .colorToRgba(this.options.markColorFocus)
+            .colorToRgba(this.options.markColorHighlight)
             .slice(0, 3)
             .map((x) => Math.min(1, Math.max(0, x / 255)))
         : [1, 0, 0];
+
+      this.markColorDehighlight = HGC.utils.colorToHex(
+        this.options.markColorDehighlight || '#999999'
+      );
+
+      this.markColorDehighlightRgbNorm = this.options.markColorDehighlight
+        ? HGC.utils
+            .colorToRgba(this.options.markColorDehighlight)
+            .slice(0, 3)
+            .map((x) => Math.min(1, Math.max(0, x / 255)))
+        : [0.6, 0.6, 0.6];
 
       this.markOpacityFocus = Number.isNaN(+this.options.markOpacityFocus)
         ? this.markOpacity
@@ -363,6 +361,10 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         ? (item) => item.fields[this.options.geneField].toLowerCase()
         : undefined;
 
+      this.focusStyle = this.options.focusStyle
+        ? this.options.focusStyle.toLowerCase()
+        : undefined;
+
       this.minImportance = this.options.minImportance || 0;
 
       this.updateStratificationOption();
@@ -404,16 +406,14 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         .range([0, height]);
     }
 
-    itemToIndicatorCategory(item) {
+    itemToIndicatorCategory(item, isHighlighting) {
       return {
         cX: this._xScale(item.start),
         y: this.categoryHeightScale(
           this.categoryToY.get(this.getCategory(item))
         ),
         opacity: this.opacityScale(this.getImportance(item)),
-        // focused:
-        //   item.xStart <= this.focusRegion[1] &&
-        //   item.xEnd >= this.focusRegion[0],
+        highlight: isHighlighting && item.__focus,
         widthHalf: Math.max(
           this.markMinWidth / 2,
           Math.abs(this._xScale(item.xStart) - this._xScale(item.xEnd)) / 2
@@ -423,45 +423,53 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       };
     }
 
-    itemToIndicatorReducer(addFn) {
+    isItemInFocus() {
       if (
         this.getGene &&
         this.focusGene &&
         this.getRegion &&
         this.focusRegion
       ) {
-        return (filteredItems, item) => {
-          const gene = this.getGene(item);
-          const region = this.getRegion(item);
-          if (gene === this.focusGene && contains(region, this.focusRegion)) {
-            addFn(filteredItems, item);
-          }
-          return filteredItems;
+        return (item) => {
+          item.__focus =
+            this.getGene(item) === this.focusGene &&
+            contains(this.getRegion(item), this.focusRegion);
+          return item.__focus;
         };
       }
 
       if (this.getGene && this.focusGene) {
-        return (filteredItems, item) => {
-          const gene = this.getGene(item);
-          if (gene === this.focusGene) {
-            addFn(filteredItems, item);
-          }
-          return filteredItems;
+        return (item) => {
+          item.__focus = this.getGene(item) === this.focusGene;
+          return item.__focus;
         };
       }
 
       if (this.getRegion && this.focusRegion) {
+        return (item) => {
+          item.__focus = contains(this.getRegion(item), this.focusRegion);
+          return item.__focus;
+        };
+      }
+
+      return (item) => {
+        item.__focus = false;
+        // If no focus was defined, we include all intervals
+        return true;
+      };
+    }
+
+    itemToIndicatorReducer(filterFn, addFn) {
+      if (this.focusStyle === 'highlighting') {
         return (filteredItems, item) => {
-          const region = this.getRegion(item);
-          if (contains(region, this.focusRegion)) {
-            addFn(filteredItems, item);
-          }
+          filterFn(item);
+          addFn(filteredItems, item);
           return filteredItems;
         };
       }
 
       return (filteredItems, item) => {
-        addFn(filteredItems, item);
+        if (filterFn(item)) addFn(filteredItems, item);
         return filteredItems;
       };
     }
@@ -471,9 +479,14 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         .domain([...this.xScale().domain()])
         .range([...this.xScale().range()]);
 
+      const isHighlighting =
+        this.focusStyle === 'highlighting' &&
+        ((this.focusGene && this.getGene) ||
+          (this.focusRegion && this.getRegion));
+
       let reducerVar = [];
       let addFn = (accumulator, item) =>
-        accumulator.push(this.itemToIndicatorCategory(item));
+        accumulator.push(this.itemToIndicatorCategory(item, isHighlighting));
 
       if (this.opacityEncoding === 'highestImportance') {
         reducerVar = {};
@@ -482,10 +495,16 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
             const i1 = this.getImportance(accumulator[item.regionId].__item);
             const i2 = this.getImportance(item);
             if (i2 > i1) {
-              accumulator[item.regionId] = this.itemToIndicatorCategory(item);
+              accumulator[item.regionId] = this.itemToIndicatorCategory(
+                item,
+                isHighlighting
+              );
             }
           } else {
-            accumulator[item.regionId] = this.itemToIndicatorCategory(item);
+            accumulator[item.regionId] = this.itemToIndicatorCategory(
+              item,
+              isHighlighting
+            );
           }
         };
       } else if (this.opacityEncoding === 'closestImportance') {
@@ -495,12 +514,16 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
             !accumulator[item.regionId] ||
             item.width < accumulator[item.regionId].__item.width
           ) {
-            accumulator[item.regionId] = this.itemToIndicatorCategory(item);
+            accumulator[item.regionId] = this.itemToIndicatorCategory(
+              item,
+              isHighlighting
+            );
           }
         };
       }
 
-      const dataToPoint = this.itemToIndicatorReducer(addFn);
+      const filterFn = this.isItemInFocus();
+      const dataToPoint = this.itemToIndicatorReducer(filterFn, addFn);
 
       const points = Object.values(this.fetchedTiles).flatMap((tile) =>
         Object.values(tile.tileData.reduce(dataToPoint, reducerVar))
@@ -509,11 +532,14 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const positions = new Float32Array(points.flatMap(pointToPosition));
       const indices = new Uint16Array(points.flatMap(pointToIndex));
       const opacities = new Float32Array(points.flatMap(pointToOpacity));
-      const focused = new Float32Array(points.flatMap(pointToFocused));
+      const highlights = new Float32Array(points.flatMap(pointToHighlight));
 
       const uniforms = new PIXI.UniformGroup({
-        uColor: [...this.markColorRgbNorm, this.markOpacity],
-        uColorFocused: [...this.markColorFocusRgbNorm, this.markOpacity],
+        uColor: isHighlighting
+          ? [...this.markColorDehighlightRgbNorm, this.markOpacity]
+          : [...this.markColorRgbNorm, this.markOpacity],
+        uColorHighlight: [...this.markColorHighlightRgbNorm, this.markOpacity],
+        uHighlighting: isHighlighting,
       });
 
       const shader = PIXI.Shader.from(VS, FS, uniforms);
@@ -521,7 +547,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const geometry = new PIXI.Geometry();
       geometry.addAttribute('aPosition', positions, 2);
       geometry.addAttribute('aOpacity', opacities, 1);
-      geometry.addAttribute('aFocused', focused, 1);
+      geometry.addAttribute('aHighlight', highlights, 1);
       geometry.addIndex(indices);
 
       const mesh = new PIXI.Mesh(geometry, shader);
@@ -547,10 +573,6 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.draw();
       this.animate();
-    }
-
-    renderIndicatorDistanceAxis(valueScale) {
-      this.drawAxis(valueScale);
     }
 
     renderIndicatorCategoryAxis() {
@@ -579,10 +601,35 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         labelPixiText.anchor.x = this.axisAlign === 'right' ? 1 : 0;
         labelPixiText.anchor.y = 0.5;
 
+        if (this.options.focusStyle === 'highlighting') {
+          this.pAxis.beginFill(0xffffff, 0.66);
+        } else {
+          this.pAxis.beginFill(this.groupToColor.get(i)[1], 0.66);
+        }
+
+        this.pAxis.lineStyle(0);
+        if (this.axisAlign === 'right') {
+          this.pAxis.drawRect(
+            labelPixiText.x - labelPixiText.width,
+            labelPixiText.y - labelPixiText.height / 2,
+            labelPixiText.width,
+            labelPixiText.height
+          );
+        } else {
+          this.pAxis.drawRect(
+            labelPixiText.x,
+            labelPixiText.y - labelPixiText.height / 2,
+            labelPixiText.width,
+            labelPixiText.height
+          );
+        }
+        this.pAxis.endFill();
+
         if (numAxisLabels < i + 1) {
           this.pAxis.addChild(labelPixiText);
         }
 
+        this.pAxis.lineStyle(1, 0x000000, 1.0, 0.0);
         this.pAxis.moveTo(0, yStart);
         this.pAxis.lineTo(xTickOffset, yStart);
         if (this.options.stratification.axisShowGroupSeparator) {
