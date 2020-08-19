@@ -32,7 +32,8 @@ import { toAbsPosition } from './utils';
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
-  DEFAULT_VIEW_CONFIG,
+  DEFAULT_VIEW_CONFIG_ENHANCER,
+  DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
   GENE_SEARCH_URL,
   VARIANT_SEARCH_URL,
 } from './constants';
@@ -77,24 +78,16 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'white',
   },
   higlass: {
+    display: 'flex',
     flexGrow: 1,
   },
+  higlassPrimary: {
+    flexGrow: 1,
+  },
+  higlassSecondary: {
+    width: '20rem',
+  },
 }));
-
-const DEFAULT_HIGLASS_OPTIONS = {
-  sizeMode: 'bounded',
-  // pixelPreciseMarginPadding: true,
-  // containerPaddingX: 0,
-  // containerPaddingY: 0,
-  // viewMarginTop: 0,
-  // viewMarginBottom: 6,
-  // viewMarginLeft: 0,
-  // viewMarginRight: 0,
-  // viewPaddingTop: 3,
-  // viewPaddingBottom: 3,
-  // viewPaddingLeft: 0,
-  // viewPaddingRight: 0,
-};
 
 const chrPosUrlEncoder = (chrPos) =>
   chrPos ? chrPos.replace(':', '.') : chrPos;
@@ -241,8 +234,8 @@ const Viewer = (props) => {
 
   const [focusGeneOption, setFocusGeneOption] = useState(null);
   const [focusVariantOption, setFocusVariantOption] = useState(null);
-  const [options, setOptions] = useState(DEFAULT_HIGLASS_OPTIONS);
-  const higlassApi = useRef(null);
+  const higlassEnhancerApi = useRef(null);
+  const higlassDnaAccessApi = useRef(null);
 
   // Derived State
   const viewConfig = useMemo(
@@ -279,7 +272,7 @@ const Viewer = (props) => {
           toAbsPosition(xDomainStart, props.chromInfo),
           toAbsPosition(xDomainEnd, props.chromInfo)
         )
-      )(deepClone(DEFAULT_VIEW_CONFIG)),
+      )(deepClone(DEFAULT_VIEW_CONFIG_ENHANCER)),
     [
       // `xDomainStart` and `xDomainEnd` are ommitted on purpose
       focusGeneOption,
@@ -396,7 +389,7 @@ const Viewer = (props) => {
   );
 
   const higlassZoomToXDomain = (event) => {
-    if (!higlassApi.current) return;
+    if (!higlassEnhancerApi.current) return;
 
     const newViewConfig = deepClone(viewConfig);
 
@@ -409,7 +402,7 @@ const Viewer = (props) => {
       xDomain[1] = numericalXDomainEnd;
     }
 
-    higlassApi.current.zoomTo(
+    higlassEnhancerApi.current.zoomTo(
       'context',
       xDomain[0],
       xDomain[1],
@@ -435,15 +428,21 @@ const Viewer = (props) => {
     })();
   }, []);
 
-  const higlassInitHandler = useCallback((higlassInstance) => {
+  const higlassEnhancerInitHandler = useCallback((higlassInstance) => {
     if (higlassInstance !== null) {
-      higlassApi.current = higlassInstance.api;
+      higlassEnhancerApi.current = higlassInstance.api;
       higlassInstance.api.on('click', higlassClickHandler);
       higlassInstance.api.on(
         'location',
         higlassLocationChangeHandlerDb,
         'context'
       );
+    }
+  }, []);
+
+  const higlassDnaAccessibilityInitHandler = useCallback((higlassInstance) => {
+    if (higlassInstance !== null) {
+      higlassDnaAccessApi.current = higlassInstance.api;
     }
   }, []);
 
@@ -600,11 +599,35 @@ const Viewer = (props) => {
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <div className={classes.higlass}>
-          <HiGlassComponent
-            ref={higlassInitHandler}
-            viewConfig={viewConfig}
-            options={options}
-          />
+          <div className={classes.higlassPrimary}>
+            <HiGlassComponent
+              ref={higlassEnhancerInitHandler}
+              viewConfig={viewConfig}
+              options={{
+                sizeMode: 'bounded',
+              }}
+            />
+          </div>
+          <div className={classes.higlassSecondary}>
+            <HiGlassComponent
+              ref={higlassDnaAccessibilityInitHandler}
+              viewConfig={DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY}
+              options={{
+                sizeMode: 'scroll',
+                pixelPreciseMarginPadding: true,
+                containerPaddingX: 0,
+                containerPaddingY: 0,
+                viewMarginTop: 0,
+                viewMarginBottom: 0,
+                viewMarginLeft: 0,
+                viewMarginRight: 0,
+                viewPaddingTop: 0,
+                viewPaddingBottom: 0,
+                viewPaddingLeft: 0,
+                viewPaddingRight: 16,
+              }}
+            />
+          </div>
         </div>
       </main>
     </div>
