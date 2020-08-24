@@ -6,6 +6,7 @@ import App from './App';
 import * as serviceWorker from './serviceWorker';
 
 import createAnnotationOverlayMetaTrack from './annotation-overlay-meta-track';
+import createRidgePlotTrack from './ridge-plot-track';
 import createStratifiedBedTrack from './stratified-bed-track';
 import createScalableArcs1dTrack from './scalable-arcs-track';
 import createSnpTrack from './snp-track';
@@ -15,40 +16,39 @@ import createTssTrack from './tss-track';
 import './index.css';
 
 register({
-  name: 'ScalableArcs1dTrack',
+  track: createRidgePlotTrack,
+  config: createRidgePlotTrack.config,
+});
+
+register({
   track: createScalableArcs1dTrack,
   config: createScalableArcs1dTrack.config,
 });
 
 register({
-  name: 'StratifiedBedTrack',
   track: createStratifiedBedTrack,
   config: createStratifiedBedTrack.config,
 });
 
 register({
-  name: 'SnpTrack',
   track: createSnpTrack,
   config: createSnpTrack.config,
 });
 
 register({
-  name: 'StackedBarTrack',
   track: createStackedBarTrack,
   config: createStackedBarTrack.config,
 });
 
 register({
-  name: 'TssTrack',
   track: createTssTrack,
   config: createTssTrack.config,
 });
 
 register({
-  name: 'AnnotationsToInsetsMetaTrack',
   track: createAnnotationOverlayMetaTrack,
-  isMetaTrack: true,
   config: createAnnotationOverlayMetaTrack.config,
+  isMetaTrack: true,
 });
 
 ReactDOM.render(<App />, document.getElementById('root'));

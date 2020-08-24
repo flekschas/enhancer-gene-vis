@@ -563,7 +563,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             },
           },
           {
-            type: 'multivec',
+            type: 'ridge-plot',
             uid: 'dna-accessibility',
             // height: 403,
             height: 806,
@@ -578,6 +578,9 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               labelShowAssembly: false,
               valueScaling: 'exponential',
               colorRange: ['#ffffff', '#000000'],
+              rowHeight: 12,
+              rowPadding: 0,
+              rowNormalization: true,
               selectRows: [
                 120,
                 36,
