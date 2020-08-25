@@ -96,8 +96,8 @@ const chrPosUrlDecoder = (chrPos) =>
   chrPos ? chrPos.replace('.', ':') : chrPos;
 
 const getFocusGeneRegion = (viewConfig) => {
-  const n = viewConfig.views[0].tracks.top.length;
-  return viewConfig.views[0].overlays[1].options.extent &&
+  return viewConfig.views[0].overlays[1] &&
+    viewConfig.views[0].overlays[1].options.extent &&
     viewConfig.views[0].overlays[1].options.extent.length
     ? [...viewConfig.views[0].overlays[1].options.extent[0]]
     : null;
@@ -108,7 +108,7 @@ const getFocusVariantRegion = (viewConfig) =>
     ? [...viewConfig.views[0].tracks.top[2].options.focusRegion]
     : null;
 
-const updateViewConfigXDomain = (newXDomainStart, newXDomainEnd) => (
+const updateViewConfigXDomain = (newXDomainStart, newXDomainEnd, force) => (
   viewConfig
 ) => {
   const xDomain = [...viewConfig.views[0].initialXDomain];
@@ -122,12 +122,12 @@ const updateViewConfigXDomain = (newXDomainStart, newXDomainEnd) => (
     xDomain[1] = newXDomainEnd;
   }
 
-  if (focusGeneRegion) {
+  if (focusGeneRegion && !force) {
     xDomain[0] = focusGeneRegion[0] - 100000;
     xDomain[1] = focusGeneRegion[1] + 100000;
   }
 
-  if (focusVariantRegion) {
+  if (focusVariantRegion && !force) {
     xDomain[0] = Math.min(xDomain[0], focusVariantRegion[0] - 100000);
     xDomain[1] = Math.max(xDomain[1], focusVariantRegion[1] + 100000);
   }
@@ -151,27 +151,23 @@ const updateViewConfigFocusGene = (gene, start, end) => (viewConfig) => {
   return viewConfig;
 };
 
-const updateViewConfigFocusVariant = (position) => (viewConfig) => {
-  // const n = viewConfig.views.length;
-
+const updateViewConfigFocusVariant = (position, trackIdxs = []) => (
+  viewConfig
+) => {
   if (Number.isNaN(+position) || position === null) {
-    delete viewConfig.views[0].tracks.top[2].options.focusRegion;
-    delete viewConfig.views[0].tracks.top[4].options.focusRegion;
-    // viewConfig.views[0].tracks.top[n - 1].options.focusRegion = focusRegion;
+    trackIdxs.forEach((trackIdx) => {
+      delete viewConfig.views[0].tracks.top[trackIdx].options.focusRegion;
+    });
     viewConfig.views[0].overlays[0].options.extent = [];
   } else {
     const focusRegion = [position - 0.5, position + 0.5];
-    viewConfig.views[0].tracks.top[2].options.focusRegion = focusRegion;
-    viewConfig.views[0].tracks.top[4].options.focusRegion = focusRegion;
-    // viewConfig.views[0].tracks.top[n - 1].options.focusRegion = focusRegion;
+    trackIdxs.forEach((trackIdx) => {
+      viewConfig.views[0].tracks.top[
+        trackIdx
+      ].options.focusRegion = focusRegion;
+    });
+
     viewConfig.views[0].overlays[0].options.extent = [focusRegion];
-
-    // const focusDomain = Number.isNaN(+variantAbsPosition)
-    //   ? viewConfig.views[1].initialXDomain
-    //   : [variantAbsPosition - 500, variantAbsPosition + 500];
-
-    // viewConfig.views[1].initialXDomain = focusDomain;
-    // viewConfig.views[1].initialYDomain = focusDomain;
   }
 
   return viewConfig;
@@ -238,48 +234,90 @@ const Viewer = (props) => {
   const higlassDnaAccessApi = useRef(null);
 
   // Derived State
-  const viewConfig = useMemo(
+  const focusGeneStartPosition = useMemo(
+    () =>
+      focusGeneOption
+        ? toAbsPosition(
+            `${focusGeneOption.chr}:${focusGeneOption.txStart}`,
+            props.chromInfo
+          )
+        : null,
+    [focusGeneOption, props.chromInfo]
+  );
+
+  const focusGeneEndPosition = useMemo(
+    () =>
+      focusGeneOption
+        ? toAbsPosition(
+            `${focusGeneOption.chr}:${focusGeneOption.txEnd}`,
+            props.chromInfo
+          )
+        : null,
+    [focusGeneOption, props.chromInfo]
+  );
+
+  const focusVariantPosition = useMemo(
+    () =>
+      focusVariantOption
+        ? toAbsPosition(
+            `${focusVariantOption.chr}:${focusVariantOption.txStart}`,
+            props.chromInfo
+          )
+        : null,
+    [focusVariantOption, props.chromInfo]
+  );
+
+  const xDomainStartAbs = useMemo(
+    () => toAbsPosition(xDomainStart, props.chromInfo),
+    [xDomainStart, props.chromInfo]
+  );
+
+  const xDomainEndAbs = useMemo(
+    () => toAbsPosition(xDomainEnd, props.chromInfo),
+    [xDomainEnd, props.chromInfo]
+  );
+
+  const viewConfigEnhancer = useMemo(
     () =>
       pipe(
         updateViewConfigFocusGene(
           focusGeneOption ? focusGeneOption.geneName : null,
-          focusGeneOption
-            ? toAbsPosition(
-                `${focusGeneOption.chr}:${focusGeneOption.txStart}`,
-                props.chromInfo
-              )
-            : null,
-          focusGeneOption
-            ? toAbsPosition(
-                `${focusGeneOption.chr}:${focusGeneOption.txEnd}`,
-                props.chromInfo
-              )
-            : null
+          focusGeneStartPosition,
+          focusGeneEndPosition
         ),
-        updateViewConfigFocusVariant(
-          focusVariantOption
-            ? toAbsPosition(
-                `${focusVariantOption.chr}:${focusVariantOption.txStart}`,
-                props.chromInfo
-              )
-            : null,
-          focusVariantOption
-        ),
+        updateViewConfigFocusVariant(focusVariantPosition, [2, 4]),
         updateViewConfigFocusStyle(hideUnfocused),
         updateViewConfigMatrixColoring(matrixColoring),
         updateViewConfigVariantYScale(variantYScale),
-        updateViewConfigXDomain(
-          toAbsPosition(xDomainStart, props.chromInfo),
-          toAbsPosition(xDomainEnd, props.chromInfo)
-        )
+        updateViewConfigXDomain(xDomainStartAbs, xDomainEndAbs)
       )(deepClone(DEFAULT_VIEW_CONFIG_ENHANCER)),
     [
-      // `xDomainStart` and `xDomainEnd` are ommitted on purpose
+      // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
+      // updating the view-config on every pan or zoom event.
       focusGeneOption,
-      focusVariantOption,
+      focusGeneStartPosition,
+      focusGeneEndPosition,
+      focusVariantPosition,
       hideUnfocused,
       matrixColoring,
       variantYScale,
+    ]
+  );
+
+  const viewConfigDnaAccessibility = useMemo(
+    () =>
+      pipe(
+        updateViewConfigFocusVariant(focusVariantPosition, [2]),
+        updateViewConfigXDomain(
+          focusVariantPosition ? focusVariantPosition - 2500 : xDomainStartAbs,
+          focusVariantPosition ? focusVariantPosition + 2500 : xDomainEndAbs,
+          true
+        )
+      )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
+    [
+      // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
+      // updating the view-config on every pan or zoom event.
+      focusVariantPosition,
       props.chromInfo,
     ]
   );
@@ -388,10 +426,10 @@ const Viewer = (props) => {
     250
   );
 
-  const higlassZoomToXDomain = (event) => {
+  const higlassEnhancerZoomToXDomain = (event) => {
     if (!higlassEnhancerApi.current) return;
 
-    const newViewConfig = deepClone(viewConfig);
+    const newViewConfig = deepClone(viewConfigEnhancer);
 
     const xDomain = [...newViewConfig.views[0].initialXDomain];
 
@@ -496,7 +534,7 @@ const Viewer = (props) => {
             <Button
               variant="contained"
               margin="dense"
-              onClick={higlassZoomToXDomain}
+              onClick={higlassEnhancerZoomToXDomain}
               fullWidth
               disableElevation
             >
@@ -602,7 +640,7 @@ const Viewer = (props) => {
           <div className={classes.higlassPrimary}>
             <HiGlassComponent
               ref={higlassEnhancerInitHandler}
-              viewConfig={viewConfig}
+              viewConfig={viewConfigEnhancer}
               options={{
                 sizeMode: 'bounded',
               }}
@@ -611,7 +649,7 @@ const Viewer = (props) => {
           <div className={classes.higlassSecondary}>
             <HiGlassComponent
               ref={higlassDnaAccessibilityInitHandler}
-              viewConfig={DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY}
+              viewConfig={viewConfigDnaAccessibility}
               options={{
                 sizeMode: 'scroll',
                 pixelPreciseMarginPadding: true,

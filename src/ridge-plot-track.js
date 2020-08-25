@@ -1,4 +1,11 @@
-import { identity, max, maxVector, meanNan } from '@flekschas/utils';
+import {
+  identity,
+  maxNan,
+  maxVector,
+  meanNan,
+  minNan,
+  sumNan,
+} from '@flekschas/utils';
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 
@@ -100,8 +107,6 @@ const COLORMAP_GRAYS = Array(127)
     return [gray, gray, gray, 1];
   });
 
-console.log(COLORMAP_GRAYS);
-
 const getMax = (fetchedTiles) =>
   Object.values(fetchedTiles).reduce(
     (maxValue, tile) => Math.max(maxValue, tile.tileData.maxNonZero),
@@ -109,7 +114,7 @@ const getMax = (fetchedTiles) =>
   );
 
 const getNumRows = (fetchedTiles) =>
-  Object.values(fetchedTiles)[0].tileData.shape[0];
+  Object.values(fetchedTiles)[0].tileData.coarseShape[0];
 
 const getRowMaxs = (fetchedTiles) =>
   maxVector(
@@ -138,7 +143,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
   }
 
   const { PIXI } = HGC.libraries;
+  const { format } = HGC.libraries.d3Format;
   const { scaleLinear } = HGC.libraries.d3Scale;
+  const { tileProxy } = HGC.services;
 
   const createColorTexture = (colors) => {
     const colorTexRes = Math.max(2, Math.ceil(Math.sqrt(colors.length)));
@@ -160,7 +167,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
     ];
   };
 
-  class RidgePlotTrack extends HGC.tracks.HorizontalMultivecTrack {
+  class RidgePlotTrack extends HGC.tracks.HorizontalLine1DPixiTrack {
     constructor(context, options) {
       super(context, options);
       this.updateOptions();
@@ -172,7 +179,82 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
     destroyTile() {}
 
+    binsPerTile() {
+      return this.tilesetInfo.bins_per_dimension || TILE_SIZE;
+    }
+
+    /**
+     * From HeatmapTiledPixiTrack
+     */
+    getTilePosAndDimensions(zoomLevel, tilePos, binsPerTileIn) {
+      const binsPerTile = binsPerTileIn || this.binsPerTile();
+
+      if (this.tilesetInfo.resolutions) {
+        const sortedResolutions = this.tilesetInfo.resolutions
+          .map((x) => +x)
+          .sort((a, b) => b - a);
+
+        const chosenResolution = sortedResolutions[zoomLevel];
+
+        const tileWidth = chosenResolution * binsPerTile;
+        const tileHeight = tileWidth;
+
+        const tileX = chosenResolution * binsPerTile * tilePos[0];
+        const tileY = chosenResolution * binsPerTile * tilePos[1];
+
+        return {
+          tileX,
+          tileY,
+          tileWidth,
+          tileHeight,
+        };
+      }
+
+      const xTilePos = tilePos[0];
+      const yTilePos = tilePos[1];
+
+      const minX = this.tilesetInfo.min_pos[0];
+      const minY = this.options.reverseYAxis
+        ? -this.tilesetInfo.max_pos[1]
+        : this.tilesetInfo.min_pos[1];
+
+      const tileWidth = this.tilesetInfo.max_width / 2 ** zoomLevel;
+      const tileHeight = this.tilesetInfo.max_width / 2 ** zoomLevel;
+
+      const tileX = minX + xTilePos * tileWidth;
+      const tileY = minY + yTilePos * tileHeight;
+
+      return {
+        tileX,
+        tileY,
+        tileWidth,
+        tileHeight,
+      };
+    }
+
     updateOptions() {
+      this.selectRowsAggregationMode =
+        this.options.selectRowsAggregationMode || 'mean';
+
+      switch (this.selectRowsAggregationMode) {
+        case 'max':
+          this.selectRowsAggregationFn = maxNan;
+          break;
+
+        case 'min':
+          this.selectRowsAggregationFn = minNan;
+          break;
+
+        case 'sum':
+          this.selectRowsAggregationFn = sumNan;
+          break;
+
+        case 'mean':
+        default:
+          this.selectRowsAggregationFn = meanNan;
+          break;
+      }
+
       this.markArea = !!this.options.markArea;
 
       this.markAreaColor = 'grays';
@@ -218,7 +300,14 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       const oldRowNormalization = this.rowNormalization;
       this.rowNormalization = this.options.rowNormalization || false;
 
-      if (oldMarkResolution !== this.markResolution) {
+      const oldRowSelections = this.rowSelections;
+      this.rowSelections =
+        this.options.rowSelections || this.rowSelections || [];
+
+      if (
+        oldMarkResolution !== this.markResolution ||
+        oldRowSelections !== this.rowSelections
+      ) {
         this.updateTiles();
       }
 
@@ -278,6 +367,22 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
               : tile.tileData.maxValueByRow[i];
         }
       }
+
+      // 2. Sort rows
+      if (this.rowSelections.length) {
+        tile.tileData.valuesByRow = this.rowSelections
+          .map((rowIdx) => tile.tileData.valuesByRow[rowIdx])
+          .filter(identity);
+        tile.tileData.maxValueByRow = this.rowSelections
+          .map((rowIdx) => tile.tileData.maxValueByRow[rowIdx])
+          .filter(identity);
+      }
+
+      // 3. Set out shape
+      tile.tileData.coarseShape = [
+        tile.tileData.valuesByRow.length,
+        this.markResolution,
+      ];
     }
 
     updateTiles() {
@@ -327,11 +432,13 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
             .range([0, this.markNumColors])
             .clamp(true);
         }
-        this.valueScaleByRow = (value, row) => this.rowValueScales[row](value);
+        this.valueScaleByRow = (value, row) =>
+          Number.isNaN(value) ? rowHeight : this.rowValueScales[row](value);
         this.colorIndexScaleByRow = (value, row) =>
           Number.isNaN(value) ? -2 : this.rowColorIndexScales[row](value);
       } else {
-        this.valueScaleByRow = (value, row) => this.valueScale(value);
+        this.valueScaleByRow = (value, row) =>
+          Number.isNaN(value) ? rowHeight : this.valueScale(value);
         this.colorIndexScaleByRow = (value, row) =>
           Number.isNaN(value) ? -2 : this.colorIndexScale(value);
       }
@@ -570,6 +677,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
       if (this.lineGraphics) {
         this.pMain.removeChild(this.lineGraphics);
+        this.lineGraphics.destroy();
       }
 
       this.pMain.addChild(newGraphics);
@@ -612,7 +720,124 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       this.draw();
     }
 
-    getMouseOverHtml() {}
+    /**
+     * Return the data currently visible at position X and Y
+     *
+     * @param {Number} trackX: The x position relative to the track's start and end
+     * @param {Number} trakcY: The y position relative to the track's start and end
+     */
+    getVisibleData(trackX, trackY) {
+      const zoomLevel = this.calculateZoomLevel();
+
+      // the width of the tile in base pairs
+      const tileWidth = tileProxy.calculateTileWidth(
+        this.tilesetInfo,
+        zoomLevel,
+        this.tilesetInfo.tile_size
+      );
+
+      // the position of the tile containing the query position
+      const tilePos = this._xScale.invert(trackX) / tileWidth;
+      const numRows = getNumRows(this.fetchedTiles);
+
+      // the position of query within the tile
+      let posInTileX =
+        this.tilesetInfo.tile_size * (tilePos - Math.floor(tilePos));
+      const posInTileYNormalized = trackY / this.dimensions[1];
+      const posInTileY = posInTileYNormalized * numRows;
+
+      const rowIndex = Math.floor(posInTileY);
+      const rowSelection = this.rowSelections[rowIndex];
+      const tileId = this.tileToLocalId([zoomLevel, Math.floor(tilePos)]);
+      const fetchedTile = this.fetchedTiles[tileId];
+
+      let value = '';
+
+      if (fetchedTile) {
+        if (!this.tilesetInfo.shape) {
+          posInTileX =
+            fetchedTile.tileData.dense.length * (tilePos - Math.floor(tilePos));
+        }
+
+        let index = null;
+        if (this.tilesetInfo.shape) {
+          // Accomodate data from vector sources
+          if (
+            Array.isArray(rowSelection) &&
+            this.options.selectRowsAggregationMethod === 'client'
+          ) {
+            // Need to aggregate, so `index` will actually be an array.
+            index = rowSelection.map(
+              (rowI) =>
+                this.tilesetInfo.shape[0] * rowI + Math.floor(posInTileX)
+            );
+          } else if (
+            rowSelection &&
+            this.options.selectRowsAggregationMethod === 'client'
+          ) {
+            index =
+              this.tilesetInfo.shape[0] * rowSelection + Math.floor(posInTileX);
+          } else {
+            // No need to aggregate, `index` will contain a single item.
+            index =
+              this.tilesetInfo.shape[0] * rowIndex + Math.floor(posInTileX);
+          }
+        } else {
+          index =
+            fetchedTile.tileData.dense.length * rowIndex +
+            Math.floor(posInTileX);
+        }
+
+        if (Array.isArray(index)) {
+          const values = index.map((i) => fetchedTile.tileData.dense[i]);
+          value = format('.3f')(this.selectRowsAggregationFn(values));
+          value += '<br/>';
+          value += `${index.length}-item ${this.options.selectRowsAggregationMode}`;
+        } else {
+          value = format('.3f')(fetchedTile.tileData.dense[index]);
+          if (Array.isArray(rowSelection)) {
+            value += '<br/>';
+            value += `${rowSelection.length}-item ${this.options.selectRowsAggregationMode}`;
+          }
+        }
+      }
+
+      // add information about the row
+      if (this.tilesetInfo.row_infos) {
+        value += '<br/>';
+        let rowInfo = '';
+        if (this.options.selectRows && !Array.isArray(rowSelection)) {
+          rowInfo = this.tilesetInfo.row_infos[rowSelection];
+        } else if (rowIndex) {
+          rowInfo = this.tilesetInfo.row_infos[rowIndex];
+        }
+        if (typeof rowInfo === 'object') {
+          // The simplest thing to do here is conform to the tab-separated values convention.
+          value += Object.values(rowInfo).join('\t');
+        } else {
+          // Probably a tab-separated string since not an object.
+          value += rowInfo;
+        }
+      }
+
+      return `${value}`;
+    }
+
+    /**
+     * Get some information to display when the mouse is over this
+     * track
+     *
+     * @param {Number} trackX: the x position of the mouse over the track
+     * @param {Number} trackY: the y position of the mouse over the track
+     *
+     * @return {string}: A HTML string containing the information to display
+     *
+     */
+    getMouseOverHtml(trackX, trackY) {
+      if (!this.tilesetInfo) return '';
+
+      return `Value: ${this.getVisibleData(trackX, trackY)}`;
+    }
   }
 
   return new RidgePlotTrack(...args);

@@ -492,7 +492,11 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
       tracks: {
         top: [
           {
+            uid: 'chroms',
             type: 'horizontal-chromosome-labels',
+            server: 'https://resgen.io/api/v1',
+            tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
+            height: 12,
             options: {
               // tickPositions: 'ends',
               color: '#999999',
@@ -502,17 +506,13 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               showMousePosition: false,
               mousePositionColor: '#000000',
             },
-            tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
-            height: 12,
-            server: 'https://resgen.io/api/v1',
-            uid: 'chroms',
           },
           {
-            type: 'horizontal-gene-annotations',
             uid: 'genes',
-            height: 48,
+            type: 'horizontal-gene-annotations',
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
+            height: 48,
             options: {
               fontSize: 9,
               plusStrandColor: 'black',
@@ -523,8 +523,8 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             },
           },
           {
-            type: 'point-annotation',
             uid: 'ibd-snps',
+            type: 'point-annotation',
             // server: 'http://localhost:9876/api/v1',
             // tilesetUid: 'IBDCombinedset1-2variantonly-pval',
             server: 'https://resgen.io/api/v1',
@@ -563,14 +563,14 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             },
           },
           {
-            type: 'ridge-plot',
             uid: 'dna-accessibility',
-            // height: 403,
-            height: 806,
+            type: 'ridge-plot',
             // server: 'http://localhost:9876/api/v1',
             // tilesetUid: 'test',
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'Uz1_tEABQf-uzktblvBKSQ',
+            // height: 403,
+            height: 806,
             options: {
               name: 'DNA Accessibility',
               labelPosition: 'outerBottom',
@@ -584,7 +584,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               rowHeight: 24,
               rowPadding: -6,
               rowNormalization: true,
-              selectRows: [
+              rowSelections: [
                 120,
                 36,
                 54,
@@ -721,6 +721,23 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
           },
         ],
       },
+      overlays: [
+        {
+          uid: 'region-focus',
+          includes: ['chroms', 'genes', 'ibd-snps', 'dna-accessibility'],
+          options: {
+            extent: [],
+            minWidth: 3,
+            fill: '#cc0078',
+            fillOpacity: 0.05,
+            strokeWidth: 0,
+            outline: '#cc0078',
+            outlineOpacity: 0.33,
+            outlineWidth: 1,
+            outlinePos: ['left', 'right'],
+          },
+        },
+      ],
       layout: {
         w: 12,
         h: 12,
