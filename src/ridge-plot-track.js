@@ -1,4 +1,4 @@
-import { identity, maxVector, mean } from '@flekschas/utils';
+import { identity, max, maxVector, meanNan } from '@flekschas/utils';
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 
@@ -8,70 +8,103 @@ const VS = `precision mediump float;
   attribute vec2 aCurrPosition;
   attribute vec2 aNextPosition;
   attribute float aOffsetSign;
+  attribute float aColorIndex;
 
+  uniform sampler2D uAreaColorTex;
+  uniform float uAreaColorTexRes;
   uniform mat3 projectionMatrix;
   uniform mat3 translationMatrix;
 
+  uniform vec4 uLineColor;
+  uniform vec4 uNaNColor;
   uniform float uWidth;
   uniform int uMiter;
+
+  varying vec4 vColor;
 
   void main(void)
   {
     mat3 model = projectionMatrix * translationMatrix;
-    vec4 prevGlPos = vec4((model * vec3(aPrevPosition, 1.0)).xy, 0.0, 1.0);
-    vec4 currGlPos = vec4((model * vec3(aCurrPosition, 1.0)).xy, 0.0, 1.0);
-    vec4 nextGlPos = vec4((model * vec3(aNextPosition, 1.0)).xy, 0.0, 1.0);
 
-    // Calculate the direction
-    vec2 dir = vec2(0.0);
+    if (aColorIndex <= -0.5) {
+      // Render line
+      vColor = vec4(uLineColor.rgb, 1.0);
 
-    if (currGlPos == prevGlPos) {
-      // start point uses (next - current)
-      dir = normalize(nextGlPos.xy - currGlPos.xy);
-    }
-    else if (currGlPos == nextGlPos) {
-      // end point uses (current - previous)
-      dir = normalize(currGlPos.xy - prevGlPos.xy);
-    }
-    else {
-      // somewhere in middle, needs a join:
-      // get directions from (C - B) and (B - A)
-      vec2 dirA = normalize((currGlPos.xy - prevGlPos.xy));
-      if (uMiter == 1) {
-        vec2 dirB = normalize((nextGlPos.xy - currGlPos.xy));
-        // now compute the miter join normal and length
-        vec2 tangent = normalize(dirA + dirB);
-        vec2 perp = vec2(-dirA.y, dirA.x);
-        vec2 miter = vec2(-tangent.y, tangent.x);
-        dir = tangent;
-      } else {
-        dir = dirA;
+      vec4 prevGlPos = vec4((model * vec3(aPrevPosition, 1.0)).xy, 0.0, 1.0);
+      vec4 currGlPos = vec4((model * vec3(aCurrPosition, 1.0)).xy, 0.0, 1.0);
+      vec4 nextGlPos = vec4((model * vec3(aNextPosition, 1.0)).xy, 0.0, 1.0);
+
+      // Calculate the direction
+      vec2 dir = vec2(0.0);
+
+      if (currGlPos == prevGlPos) {
+        // start point uses (next - current)
+        dir = normalize(nextGlPos.xy - currGlPos.xy);
       }
+      else if (currGlPos == nextGlPos) {
+        // end point uses (current - previous)
+        dir = normalize(currGlPos.xy - prevGlPos.xy);
+      }
+      else {
+        // somewhere in middle, needs a join:
+        // get directions from (C - B) and (B - A)
+        vec2 dirA = normalize((currGlPos.xy - prevGlPos.xy));
+        if (uMiter == 1) {
+          vec2 dirB = normalize((nextGlPos.xy - currGlPos.xy));
+          // now compute the miter join normal and length
+          vec2 tangent = normalize(dirA + dirB);
+          vec2 perp = vec2(-dirA.y, dirA.x);
+          vec2 miter = vec2(-tangent.y, tangent.x);
+          dir = tangent;
+        } else {
+          dir = dirA;
+        }
+      }
+
+      float width = (projectionMatrix * vec3(uWidth, 0.0, 0.0)).x / 2.0;
+
+      vec2 normal = vec2(-dir.y, dir.x) * width;
+      // normal.x /= aspectRatio;
+      vec4 offset = vec4(normal * aOffsetSign, 0.0, 0.0);
+      gl_Position = currGlPos + offset;
+    } else {
+      // Render area
+      float colorRowIndex = aColorIndex / uAreaColorTexRes;
+
+      vec2 colorTexIndex = vec2(
+        (aColorIndex / uAreaColorTexRes) - colorRowIndex,
+        colorRowIndex / uAreaColorTexRes
+      );
+      vColor = texture2D(uAreaColorTex, colorTexIndex);
+
+      gl_Position = vec4((model * vec3(aCurrPosition, 1.0)).xy, 0.0, 1.0);
     }
-
-    float width = (projectionMatrix * vec3(uWidth, 0.0, 0.0)).x / 2.0;
-
-    vec2 normal = vec2(-dir.y, dir.x) * width;
-    // normal.x /= aspectRatio;
-    vec4 offset = vec4(normal * aOffsetSign, 0.0, 0.0);
-    gl_Position = currGlPos + offset;
   }
 `;
 
 const FS = `precision mediump float;
 
-  uniform vec4 uColor;
+  varying vec4 vColor;
 
   void main() {
-    gl_FragColor = vec4(uColor.rgb, 1.0);
+    gl_FragColor = vColor;
   }
 `;
 
 const TILE_SIZE = 256;
 
+const COLORMAP_GRAYS = Array(127)
+  .fill()
+  .map((x, i) => {
+    const gray = (1 - i / 127) * 0.5 + 0.5;
+    return [gray, gray, gray, 1];
+  });
+
+console.log(COLORMAP_GRAYS);
+
 const getMax = (fetchedTiles) =>
   Object.values(fetchedTiles).reduce(
-    (max, tile) => Math.max(max, tile.tileData.maxNonZero),
+    (maxValue, tile) => Math.max(maxValue, tile.tileData.maxNonZero),
     -Infinity
   );
 
@@ -79,7 +112,9 @@ const getNumRows = (fetchedTiles) =>
   Object.values(fetchedTiles)[0].tileData.shape[0];
 
 const getRowMaxs = (fetchedTiles) =>
-  maxVector(Object.values(fetchedTiles).map((tile) => tile.tileData.rowMaxs));
+  maxVector(
+    Object.values(fetchedTiles).map((tile) => tile.tileData.maxValueByRow)
+  );
 
 const scaleGraphics = (graphics, xScale, drawnAtScale) => {
   const tileK =
@@ -92,16 +127,8 @@ const scaleGraphics = (graphics, xScale, drawnAtScale) => {
   graphics.position.x = -posOffset * tileK;
 };
 
-const rowWiseMinMax = (data, shape) => {
-  const [rows, cols] = shape;
-  const mins = Array(2 * rows).fill();
-  const maxs = Array(2 * rows).fill();
-  for (let i = 0; i < rows; i++) {
-    mins[i] = Math.min.apply(null, data.slice(i * cols, (i + 1) * cols));
-    maxs[i] = Math.max.apply(null, data.slice(i * cols, (i + 1) * cols));
-  }
-  return [mins, maxs];
-};
+const getNumPointsPerRow = (numRows, positions, markArea) =>
+  positions.length / numRows / 4 / (1 + markArea) - 2;
 
 const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
   if (!new.target) {
@@ -113,6 +140,26 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
   const { PIXI } = HGC.libraries;
   const { scaleLinear } = HGC.libraries.d3Scale;
 
+  const createColorTexture = (colors) => {
+    const colorTexRes = Math.max(2, Math.ceil(Math.sqrt(colors.length)));
+    const rgba = new Float32Array(colorTexRes ** 2 * 4);
+    colors.forEach((color, i) => {
+      // eslint-disable-next-line prefer-destructuring
+      rgba[i * 4] = color[0]; // r
+      // eslint-disable-next-line prefer-destructuring
+      rgba[i * 4 + 1] = color[1]; // g
+      // eslint-disable-next-line prefer-destructuring
+      rgba[i * 4 + 2] = color[2]; // b
+      // eslint-disable-next-line prefer-destructuring
+      rgba[i * 4 + 3] = color[3]; // a
+    });
+
+    return [
+      PIXI.Texture.fromBuffer(rgba, colorTexRes, colorTexRes),
+      colorTexRes,
+    ];
+  };
+
   class RidgePlotTrack extends HGC.tracks.HorizontalMultivecTrack {
     constructor(context, options) {
       super(context, options);
@@ -120,18 +167,16 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
     }
 
     initTile(tile) {
-      const [rowMins, rowMaxs] = rowWiseMinMax(
-        tile.tileData.dense,
-        tile.tileData.shape
-      );
-      tile.tileData.rowMins = rowMins;
-      tile.tileData.rowMaxs = rowMaxs;
       this.coarsifyTileValues(tile);
     }
 
     destroyTile() {}
 
     updateOptions() {
+      this.markArea = !!this.options.markArea;
+
+      this.markAreaColor = 'grays';
+
       this.markColor = HGC.utils.colorToHex(this.options.markColor || 'black');
 
       this.markColorRgbNorm = this.options.markColor
@@ -141,6 +186,12 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
             .map((x) => Math.min(1, Math.max(0, x / 255)))
         : [0, 0, 0];
 
+      [this.markColorTex, this.markColorTexRes] = createColorTexture([
+        ...COLORMAP_GRAYS,
+      ]);
+
+      this.markNumColors = COLORMAP_GRAYS.length;
+
       this.markOpacity = Number.isNaN(+this.options.markOpacity)
         ? 1
         : Math.min(1, Math.max(0, +this.options.markOpacity));
@@ -149,7 +200,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
       // Number of line segments
       const oldMarkResolution = this.markResolution;
-      this.markResolution = this.options.markResolution || TILE_SIZE / 4;
+      this.markResolution = Math.max(
+        1,
+        Math.min(TILE_SIZE, this.options.markResolution || TILE_SIZE / 4)
+      );
       // Given 100 (rows) x 256 (tile size). At a resolution of 1 we need:
       // 100 x (256 / 4) x 4 = 25,600 vertices
 
@@ -207,17 +261,21 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       tile.tileData.valuesByRow = Array(numRows)
         .fill()
         .map(() => []);
+      tile.tileData.maxValueByRow = Array(numRows).fill(-Infinity);
 
       for (let i = 0; i < numRows; i++) {
         for (let j = 0; j < TILE_SIZE; j += binSizePx) {
-          tile.tileData.valuesByRow[i].push(
-            mean(
-              tile.tileData.dense.subarray(
-                i * TILE_SIZE + j,
-                i * TILE_SIZE + j + binSizePx
-              )
+          const meanValue = meanNan(
+            tile.tileData.dense.subarray(
+              i * TILE_SIZE + j,
+              i * TILE_SIZE + j + binSizePx
             )
           );
+          tile.tileData.valuesByRow[i].push(meanValue);
+          tile.tileData.maxValueByRow[i] =
+            meanValue > tile.tileData.maxValueByRow[i]
+              ? meanValue
+              : tile.tileData.maxValueByRow[i];
         }
       }
     }
@@ -246,21 +304,36 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
           ? visibleTrackHeight
           : rowHeight * numRows + this.rowPadding * (numRows - 1);
 
-      const max = getMax(this.fetchedTiles);
+      const globalMax = getMax(this.fetchedTiles);
 
-      this.valueScale = scaleLinear().domain([0, max]).range([rowHeight, 0]);
+      this.valueScale = scaleLinear()
+        .domain([0, globalMax])
+        .range([rowHeight, 0]);
+      this.colorIndexScale = scaleLinear()
+        .domain([0, globalMax])
+        .range([0, this.markNumColors])
+        .clamp(true);
 
       if (this.rowNormalization) {
         const rowMaxs = getRowMaxs(this.fetchedTiles);
         this.rowValueScales = {};
+        this.rowColorIndexScales = {};
         for (let i = 0; i < numRows; i++) {
           this.rowValueScales[i] = scaleLinear()
             .domain([0, rowMaxs[i]])
             .range([rowHeight, 0]);
+          this.rowColorIndexScales[i] = scaleLinear()
+            .domain([0, rowMaxs[i]])
+            .range([0, this.markNumColors])
+            .clamp(true);
         }
         this.valueScaleByRow = (value, row) => this.rowValueScales[row](value);
+        this.colorIndexScaleByRow = (value, row) =>
+          Number.isNaN(value) ? -2 : this.rowColorIndexScales[row](value);
       } else {
         this.valueScaleByRow = (value, row) => this.valueScale(value);
+        this.colorIndexScaleByRow = (value, row) =>
+          Number.isNaN(value) ? -2 : this.colorIndexScale(value);
       }
 
       this.rowScale = scaleLinear()
@@ -268,31 +341,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
         .range([0, actualTrackHeight]);
     }
 
-    itemToIndicatorCategory(item, isHighlighting) {
-      return {
-        cX: this._xScale(item.start),
-        y: this.categoryHeightScale(
-          this.categoryToY.get(this.getCategory(item))
-        ),
-        opacity: this.opacityScale(this.getImportance(item)),
-        highlight: isHighlighting && item.__focus,
-        widthHalf: Math.max(
-          this.markMinWidth / 2,
-          Math.abs(this._xScale(item.xStart) - this._xScale(item.xEnd)) / 2
-        ),
-        height: this.markHeight,
-        __item: item,
-      };
-    }
-
-    tilesToNumPoints(tiles) {
-      return (
-        tiles[0].tileData.valuesByRow.length *
-        tiles[0].tileData.valuesByRow[0].length
-      );
-    }
-
-    tilesToPositions(tiles, maxRows = Infinity) {
+    tilesToData(tiles, { markArea, maxRows = Infinity, rowHeight } = {}) {
       if (!tiles.length) return [];
 
       const numRows = Math.min(maxRows, getNumRows(tiles));
@@ -300,63 +349,134 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       const positionsByRow = Array(numRows)
         .fill()
         .map(() => []);
+      const colorIndicesByRow = Array(numRows)
+        .fill()
+        .map(() => []);
+      const offsetSignsByRow = Array(numRows)
+        .fill()
+        .map(() => []);
+
       tiles.forEach((tile) => {
         tile.tileData.valuesByRow.forEach((values, i) => {
           if (i >= maxRows) return;
           values.forEach((value, j) => {
             const x = this._xScale(tile.tileData.binXPos[j]);
-            const y = this.rowScale(i) + this.valueScaleByRow(value, i);
+            const yStart = this.rowScale(i);
+            const y = yStart + this.valueScaleByRow(value, i);
             // We're duplicating the the point as for every point on the line we
             // need two x,y vertices to render triangles.
             positionsByRow[i].push(x, y, x, y);
+            colorIndicesByRow[i].push(-1, -1); // -1 refers to the line color
+            offsetSignsByRow[i].push(1, -1);
+
+            if (markArea) {
+              positionsByRow[i].push(x, y, x, yStart + rowHeight);
+              colorIndicesByRow[i].push(this.colorIndexScaleByRow(value, i), 0);
+              offsetSignsByRow[i].push(0, 0);
+            }
           });
         });
       });
 
+      const size2d = markArea ? 8 : 4;
+      const size1d = markArea ? 4 : 2;
+
       // For each row, duplicate the first and last point
-      positionsByRow.forEach((positions) => {
+      for (let i = 0; i < numRows; i++) {
         // Add first point pair to the beginning of the array
-        positions.unshift(...positions.slice(0, 4));
+        positionsByRow[i].unshift(...positionsByRow[i].slice(0, size2d));
+
+        // The very first duplicated point positions do not matter as
+        // we offset the buffer reading. Subsequent dupliations need to be
+        // taken into account though.
+        if (i > 0) {
+          colorIndicesByRow[i].unshift(
+            ...colorIndicesByRow[i].slice(0, size1d)
+          );
+          offsetSignsByRow[i].unshift(...offsetSignsByRow[i].slice(0, size1d));
+        }
 
         // Add last point pair to the end of the array
-        positions.push(...positions.slice(-4));
-      });
-
-      return new Float32Array(positionsByRow.flatMap(identity));
-    }
-
-    positionsToOffsetSign(positions) {
-      const offsetSigns = new Float32Array(positions.length).fill(1);
-      for (let i = 1; i < positions.length; i += 2) {
-        offsetSigns[i] = -1;
+        positionsByRow[i].push(...positionsByRow[i].slice(-size2d));
+        colorIndicesByRow[i].push(...colorIndicesByRow[i].slice(-size1d));
+        offsetSignsByRow[i].push(...offsetSignsByRow[i].slice(-size1d));
       }
-      return offsetSigns;
+
+      return [
+        new Float32Array(positionsByRow.flatMap(identity)),
+        new Float32Array(colorIndicesByRow.flatMap(identity)),
+        new Float32Array(offsetSignsByRow.flatMap(identity)),
+      ];
     }
 
-    numPointsToIndices(numRows, numPointsPerRow) {
-      const indices = new Uint32Array((numPointsPerRow - 1) * numRows * 6);
+    toLineIndices(numRows, numPointsPerRow, markArea) {
+      const verticesPerLine = markArea ? 12 : 6;
+      const verticesPerPoint = markArea ? 4 : 2;
+      const indices = new Uint32Array(
+        (numPointsPerRow - 1) * numRows * verticesPerLine
+      );
       let k = 0;
-      for (let i = 0; i < numRows; i++) {
-        for (let j = 0; j < numPointsPerRow - 1; j++) {
-          // The `+2` comes from the fact that for each row of points we
-          // duplicate the first and last point.
-          const pointOffset = i * (numPointsPerRow + 2) * 2;
-          const a = pointOffset + j * 2;
-          const b = a + 1;
-          const c = a + 2;
-          const d = a + 3;
 
-          const indexOffset = k * 6;
-          indices[indexOffset] = a;
-          indices[indexOffset + 1] = b;
-          indices[indexOffset + 2] = c;
-          indices[indexOffset + 3] = c;
-          indices[indexOffset + 4] = b;
-          indices[indexOffset + 5] = d;
+      if (markArea) {
+        // Draw a line and area
+        for (let i = 0; i < numRows; i++) {
+          for (let j = 0; j < numPointsPerRow - 1; j++) {
+            // The `+2` comes from the fact that for each row of points we
+            // duplicate the first and last point.
+            const pointOffset = i * (numPointsPerRow + 2) * verticesPerPoint;
+            const p1a = pointOffset + j * verticesPerPoint;
+            const p1b = p1a + 1;
+            const p1c = p1a + 2;
+            const p1d = p1a + 3;
+            const p2a = p1a + 4;
+            const p2b = p1a + 5;
+            const p2c = p1a + 6;
+            const p2d = p1a + 7;
 
-          k++;
+            const indexOffset = k * verticesPerLine;
+            // Area
+            indices[indexOffset] = p1c;
+            indices[indexOffset + 1] = p1d;
+            indices[indexOffset + 2] = p2c;
+            indices[indexOffset + 3] = p2c;
+            indices[indexOffset + 4] = p1d;
+            indices[indexOffset + 5] = p2d;
+            // Line
+            indices[indexOffset + 6] = p1a;
+            indices[indexOffset + 7] = p1b;
+            indices[indexOffset + 8] = p2a;
+            indices[indexOffset + 9] = p2a;
+            indices[indexOffset + 10] = p1b;
+            indices[indexOffset + 11] = p2b;
+
+            k++;
+          }
+        }
+      } else {
+        // Just draw a line
+        for (let i = 0; i < numRows; i++) {
+          for (let j = 0; j < numPointsPerRow - 1; j++) {
+            // The `+2` comes from the fact that for each row of points we
+            // duplicate the first and last point.
+            const pointOffset = i * (numPointsPerRow + 2) * verticesPerPoint;
+            const p1a = pointOffset + j * verticesPerPoint;
+            const p1b = p1a + 1;
+            const p2a = p1a + 2;
+            const p2b = p1a + 3;
+
+            const indexOffset = k * verticesPerLine;
+            indices[indexOffset] = p1a;
+            indices[indexOffset + 1] = p1b;
+            indices[indexOffset + 2] = p2a;
+            indices[indexOffset + 3] = p2a;
+            indices[indexOffset + 4] = p1b;
+            indices[indexOffset + 5] = p2b;
+
+            k++;
+          }
         }
       }
+
       return indices;
     }
 
@@ -368,15 +488,36 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       const tiles = Object.values(this.fetchedTiles);
 
       const numRows = getNumRows(tiles);
-      const positions = this.tilesToPositions(tiles, numRows);
-      const numPoints = positions.length / 4 - 2 * numRows;
-      const numPointsPerRow = positions.length / numRows / 4 - 2;
-      const offsetSigns = this.positionsToOffsetSign(positions);
-      const indices = this.numPointsToIndices(numRows, numPointsPerRow);
+      const [, visibleTrackHeight] = this.dimensions;
+
+      const rowHeight =
+        this.rowHeight === 'auto'
+          ? Math.floor(visibleTrackHeight / numRows)
+          : this.rowHeight;
+
+      const [positions, colorIndices, offsetSigns] = this.tilesToData(tiles, {
+        maxRows: numRows,
+        markArea: this.markArea,
+        rowHeight,
+      });
+
+      const numPointsPerRow = getNumPointsPerRow(
+        numRows,
+        positions,
+        this.markArea
+      );
+
+      const indices = this.toLineIndices(
+        numRows,
+        numPointsPerRow,
+        this.markArea
+      );
 
       const uniforms = new PIXI.UniformGroup({
-        uColor: [...this.markColorRgbNorm, 1.0],
-        uColorHighlight: [1.0, 0.0, 0.0, 1.0],
+        uLineColor: [...this.markColorRgbNorm, 1.0],
+        uNaNColor: [1.0, 1.0, 1.0, 1.0],
+        uAreaColorTex: this.markColorTex,
+        uAreaColorTexRes: this.markColorTexRes,
         uWidth: 0.25,
         uMiter: 1,
       });
@@ -384,13 +525,15 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       const shader = PIXI.Shader.from(VS, FS, uniforms);
 
       const geometry = new PIXI.Geometry();
+      const numCoords = 2;
+      const numVerticesPoint = this.markArea ? 4 : 2;
       geometry.addAttribute(
         'aPrevPosition',
         positions,
         2, // size
         false, // normalize
         PIXI.TYPES.FLOAT, // type
-        FLOAT_BYTES * 2, // stride
+        FLOAT_BYTES * numCoords, // stride
         0 // offset/start
       );
       geometry.addAttribute(
@@ -399,9 +542,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
         2, // size
         false, // normalize
         PIXI.TYPES.FLOAT, // type
-        FLOAT_BYTES * 2, // stride
+        FLOAT_BYTES * numCoords, // stride
         // note that each point is duplicated, hence we need to skip over the first two
-        FLOAT_BYTES * 2 * 2 // offset/start
+        FLOAT_BYTES * numCoords * numVerticesPoint // offset/start
       );
       geometry.addAttribute(
         'aNextPosition',
@@ -411,9 +554,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
         PIXI.TYPES.FLOAT, // type
         FLOAT_BYTES * 2, // stride
         // note that each point is duplicated, hence we need to skip over the first four
-        FLOAT_BYTES * 2 * 4 // offset/start
+        FLOAT_BYTES * numCoords * numVerticesPoint * 2 // offset/start
       );
       geometry.addAttribute('aOffsetSign', offsetSigns, 1);
+      geometry.addAttribute('aColorIndex', colorIndices, 1);
       geometry.addIndex(indices);
 
       const mesh = new PIXI.Mesh(geometry, shader);
