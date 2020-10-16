@@ -16,6 +16,7 @@ import Drawer from '@material-ui/core/Drawer';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormLabel from '@material-ui/core/FormLabel';
+import Grid from '@material-ui/core/Grid';
 import InputLabel from '@material-ui/core/InputLabel';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
 import Radio from '@material-ui/core/Radio';
@@ -24,10 +25,12 @@ import Switch from '@material-ui/core/Switch';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
+import SearchIcon from '@material-ui/icons/Search';
 
 import SearchField from './SearchField';
 
 import useQueryString from './use-query-string';
+import usePrevious from './use-previous';
 import { toAbsPosition } from './utils';
 import {
   DEFAULT_X_DOMAIN_START,
@@ -86,6 +89,31 @@ const useStyles = makeStyles((theme) => ({
   },
   higlassSecondary: {
     width: '20rem',
+  },
+  higlassTitleBarFontSize: {
+    fontSize: '0.8rem',
+  },
+  higlassEnhancersTitleBar: {
+    position: 'relative',
+    margin: '-8px 0 0 -8px',
+    padding: '4px 0 4px 8px',
+    background: theme.palette.grey['300'],
+    boxShadow: '1px 0 0 0 white',
+  },
+  higlassDnaAccessibilityTitleBar: {
+    margin: '-8px -8px 0 0',
+    padding: '4px 8px 4px 0',
+    background: theme.palette.grey['300'],
+  },
+  higlassSeparator: {
+    width: 1,
+    margin: '-8px 0',
+    background: theme.palette.grey['300'],
+  },
+  toolbarExtra: {
+    paddingLeft: 0,
+    paddingRight: 0,
+    alignItems: 'flex-end',
   },
 }));
 
@@ -185,8 +213,6 @@ const updateViewConfigFocusStyle = (hideUnfocused) => (viewConfig) => {
 const updateViewConfigVariantYScale = (yScale) => (viewConfig) => {
   viewConfig.views[0].tracks.top[2].options.valueColumn =
     yScale === 'pValue' ? 7 : 8;
-  // viewConfig.views[1].tracks.top[2].options.valueColumn =
-  //   yScale === 'pValue' ? 7 : 8;
 
   return viewConfig;
 };
@@ -230,10 +256,27 @@ const Viewer = (props) => {
 
   const [focusGeneOption, setFocusGeneOption] = useState(null);
   const [focusVariantOption, setFocusVariantOption] = useState(null);
+  const prevFocusGeneOption = usePrevious(focusGeneOption);
+  const prevFocusVariantOption = usePrevious(focusVariantOption);
   const higlassEnhancerApi = useRef(null);
   const higlassDnaAccessApi = useRef(null);
 
   // Derived State
+  const focusGeneVariantOptions = useMemo(() => {
+    const _focusGeneVariant = [];
+    // Add the focus element that has not changed first!
+    if (focusGeneOption && focusGeneOption === prevFocusGeneOption)
+      _focusGeneVariant.push(focusGeneOption);
+    if (focusVariantOption && focusVariantOption === prevFocusVariantOption)
+      _focusGeneVariant.push(focusVariantOption);
+    // Now add the focused element that has changed!
+    if (focusGeneOption && focusGeneOption !== prevFocusGeneOption)
+      _focusGeneVariant.push(focusGeneOption);
+    if (focusVariantOption && focusVariantOption !== prevFocusVariantOption)
+      _focusGeneVariant.push(focusVariantOption);
+    return _focusGeneVariant;
+  }, [focusGeneOption, focusVariantOption]);
+
   const focusGeneStartPosition = useMemo(
     () =>
       focusGeneOption
@@ -308,6 +351,7 @@ const Viewer = (props) => {
     () =>
       pipe(
         updateViewConfigFocusVariant(focusVariantPosition, [2]),
+        updateViewConfigVariantYScale(variantYScale),
         updateViewConfigXDomain(
           focusVariantPosition ? focusVariantPosition - 2500 : xDomainStartAbs,
           focusVariantPosition ? focusVariantPosition + 2500 : xDomainEndAbs,
@@ -318,6 +362,7 @@ const Viewer = (props) => {
       // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
       // updating the view-config on every pan or zoom event.
       focusVariantPosition,
+      variantYScale,
       props.chromInfo,
     ]
   );
@@ -372,6 +417,43 @@ const Viewer = (props) => {
     }
   };
 
+  const focusGeneVariantChangeHandler = (newValues) => {
+    if (newValues.length) {
+      const newFocusElements = {};
+      // We only allow exactly two selections
+      newValues.slice(newValues.length - 2).forEach((newValue) => {
+        switch (newValue.type) {
+          case 'gene':
+            newFocusElements.gene = newValue;
+            if (focusGene !== newValue.geneName) {
+              setFocusGene(newValue.geneName);
+              setFocusGeneOption(newValue);
+            }
+            break;
+
+          case 'variant':
+            newFocusElements.variant = newValue;
+            if (focusVariant !== newValue.geneName) {
+              setFocusVariant(newValue.geneName);
+              setFocusVariantOption(newValue);
+            }
+            break;
+
+          default:
+            // eslint-disable-next-line no-console
+            console.warn('Unknown focus element', newValue);
+            break;
+        }
+      });
+      // Unset focus elements
+      if (focusGene && !newFocusElements.gene) clearFocusGene();
+      if (focusVariant && !newFocusElements.variant) clearFocusVariant();
+    } else {
+      clearFocusGene();
+      clearFocusVariant();
+    }
+  };
+
   const hideUnfocusedChangeHandler = (event) => {
     setHideUnfocused(event.target.checked.toString());
   };
@@ -401,6 +483,7 @@ const Viewer = (props) => {
         txStart: event.payload.fields[1],
         txEnd: event.payload.fields[2],
         geneName: event.payload.name,
+        type: 'gene',
       });
     } else if (event.type === 'snp') {
       setFocusVariant(event.payload.name);
@@ -410,6 +493,7 @@ const Viewer = (props) => {
         txEnd: event.payload.fields[2],
         geneName: event.payload.name,
         score: event.payload.importance,
+        type: 'variant',
       });
     }
   };
@@ -456,11 +540,15 @@ const Viewer = (props) => {
       if (focusGene && !focusGeneOption) {
         const r = await fetch(`${GENE_SEARCH_URL}&ac=${focusGene}`);
         const results = await r.json();
+        const result = results[0];
+        result.type = 'gene';
         focusGeneChangeHandler(results[0]);
       }
       if (focusVariant && !focusVariantOption) {
         const r = await fetch(`${VARIANT_SEARCH_URL}&ac=${focusVariant}`);
         const results = await r.json();
+        const result = results[0];
+        result.type = 'variant';
         focusVariantChangeHandler(results[0]);
       }
     })();
@@ -491,10 +579,31 @@ const Viewer = (props) => {
     <div className={classes.root}>
       <CssBaseline />
       <AppBar position="fixed" className={classes.appBar}>
-        <Toolbar>
-          <Typography variant="h6" noWrap>
-            Enhancer-Promoter Vis
-          </Typography>
+        <Toolbar
+          classes={{
+            root: classes.toolbarExtra,
+          }}
+        >
+          <FormControl fullWidth>
+            <SearchField
+              label={
+                <Grid container direction="row" alignItems="center">
+                  <SearchIcon fontSize="small" />
+                  <span style={{ marginLeft: 3 }}>Gene or Variant</span>
+                </Grid>
+              }
+              searchUrl={[
+                { url: GENE_SEARCH_URL, type: 'gene' },
+                { url: VARIANT_SEARCH_URL, type: 'variant' },
+              ]}
+              onChange={focusGeneVariantChangeHandler}
+              value={focusGeneVariantOptions}
+              variant="filled"
+              larger
+              fullWidth
+              multiple
+            />
+          </FormControl>
         </Toolbar>
       </AppBar>
       <Drawer
@@ -543,30 +652,6 @@ const Viewer = (props) => {
           </Box>
         </Box>
         <Divider />
-        <Box m={1}>
-          <Box m={0}>
-            <FormControl variant="outlined" margin="dense" fullWidth>
-              <SearchField
-                label="Focus Gene"
-                searchUrl={GENE_SEARCH_URL}
-                onChange={focusGeneChangeHandler}
-                value={focusGeneOption}
-                fullWidth
-              />
-            </FormControl>
-          </Box>
-          <Box m={0}>
-            <FormControl variant="outlined" margin="dense" fullWidth>
-              <SearchField
-                label="Focus Variant"
-                searchUrl={VARIANT_SEARCH_URL}
-                onChange={focusVariantChangeHandler}
-                value={focusVariantOption}
-                fullWidth
-              />
-            </FormControl>
-          </Box>
-        </Box>
         <Box m={1}>
           <FormControlLabel
             control={
@@ -637,35 +722,62 @@ const Viewer = (props) => {
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <div className={classes.higlass}>
-          <div className={classes.higlassPrimary}>
-            <HiGlassComponent
-              ref={higlassEnhancerInitHandler}
-              viewConfig={viewConfigEnhancer}
-              options={{
-                sizeMode: 'bounded',
-              }}
-            />
-          </div>
-          <div className={classes.higlassSecondary}>
-            <HiGlassComponent
-              ref={higlassDnaAccessibilityInitHandler}
-              viewConfig={viewConfigDnaAccessibility}
-              options={{
-                sizeMode: 'scroll',
-                pixelPreciseMarginPadding: true,
-                containerPaddingX: 0,
-                containerPaddingY: 0,
-                viewMarginTop: 0,
-                viewMarginBottom: 0,
-                viewMarginLeft: 0,
-                viewMarginRight: 0,
-                viewPaddingTop: 0,
-                viewPaddingBottom: 0,
-                viewPaddingLeft: 0,
-                viewPaddingRight: 16,
-              }}
-            />
-          </div>
+          <Grid container direction="column" className={classes.higlassPrimary}>
+            <Grid item className={classes.higlassEnhancersTitleBar}>
+              <Typography
+                align="center"
+                className={classes.higlassTitleBarFontSize}
+                noWrap
+              >
+                <strong>Predicted Enhancers</strong>
+              </Typography>
+            </Grid>
+            <Grid item className={classes.higlassPrimary}>
+              <HiGlassComponent
+                ref={higlassEnhancerInitHandler}
+                viewConfig={viewConfigEnhancer}
+                options={{
+                  sizeMode: 'bounded',
+                }}
+              />
+            </Grid>
+          </Grid>
+          <div className={classes.higlassSeparator} />
+          <Grid
+            container
+            direction="column"
+            className={classes.higlassSecondary}
+          >
+            <Grid item className={classes.higlassDnaAccessibilityTitleBar}>
+              <Typography
+                align="center"
+                className={classes.higlassTitleBarFontSize}
+                noWrap
+              >
+                <strong>DNA Accessibility</strong>
+              </Typography>
+            </Grid>
+            <Grid item className={classes.higlassPrimary}>
+              <HiGlassComponent
+                ref={higlassDnaAccessibilityInitHandler}
+                viewConfig={viewConfigDnaAccessibility}
+                options={{
+                  sizeMode: 'scroll',
+                  pixelPreciseMarginPadding: true,
+                  containerPaddingX: 0,
+                  containerPaddingY: 0,
+                  viewMarginTop: 0,
+                  viewMarginBottom: 0,
+                  viewMarginLeft: 0,
+                  viewMarginRight: 0,
+                  viewPaddingTop: 0,
+                  viewPaddingBottom: 0,
+                  viewPaddingLeft: 0,
+                  viewPaddingRight: 16,
+                }}
+              />
+            </Grid>
+          </Grid>
         </div>
       </main>
     </div>
