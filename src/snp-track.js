@@ -424,6 +424,37 @@ const createSnpTrack = function createSnpTrack(HGC, ...args) {
             output.appendChild(c);
           });
         });
+
+      const gAxis = document.createElement('g');
+      gAxis.setAttribute('id', 'axis');
+
+      // append the axis to base so that it's not clipped
+      base.appendChild(gAxis);
+      gAxis.setAttribute(
+        'transform',
+        `translate(${this.axis.pAxis.position.x}, ${this.axis.pAxis.position.y})`
+      );
+
+      if (
+        this.options.axisPositionHorizontal === 'left' ||
+        this.options.axisPositionVertical === 'top'
+      ) {
+        const gDrawnAxis = this.axis.exportAxisLeftSVG(
+          this.valueScale,
+          this.dimensions[1]
+        );
+        gAxis.appendChild(gDrawnAxis);
+      } else if (
+        this.options.axisPositionHorizontal === 'right' ||
+        this.options.axisPositionVertical === 'bottom'
+      ) {
+        const gDrawnAxis = this.axis.exportAxisRightSVG(
+          this.valueScale,
+          this.dimensions[1]
+        );
+        gAxis.appendChild(gDrawnAxis);
+      }
+
       return [base, track];
     }
   }
