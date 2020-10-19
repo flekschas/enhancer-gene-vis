@@ -774,6 +774,8 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               ),
               showRowLabels: true,
               rowLabelSize: 10,
+              showMousePosition: true,
+              mousePositionColor: '#cccccc',
             },
           },
         ],
