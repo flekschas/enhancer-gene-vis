@@ -8,9 +8,9 @@ import {
 } from '@flekschas/utils';
 
 import {
-  DEFAULT_GROUP_COLORS,
-  DEFAULT_GROUP_COLORS_LIGHT,
-  DEFAULT_GROUP_COLORS_DARK,
+  DEFAULT_COLOR_MAP,
+  DEFAULT_COLOR_MAP_LIGHT,
+  DEFAULT_COLOR_MAP_DARK,
 } from './constants';
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
@@ -380,9 +380,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
           indicator.tint = this.rowCategories[label]
             ? HGC.utils.colorToHex(
                 this.rowCategories[label].axisLabelColor ||
-                  DEFAULT_GROUP_COLORS[
-                    this.rowCategories[label].index %
-                      DEFAULT_GROUP_COLORS.length
+                  DEFAULT_COLOR_MAP[
+                    this.rowCategories[label].index % DEFAULT_COLOR_MAP.length
                   ]
               )
             : 0x808080;
@@ -397,9 +396,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
               fill: this.rowCategories[label]
                 ? HGC.utils.colorToHex(
                     this.rowCategories[label].axisLabelColor ||
-                      DEFAULT_GROUP_COLORS_DARK[
+                      DEFAULT_COLOR_MAP_DARK[
                         this.rowCategories[label].index %
-                          DEFAULT_GROUP_COLORS_DARK.length
+                          DEFAULT_COLOR_MAP_DARK.length
                       ]
                   )
                 : 0x808080,
@@ -954,16 +953,15 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
         const color = this.rowCategories[label]
           ? this.rowCategories[label].axisLabelColor ||
-            DEFAULT_GROUP_COLORS_DARK[
-              this.rowCategories[label].index % DEFAULT_GROUP_COLORS_DARK.length
+            DEFAULT_COLOR_MAP_DARK[
+              this.rowCategories[label].index % DEFAULT_COLOR_MAP_DARK.length
             ]
           : '#666666';
 
         const background = this.rowCategories[label]
           ? this.rowCategories[label].axisLabelColor ||
-            DEFAULT_GROUP_COLORS_LIGHT[
-              this.rowCategories[label].index %
-                DEFAULT_GROUP_COLORS_LIGHT.length
+            DEFAULT_COLOR_MAP_LIGHT[
+              this.rowCategories[label].index % DEFAULT_COLOR_MAP_LIGHT.length
             ]
           : '#ffffff';
 

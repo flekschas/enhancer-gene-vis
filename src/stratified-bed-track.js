@@ -1,9 +1,9 @@
 import createIntervalTree from 'interval-tree-1d';
 
 import {
-  DEFAULT_GROUP_COLORS,
-  DEFAULT_GROUP_COLORS_DARK,
-  DEFAULT_GROUP_COLORS_LIGHT,
+  DEFAULT_COLOR_MAP,
+  DEFAULT_COLOR_MAP_DARK,
+  DEFAULT_COLOR_MAP_LIGHT,
 } from './constants';
 import { contains, dashedXLineTo } from './utils';
 
@@ -204,11 +204,11 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.options.stratification.groups.forEach((group, i) => {
         this.groupToColor.set(i, [
           HGC.utils.colorToHex(
-            group.color || DEFAULT_GROUP_COLORS[i % DEFAULT_GROUP_COLORS.length]
+            group.color || DEFAULT_COLOR_MAP[i % DEFAULT_COLOR_MAP.length]
           ),
           HGC.utils.colorToHex(
             group.backgroundColor ||
-              DEFAULT_GROUP_COLORS_LIGHT[i % DEFAULT_GROUP_COLORS.length]
+              DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP.length]
           ),
         ]);
         group.categories.forEach((category, j) => {
@@ -227,7 +227,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
             align: this.axisAlign === 'right' ? 'right' : 'left',
             fill: HGC.utils.colorToHex(
               this.options.stratification.groups[i].axisLabelColor ||
-                DEFAULT_GROUP_COLORS_DARK[i % DEFAULT_GROUP_COLORS_DARK.length]
+                DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
             ),
           })
       );

@@ -1,4 +1,4 @@
-export const DEFAULT_GROUP_COLORS = [
+export const DEFAULT_COLOR_MAP = [
   // '#c17da5',
   '#c76526',
   '#dca237',
@@ -10,7 +10,7 @@ export const DEFAULT_GROUP_COLORS = [
   '#999999',
 ];
 
-export const DEFAULT_GROUP_COLORS_DARK = [
+export const DEFAULT_COLOR_MAP_DARK = [
   // '#a1688a',
   '#a65420',
   '#b7872e',
@@ -22,7 +22,7 @@ export const DEFAULT_GROUP_COLORS_DARK = [
   '#666666',
 ];
 
-export const DEFAULT_GROUP_COLORS_LIGHT = [
+export const DEFAULT_COLOR_MAP_LIGHT = [
   // '#f5e9f0',
   '#f6e5db',
   '#f9f0de',
