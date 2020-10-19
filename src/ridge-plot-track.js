@@ -7,6 +7,12 @@ import {
   sumNan,
 } from '@flekschas/utils';
 
+import {
+  DEFAULT_GROUP_COLORS,
+  DEFAULT_GROUP_COLORS_LIGHT,
+  DEFAULT_GROUP_COLORS_DARK,
+} from './constants';
+
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 
 const VS = `precision mediump float;
@@ -295,7 +301,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
         : +this.options.rowHeight;
 
       const oldRowPadding = this.rowPadding;
-      this.rowPadding = this.options.rowPadding || 0;
+      this.rowPadding =
+        this.rowHeight === 'auto' ? 0 : this.options.rowPadding || 0;
 
       const oldRowNormalization = this.rowNormalization;
       this.rowNormalization = this.options.rowNormalization || false;
@@ -318,6 +325,124 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       ) {
         this.updateScales();
       }
+
+      const oldShowRowLabels = this.showRowLabels;
+      this.showRowLabels = this.options.showRowLabels;
+
+      if (oldShowRowLabels !== this.showRowLabels) {
+        this.updateRowLabels(oldShowRowLabels);
+        this.drawLabel();
+      }
+
+      this.rowLabelAlign = this.options.rowLabelAlign || 'left';
+      this.rowLabelSize = this.options.rowLabelSize || 12;
+
+      this.rowCategories = this.options.rowCategories || {};
+      this.rowIdToCategory = (id) => id.substring(0, id.length - 14);
+      this.rowIdToCategory = this.options.rowIdToCategory
+        ? (id) =>
+            id[this.options.rowIdToCategory.fn](
+              ...this.options.rowIdToCategory.args
+            )
+        : identity;
+    }
+
+    removeRowLabels() {
+      while (this.pAxis.children.length) {
+        this.pAxis.removeChildAt(0);
+      }
+      if (this.rowLabels) {
+        this.rowLabels.forEach((rowLabel) => {
+          rowLabel.destroy();
+        });
+        this.rowLabels = undefined;
+      }
+    }
+
+    updateRowLabels(oldShowRowLabels) {
+      if (!this.tilesetInfo || !this.tilesetInfo.row_infos) return;
+
+      const labels = this.rowSelections.length
+        ? this.rowSelections.map((rowIndex) =>
+            this.tilesetInfo.row_infos[rowIndex] === undefined
+              ? '?'
+              : this.rowIdToCategory(this.tilesetInfo.row_infos[rowIndex].id)
+          )
+        : this.tilesetInfo.row_infos.map(({ id }) => this.rowIdToCategory(id));
+
+      this.removeRowLabels();
+
+      if (this.showRowLabels === 'indicator') {
+        this.rowLabels = labels.map((label) => {
+          const indicator = new PIXI.Sprite(PIXI.Texture.WHITE);
+          indicator.width = this.rowLabelSize / 2;
+          indicator.height = this.rowLabelSize;
+          indicator.tint = this.rowCategories[label]
+            ? HGC.utils.colorToHex(
+                this.rowCategories[label].axisLabelColor ||
+                  DEFAULT_GROUP_COLORS[
+                    this.rowCategories[label].index %
+                      DEFAULT_GROUP_COLORS.length
+                  ]
+              )
+            : 0x808080;
+          return indicator;
+        });
+      } else if (this.showRowLabels) {
+        this.rowLabels = labels.map(
+          (label) =>
+            new PIXI.Text(label, {
+              fontSize: this.rowLabelSize,
+              align: this.rowLabelAlign === 'right' ? 'right' : 'left',
+              fill: this.rowCategories[label]
+                ? HGC.utils.colorToHex(
+                    this.rowCategories[label].axisLabelColor ||
+                      DEFAULT_GROUP_COLORS_DARK[
+                        this.rowCategories[label].index %
+                          DEFAULT_GROUP_COLORS_DARK.length
+                      ]
+                  )
+                : 0x808080,
+            })
+        );
+      }
+    }
+
+    drawLabel() {
+      if (!this.showRowLabels) {
+        if (this.rowLabels) {
+          while (this.pAxis.children.length) {
+            this.pAxis.removeChildAt(0);
+          }
+        }
+        return;
+      }
+      if (this.showRowLabels && !this.rowLabels) this.updateRowLabels();
+      if (!this.rowLabels) return;
+
+      const [width] = this.dimensions;
+      const [left, top] = this.position;
+
+      this.pAxis.position.x = this.axisAlign === 'right' ? left + width : left;
+      this.pAxis.position.y = top;
+
+      this.pAxis.clear();
+      let yStart = 0;
+
+      const xLabelOffset = this.axisAlign === 'right' ? -3 : 3;
+      const [, rowStepHeight] = this.getRowHeight();
+      const rowStepYCenter = rowStepHeight / 2;
+
+      this.rowLabels.forEach((label, i) => {
+        label.x = xLabelOffset;
+        label.y = yStart - this.rowPadding + rowStepYCenter;
+        label.anchor.x = this.axisAlign === 'right' ? 1 : 0;
+        label.anchor.y = 0.5;
+
+        yStart += rowStepHeight;
+
+        this.pAxis.addChild(label);
+      });
     }
 
     rerender(newOptions) {
@@ -399,15 +524,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       const [, visibleTrackHeight] = this.dimensions;
       const numRows = getNumRows(fetchedTiles);
 
-      const rowHeight =
-        this.rowHeight === 'auto'
-          ? Math.floor(visibleTrackHeight / numRows)
-          : this.rowHeight;
+      const [rowHeight] = this.getRowHeight();
 
-      const actualTrackHeight =
-        this.rowHeight === 'auto'
-          ? visibleTrackHeight
-          : rowHeight * numRows + this.rowPadding * (numRows - 1);
+      const actualTrackHeight = this.getTrackHeight(numRows, rowHeight);
 
       const globalMax = getMax(this.fetchedTiles);
 
@@ -445,7 +564,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
       this.rowScale = scaleLinear()
         .domain([0, numRows])
-        .range([0, actualTrackHeight]);
+        .range([0, actualTrackHeight + this.rowPadding]);
     }
 
     tilesToData(tiles, { markArea, maxRows = Infinity, rowHeight } = {}) {
@@ -587,6 +706,25 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       return indices;
     }
 
+    getRowHeight(numRows) {
+      const [, visibleTrackHeight] = this.dimensions;
+
+      return this.rowHeight === 'auto'
+        ? [
+            Math.floor(visibleTrackHeight / numRows),
+            Math.floor(visibleTrackHeight / numRows),
+          ]
+        : [this.rowHeight, this.rowHeight + this.rowPadding];
+    }
+
+    getTrackHeight(numRows, rowHeight) {
+      const [, visibleTrackHeight] = this.dimensions;
+
+      return this.rowHeight === 'auto'
+        ? visibleTrackHeight
+        : rowHeight * numRows + this.rowPadding * (numRows - 1);
+    }
+
     renderLines() {
       this.drawnAtScale = scaleLinear()
         .domain([...this.xScale().domain()])
@@ -595,12 +733,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       const tiles = Object.values(this.fetchedTiles);
 
       const numRows = getNumRows(tiles);
-      const [, visibleTrackHeight] = this.dimensions;
-
-      const rowHeight =
-        this.rowHeight === 'auto'
-          ? Math.floor(visibleTrackHeight / numRows)
-          : this.rowHeight;
+      const [rowHeight] = this.getRowHeight(numRows);
 
       const [positions, colorIndices, offsetSigns] = this.tilesToData(tiles, {
         maxRows: numRows,
@@ -689,17 +822,11 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       this.animate();
     }
 
-    updateIndicators() {
-      // Needs to be implemented:
-      // this.renderIndicatorCategoryAxis(this.valueScaleInverted);
-      this.renderLines();
-    }
-
     // Called whenever a new tile comes in
     updateExistingGraphics() {
       if (!this.hasFetchedTiles()) return;
       this.updateScales();
-      this.updateIndicators();
+      this.renderLines();
     }
 
     setPosition(newPosition) {
@@ -729,6 +856,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
     getVisibleData(trackX, trackY) {
       const zoomLevel = this.calculateZoomLevel();
 
+      const numRows = getNumRows(this.fetchedTiles);
+      const [, rowStepHeight] = this.getRowHeight(numRows);
+
       // the width of the tile in base pairs
       const tileWidth = tileProxy.calculateTileWidth(
         this.tilesetInfo,
@@ -738,20 +868,22 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
       // the position of the tile containing the query position
       const tilePos = this._xScale.invert(trackX) / tileWidth;
-      const numRows = getNumRows(this.fetchedTiles);
 
       // the position of query within the tile
       let posInTileX =
         this.tilesetInfo.tile_size * (tilePos - Math.floor(tilePos));
-      const posInTileYNormalized = trackY / this.dimensions[1];
-      const posInTileY = posInTileYNormalized * numRows;
-
-      const rowIndex = Math.floor(posInTileY);
+      // const posInTileYNormalized = trackY / this.dimensions[1];
+      // The first track doesn't apply padding so we have to shift padding
+      // to the mouse position once
+      const rowIndex = Math.floor(
+        Math.max(0, (trackY + this.rowPadding) / rowStepHeight)
+      );
       const rowSelection = this.rowSelections[rowIndex];
       const tileId = this.tileToLocalId([zoomLevel, Math.floor(tilePos)]);
       const fetchedTile = this.fetchedTiles[tileId];
 
-      let value = '';
+      let text = '';
+      let value = '<em>unknown</em>';
 
       if (fetchedTile) {
         if (!this.tilesetInfo.shape) {
@@ -791,10 +923,14 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
         if (Array.isArray(index)) {
           const values = index.map((i) => fetchedTile.tileData.dense[i]);
           value = format('.3f')(this.selectRowsAggregationFn(values));
-          value += '<br/>';
-          value += `${index.length}-item ${this.options.selectRowsAggregationMode}`;
+          text = value;
+
+          text += '<br/>';
+          text += `${index.length}-item ${this.options.selectRowsAggregationMode}`;
         } else {
           value = format('.3f')(fetchedTile.tileData.dense[index]);
+          text = value;
+
           if (Array.isArray(rowSelection)) {
             value += '<br/>';
             value += `${rowSelection.length}-item ${this.options.selectRowsAggregationMode}`;
@@ -804,23 +940,38 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
       // add information about the row
       if (this.tilesetInfo.row_infos) {
-        value += '<br/>';
         let rowInfo = '';
-        if (this.options.selectRows && !Array.isArray(rowSelection)) {
+
+        if (rowSelection !== undefined) {
           rowInfo = this.tilesetInfo.row_infos[rowSelection];
         } else if (rowIndex) {
           rowInfo = this.tilesetInfo.row_infos[rowIndex];
         }
-        if (typeof rowInfo === 'object') {
-          // The simplest thing to do here is conform to the tab-separated values convention.
-          value += Object.values(rowInfo).join('\t');
-        } else {
-          // Probably a tab-separated string since not an object.
-          value += rowInfo;
-        }
+
+        const label =
+          typeof rowInfo === 'object'
+            ? this.rowIdToCategory(rowInfo.id)
+            : rowInfo;
+
+        const color = this.rowCategories[label]
+          ? this.rowCategories[label].axisLabelColor ||
+            DEFAULT_GROUP_COLORS_DARK[
+              this.rowCategories[label].index % DEFAULT_GROUP_COLORS_DARK.length
+            ]
+          : '#666666';
+
+        const background = this.rowCategories[label]
+          ? this.rowCategories[label].axisLabelColor ||
+            DEFAULT_GROUP_COLORS_LIGHT[
+              this.rowCategories[label].index %
+                DEFAULT_GROUP_COLORS_LIGHT.length
+            ]
+          : '#ffffff';
+
+        return `<div style="margin: -0.25rem; padding: 0 0.25rem; background: ${background}"><strong style="color: ${color};">${label}:</strong> ${value}</div>`;
       }
 
-      return `${value}`;
+      return text;
     }
 
     /**
@@ -836,7 +987,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
     getMouseOverHtml(trackX, trackY) {
       if (!this.tilesetInfo) return '';
 
-      return `Value: ${this.getVisibleData(trackX, trackY)}`;
+      return this.getVisibleData(trackX, trackY);
     }
   }
 

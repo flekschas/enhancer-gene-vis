@@ -1,3 +1,39 @@
+export const DEFAULT_GROUP_COLORS = [
+  // '#c17da5',
+  '#c76526',
+  '#dca237',
+  '#eee462',
+  '#469b76',
+  '#3170ad',
+  '#6fb2e4',
+  '#000000',
+  '#999999',
+];
+
+export const DEFAULT_GROUP_COLORS_DARK = [
+  // '#a1688a',
+  '#a65420',
+  '#b7872e',
+  '#9f9841',
+  '#3a8162',
+  '#295d90',
+  '#4a7798',
+  '#000000',
+  '#666666',
+];
+
+export const DEFAULT_GROUP_COLORS_LIGHT = [
+  // '#f5e9f0',
+  '#f6e5db',
+  '#f9f0de',
+  '#fcfbe5',
+  '#e0eee8',
+  '#dde7f1',
+  '#e7f2fb',
+  '#d5d5d5',
+  '#ffffff',
+];
+
 export const GENE_SEARCH_URL =
   'https://higlass.io/api/v1/suggest/?d=OHJakQICQD6gTD7skx4EWA';
 
@@ -570,7 +606,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'Uz1_tEABQf-uzktblvBKSQ',
             // height: 403,
-            height: 806,
+            height: 131 * (24 - 6) + 6,
             options: {
               name: 'DNA Accessibility',
               labelPosition: 'outerBottom',
@@ -717,6 +753,27 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
                 52,
                 42,
               ],
+              rowIdToCategory: {
+                fn: 'replace',
+                args: ['.accessibility', ''],
+              },
+              rowCategories: DEFAULT_STRATIFICATION.groups.reduce(
+                (row, group, index) => {
+                  const category = {
+                    label: group.label,
+                    color: group.axisLabelColor,
+                    background: group.axisLabelBackground,
+                    index,
+                  };
+                  group.categories.forEach((sample) => {
+                    row[sample] = category;
+                  });
+                  return row;
+                },
+                {}
+              ),
+              showRowLabels: true,
+              rowLabelSize: 10,
             },
           },
         ],

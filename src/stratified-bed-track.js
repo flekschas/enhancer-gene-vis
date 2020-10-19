@@ -1,4 +1,10 @@
 import createIntervalTree from 'interval-tree-1d';
+
+import {
+  DEFAULT_GROUP_COLORS,
+  DEFAULT_GROUP_COLORS_DARK,
+  DEFAULT_GROUP_COLORS_LIGHT,
+} from './constants';
 import { contains, dashedXLineTo } from './utils';
 
 const VS = `
@@ -42,42 +48,6 @@ const FS = `
     gl_FragColor = vec4(r, g, b, 1.0) * vOpacity;
   }
 `;
-
-const DEFAULT_GROUP_COLORS = [
-  // '#c17da5',
-  '#c76526',
-  '#dca237',
-  '#eee462',
-  '#469b76',
-  '#3170ad',
-  '#6fb2e4',
-  '#000000',
-  '#999999',
-];
-
-const DEFAULT_GROUP_COLORS_DARK = [
-  // '#a1688a',
-  '#a65420',
-  '#b7872e',
-  '#9f9841',
-  '#3a8162',
-  '#295d90',
-  '#4a7798',
-  '#000000',
-  '#666666',
-];
-
-const DEFAULT_GROUP_COLORS_LIGHT = [
-  // '#f5e9f0',
-  '#f6e5db',
-  '#f9f0de',
-  '#fcfbe5',
-  '#e0eee8',
-  '#dde7f1',
-  '#e7f2fb',
-  '#d5d5d5',
-  '#ffffff',
-];
 
 // prettier-ignore
 const pointToPosition = (pt) => [
@@ -254,7 +224,6 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         (label, i) =>
           new PIXI.Text(label, {
             fontSize: this.labelSize,
-            // fill: this.labelColor,
             align: this.axisAlign === 'right' ? 'right' : 'left',
             fill: HGC.utils.colorToHex(
               this.options.stratification.groups[i].axisLabelColor ||

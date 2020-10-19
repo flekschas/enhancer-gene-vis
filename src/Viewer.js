@@ -97,13 +97,12 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
     margin: '-8px 0 0 -8px',
     padding: '4px 0 4px 8px',
-    background: theme.palette.grey['300'],
-    boxShadow: '1px 0 0 0 white',
+    background: theme.palette.grey['100'],
   },
   higlassDnaAccessibilityTitleBar: {
     margin: '-8px -8px 0 0',
     padding: '4px 8px 4px 0',
-    background: theme.palette.grey['300'],
+    background: theme.palette.grey['100'],
   },
   higlassSeparator: {
     width: 1,
@@ -222,6 +221,12 @@ const updateViewConfigMatrixColoring = (coloring) => (viewConfig) => {
   return viewConfig;
 };
 
+const updateViewConfigDnaAccessLabels = (labels) => (viewConfig) => {
+  viewConfig.views[0].tracks.top[3].options.showRowLabels =
+    !labels || labels === 'hidden' ? false : labels;
+  return viewConfig;
+};
+
 const Viewer = (props) => {
   const [focusGene, setFocusGene] = useQueryString('gene', '');
   const [focusVariant, setFocusVariant] = useQueryString(
@@ -236,6 +241,10 @@ const Viewer = (props) => {
   const [variantYScale, setVariantYScale] = useQueryString(
     'varient-scale',
     'pValue'
+  );
+  const [dnaAccessLabels, setDnaAccessLabels] = useQueryString(
+    'access-labels',
+    'indicator'
   );
   const [xDomainStart, setXDomainStart] = useQueryString(
     'start',
@@ -352,6 +361,7 @@ const Viewer = (props) => {
       pipe(
         updateViewConfigFocusVariant(focusVariantPosition, [2]),
         updateViewConfigVariantYScale(variantYScale),
+        updateViewConfigDnaAccessLabels(dnaAccessLabels),
         updateViewConfigXDomain(
           focusVariantPosition ? focusVariantPosition - 2500 : xDomainStartAbs,
           focusVariantPosition ? focusVariantPosition + 2500 : xDomainEndAbs,
@@ -363,6 +373,7 @@ const Viewer = (props) => {
       // updating the view-config on every pan or zoom event.
       focusVariantPosition,
       variantYScale,
+      dnaAccessLabels,
       props.chromInfo,
     ]
   );
@@ -464,6 +475,10 @@ const Viewer = (props) => {
 
   const matrixColoringChangeHandler = (event) => {
     setMatrixColoring(event.target.value);
+  };
+
+  const dnaAccessLabelsChangeHandler = (event) => {
+    setDnaAccessLabels(event.target.value);
   };
 
   const xDomainStartChangeHandler = (event) => {
@@ -714,6 +729,33 @@ const Viewer = (props) => {
                 label="Prediction score of the closest TSS interaction"
                 control={<Radio size="small" />}
                 value="closestImportance"
+              />
+            </RadioGroup>
+          </FormControl>
+        </Box>
+        <Box m={1}>
+          <FormControl component="fieldset">
+            <FormLabel component="legend">DNA accessibility labels</FormLabel>
+            <RadioGroup
+              aria-label="dnaAccessLabels"
+              name="dnaAccessLabels"
+              value={dnaAccessLabels}
+              onChange={dnaAccessLabelsChangeHandler}
+            >
+              <FormControlLabel
+                label="Indicator"
+                control={<Radio size="small" />}
+                value="indicator"
+              />
+              <FormControlLabel
+                label="Text"
+                control={<Radio size="small" />}
+                value="text"
+              />
+              <FormControlLabel
+                label="Hidden"
+                control={<Radio size="small" />}
+                value="hidden"
               />
             </RadioGroup>
           </FormControl>
