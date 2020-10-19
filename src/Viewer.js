@@ -83,6 +83,25 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1),
     backgroundColor: 'white',
   },
+  logo: {
+    height: '100%',
+    margin: '0',
+    padding: '0',
+    fontSize: '1rem',
+    lineHeight: '1rem',
+    fontWeight: 'bold',
+  },
+  logoGrid: {
+    height: '100%',
+    padding: '0.5rem',
+    alignItems: 'center',
+  },
+  logoAbc: {
+    fontSize: '2.75rem',
+    letterSpacing: '-0.1rem',
+    paddingRight: '0.3rem',
+  },
+  logoEnhancerGene: {},
   grow: {
     flexGrow: 1,
   },
@@ -695,7 +714,25 @@ const Viewer = (props) => {
         }}
         anchor="left"
       >
-        <div className={classes.toolbar} />
+        <div className={classes.toolbar}>
+          <h1 className={classes.logo}>
+            <Grid container className={classes.logoGrid}>
+              <Grid item className={classes.logoAbc}>
+                ABC
+              </Grid>
+              <Grid item>
+                <Grid
+                  container
+                  direction="column"
+                  className={classes.logoEnhancerGene}
+                >
+                  <Grid item>Enhancer-Gene</Grid>
+                  <Grid item>Connections</Grid>
+                </Grid>
+              </Grid>
+            </Grid>
+          </h1>
+        </div>
         <Divider />
         <Box m={1}>
           <Box m={0}>
