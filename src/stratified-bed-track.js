@@ -448,10 +448,11 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         .domain([...this.xScale().domain()])
         .range([...this.xScale().range()]);
 
-      const isHighlighting =
+      const isHighlighting = !!(
         this.focusStyle === 'highlighting' &&
         ((this.focusGene && this.getGene) ||
-          (this.focusRegion && this.getRegion));
+          (this.focusRegion && this.getRegion))
+      );
 
       let reducerVar = [];
       let addFn = (accumulator, item) =>
