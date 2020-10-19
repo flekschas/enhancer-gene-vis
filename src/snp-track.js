@@ -291,6 +291,8 @@ const createSnpTrack = function createSnpTrack(HGC, ...args) {
           });
         }
       };
+
+      return [circleDraws, circleFocusDraws];
     }
 
     /**
@@ -375,9 +377,9 @@ const createSnpTrack = function createSnpTrack(HGC, ...args) {
       let track = null;
       let base = null;
 
-      [base, track] = super.superSVG();
+      [base, track] = super.exportSVG();
 
-      base.setAttribute('class', 'exported-arcs-track');
+      base.setAttribute('class', 'exported-snp-track');
       const output = document.createElement('g');
 
       track.appendChild(output);
@@ -386,31 +388,42 @@ const createSnpTrack = function createSnpTrack(HGC, ...args) {
         `translate(${this.position[0]},${this.position[1]})`
       );
 
-      const strokeColor = this.options.strokeColor
-        ? this.options.strokeColor
-        : 'blue';
-      const strokeWidth = this.options.strokeWidth
-        ? this.options.strokeWidth
-        : 2;
+      this.visibleAndFetchedTiles()
+        .filter((tile) => tile.plusStrandRows)
+        .forEach((tile) => {
+          // call drawTile with storePolyStr = true so that
+          // we record path strings to use in the SVG
+          const [circles, focusedCircles] = this.renderRows(
+            tile,
+            tile.plusStrandRows,
+            tile.plusStrandRows.length,
+            0,
+            this.dimensions[1],
+            'blue'
+          );
 
-      this.visibleAndFetchedTiles().forEach((tile) => {
-        this.polys = [];
+          circles.forEach((circle) => {
+            const c = document.createElement('circle');
+            c.setAttribute('fill', this.options.markColor || 'black');
+            c.setAttribute('stroke-width', 0);
+            c.setAttribute('opacity', this.options.markOpacity || 0.33);
+            c.setAttribute('r', this.options.markSize);
+            c.setAttribute('cx', circle[0]);
+            c.setAttribute('cy', circle[2]);
+            output.appendChild(c);
+          });
 
-        // call drawTile with storePolyStr = true so that
-        // we record path strings to use in the SVG
-        this.drawTile(tile, true);
-
-        for (const { polyStr, opacity } of this.polys) {
-          const g = document.createElement('path');
-          g.setAttribute('fill', 'transparent');
-          g.setAttribute('stroke', strokeColor);
-          g.setAttribute('stroke-width', strokeWidth);
-          g.setAttribute('opacity', opacity);
-
-          g.setAttribute('d', polyStr);
-          output.appendChild(g);
-        }
-      });
+          focusedCircles.forEach((circle) => {
+            const c = document.createElement('circle');
+            c.setAttribute('fill', this.options.markColorFocus || 'red');
+            c.setAttribute('stroke-width', 0);
+            c.setAttribute('opacity', this.options.markOpacityFocus || 0.66);
+            c.setAttribute('r', this.options.markSize + 1);
+            c.setAttribute('cx', circle[0]);
+            c.setAttribute('cy', circle[2]);
+            output.appendChild(c);
+          });
+        });
       return [base, track];
     }
   }
