@@ -102,6 +102,17 @@ const useStyles = makeStyles((theme) => ({
       fontSize: '1.125em',
     },
   },
+  startExploring: {
+    color: 'white',
+    background: '#cc0078 linear-gradient(45deg, #cc0078 30%, #cc0066 90%)',
+    boxShadow: '0 1px 6px 1px rgba(255, 76, 151, .3)',
+    '&:hover': {
+      boxShadow: '0 1px 6px 1px rgba(255, 76, 151, .5)',
+    },
+    '&:focus': {
+      boxShadow: '0 1px 6px 1px rgba(255, 76, 151, .5)',
+    },
+  },
   appBar: {
     width: `calc(100% - ${drawerWidth}px)`,
     marginLeft: drawerWidth,
@@ -1127,6 +1138,17 @@ const Viewer = (props) => {
               </a>
               .
             </p>
+            <Typography align="center">
+              <Button
+                className={classes.startExploring}
+                onClick={infoCloseHandler}
+                variant="contained"
+                primary
+                disableElevation
+              >
+                Start Exploring!
+              </Button>
+            </Typography>
           </div>
         </Fade>
       </Modal>

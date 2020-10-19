@@ -12,6 +12,12 @@ code {
     monospace;
 }
 
+a,
+a:visited {
+  color: inherit;
+  text-decoration-color: rgba(0, 0, 0, 0.5);
+}
+
 .flex-box,
 .fb {
   display: flex;
