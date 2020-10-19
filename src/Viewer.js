@@ -810,7 +810,7 @@ const Viewer = (props) => {
       >
         <Grid container direction="column" className={classes.drawerGrid}>
           <Grid item>
-            <ButtonBase className={classes.toolbar}>
+            <ButtonBase className={classes.toolbar} style={{ width: '100%' }}>
               <h1 className={classes.h1} onClick={infoOpenHandler}>
                 <Logo />
               </h1>
