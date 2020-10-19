@@ -8,28 +8,33 @@ import React, {
 import { HiGlassComponent } from 'higlass';
 import { debounce, deepClone, isString, pipe } from '@flekschas/utils';
 import AppBar from '@material-ui/core/AppBar';
+import Backdrop from '@material-ui/core/Backdrop';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
 import Drawer from '@material-ui/core/Drawer';
+import Fade from '@material-ui/core/Fade';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormLabel from '@material-ui/core/FormLabel';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import InputLabel from '@material-ui/core/InputLabel';
+import Modal from '@material-ui/core/Modal';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
 import Popover from '@material-ui/core/Popover';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Switch from '@material-ui/core/Switch';
 import Toolbar from '@material-ui/core/Toolbar';
+import ButtonBase from '@material-ui/core/ButtonBase';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import HelpIcon from '@material-ui/icons/Help';
 import SearchIcon from '@material-ui/icons/Search';
 
+import Logo from './Logo';
 import SearchField from './SearchField';
 
 import useQueryString from './use-query-string';
@@ -67,6 +72,36 @@ const useStyles = makeStyles((theme) => ({
     bottom: 0,
     left: 0,
   },
+  h1: {
+    height: '100%',
+    margin: '0',
+    padding: '0',
+    fontSize: '1rem',
+    lineHeight: '1rem',
+    fontWeight: 'bold',
+  },
+  modal: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '4rem',
+  },
+  paper: {
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: '0.25rem',
+    boxShadow: theme.shadows[4],
+    maxWidth: '60rem',
+    padding: theme.spacing(2, 4),
+    outline: 0,
+    '&>h2': {
+      display: 'flex',
+      justifyContent: 'center',
+      margin: theme.spacing(2, 0, 3),
+    },
+    '&>p': {
+      fontSize: '1.125em',
+    },
+  },
   appBar: {
     width: `calc(100% - ${drawerWidth}px)`,
     marginLeft: drawerWidth,
@@ -91,24 +126,6 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     padding: theme.spacing(1),
     backgroundColor: 'white',
-  },
-  logo: {
-    height: '100%',
-    margin: '0',
-    padding: '0',
-    fontSize: '1rem',
-    lineHeight: '1rem',
-    fontWeight: 'bold',
-  },
-  logoGrid: {
-    height: '100%',
-    padding: '0.5rem',
-    alignItems: 'center',
-  },
-  logoAbc: {
-    fontSize: '2.75rem',
-    letterSpacing: '-0.1rem',
-    paddingRight: '0.3rem',
   },
   grow: {
     flexGrow: 1,
@@ -283,6 +300,9 @@ const updateViewConfigDnaAccessLabels = (labels) => (viewConfig) => {
 };
 
 const Viewer = (props) => {
+  const [infoOpen, setInfoOpen] = useQueryString('info', true, {
+    decoder: (v) => v === 'true',
+  });
   const [focusGene, setFocusGene] = useQueryString('gene', '');
   const [focusVariant, setFocusVariant] = useQueryString(
     'variant',
@@ -334,20 +354,26 @@ const Viewer = (props) => {
   ] = useState(null);
 
   // Derived State
-  const focusGeneVariantOptions = useMemo(() => {
-    const _focusGeneVariant = [];
-    // Add the focus element that has not changed first!
-    if (focusGeneOption && focusGeneOption === prevFocusGeneOption)
-      _focusGeneVariant.push(focusGeneOption);
-    if (focusVariantOption && focusVariantOption === prevFocusVariantOption)
-      _focusGeneVariant.push(focusVariantOption);
-    // Now add the focused element that has changed!
-    if (focusGeneOption && focusGeneOption !== prevFocusGeneOption)
-      _focusGeneVariant.push(focusGeneOption);
-    if (focusVariantOption && focusVariantOption !== prevFocusVariantOption)
-      _focusGeneVariant.push(focusVariantOption);
-    return _focusGeneVariant;
-  }, [focusGeneOption, focusVariantOption]);
+  const focusGeneVariantOptions = useMemo(
+    () => {
+      const _focusGeneVariant = [];
+      // Add the focus element that has not changed first!
+      if (focusGeneOption && focusGeneOption === prevFocusGeneOption)
+        _focusGeneVariant.push(focusGeneOption);
+      if (focusVariantOption && focusVariantOption === prevFocusVariantOption)
+        _focusGeneVariant.push(focusVariantOption);
+      // Now add the focused element that has changed!
+      if (focusGeneOption && focusGeneOption !== prevFocusGeneOption)
+        _focusGeneVariant.push(focusGeneOption);
+      if (focusVariantOption && focusVariantOption !== prevFocusVariantOption)
+        _focusGeneVariant.push(focusVariantOption);
+      return _focusGeneVariant;
+    },
+    // `prevFocusGeneOption` and `prevFocusVariantOption` are ommitted
+    // on purpose to avoid circular updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [focusGeneOption, focusVariantOption]
+  );
 
   const focusGeneStartPosition = useMemo(
     () =>
@@ -406,6 +432,7 @@ const Viewer = (props) => {
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigXDomain(xDomainStartAbs, xDomainEndAbs)
       )(deepClone(DEFAULT_VIEW_CONFIG_ENHANCER)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
       // updating the view-config on every pan or zoom event.
@@ -431,6 +458,7 @@ const Viewer = (props) => {
           true
         )
       )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
       // updating the view-config on every pan or zoom event.
@@ -621,36 +649,46 @@ const Viewer = (props) => {
   };
 
   // Initializations
-  useEffect(() => {
-    (async () => {
-      if (focusGene && !focusGeneOption) {
-        const r = await fetch(`${GENE_SEARCH_URL}&ac=${focusGene}`);
-        const results = await r.json();
-        const result = results[0];
-        result.type = 'gene';
-        focusGeneChangeHandler(results[0]);
-      }
-      if (focusVariant && !focusVariantOption) {
-        const r = await fetch(`${VARIANT_SEARCH_URL}&ac=${focusVariant}`);
-        const results = await r.json();
-        const result = results[0];
-        result.type = 'variant';
-        focusVariantChangeHandler(results[0]);
-      }
-    })();
-  }, []);
+  useEffect(
+    () => {
+      (async () => {
+        if (focusGene && !focusGeneOption) {
+          const r = await fetch(`${GENE_SEARCH_URL}&ac=${focusGene}`);
+          const results = await r.json();
+          const result = results[0];
+          result.type = 'gene';
+          focusGeneChangeHandler(results[0]);
+        }
+        if (focusVariant && !focusVariantOption) {
+          const r = await fetch(`${VARIANT_SEARCH_URL}&ac=${focusVariant}`);
+          const results = await r.json();
+          const result = results[0];
+          result.type = 'variant';
+          focusVariantChangeHandler(results[0]);
+        }
+      })();
+    },
+    // Execute only once on initialization
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
-  const higlassEnhancerInitHandler = useCallback((higlassInstance) => {
-    if (higlassInstance !== null) {
-      higlassEnhancerApi.current = higlassInstance.api;
-      higlassInstance.api.on('click', higlassClickHandler);
-      higlassInstance.api.on(
-        'location',
-        higlassLocationChangeHandlerDb,
-        'context'
-      );
-    }
-  }, []);
+  const higlassEnhancerInitHandler = useCallback(
+    (higlassInstance) => {
+      if (higlassInstance !== null) {
+        higlassEnhancerApi.current = higlassInstance.api;
+        higlassInstance.api.on('click', higlassClickHandler);
+        higlassInstance.api.on(
+          'location',
+          higlassLocationChangeHandlerDb,
+          'context'
+        );
+      }
+    },
+    // Execute only once on initialization
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   const higlassDnaAccessibilityInitHandler = useCallback((higlassInstance) => {
     if (higlassInstance !== null) {
@@ -683,6 +721,14 @@ const Viewer = (props) => {
   const higlassDnaAccessHelpId = higlassEnhancerHelpOpen
     ? 'simple-popover'
     : undefined;
+
+  const infoOpenHandler = () => {
+    setInfoOpen(true);
+  };
+
+  const infoCloseHandler = () => {
+    setInfoOpen(false);
+  };
 
   // Run on every render
   const classes = useStyles();
@@ -726,21 +772,11 @@ const Viewer = (props) => {
         }}
         anchor="left"
       >
-        <div className={classes.toolbar}>
-          <h1 className={classes.logo}>
-            <Grid container className={classes.logoGrid}>
-              <Grid item className={classes.logoAbc}>
-                ABC
-              </Grid>
-              <Grid item>
-                <Grid container direction="column">
-                  <Grid item>Enhancer-Gene</Grid>
-                  <Grid item>Connections</Grid>
-                </Grid>
-              </Grid>
-            </Grid>
+        <ButtonBase className={classes.toolbar}>
+          <h1 className={classes.h1} onClick={infoOpenHandler}>
+            <Logo />
           </h1>
-        </div>
+        </ButtonBase>
         <Divider />
         <Box m={1}>
           <Box m={0}>
@@ -1043,6 +1079,57 @@ const Viewer = (props) => {
           </Grid>
         </div>
       </main>
+      <Modal
+        aria-labelledby="info-title"
+        aria-describedby="info-description"
+        className={classes.modal}
+        open={infoOpen}
+        onClose={infoCloseHandler}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 250,
+        }}
+      >
+        <Fade in={infoOpen}>
+          <div className={classes.paper}>
+            <Typography
+              id="info-title"
+              align="center"
+              variant="h5"
+              component="h2"
+              noWrap
+            >
+              <Logo
+                styles={{
+                  width: 'auto',
+                }}
+              />
+            </Typography>
+            <p id="info-description">
+              This web application visualizes genome-wide enhancer-gene
+              interactions that were predicted with the{' '}
+              <em>Activity-By-Contact</em> (ABC) model. You can interactively
+              browse the entire human genome and filter enhancers by gene and
+              containing variant.
+            </p>
+            <p>
+              For information regarding the ABC model please refer to our
+              initial publication:{' '}
+              <a
+                href="https://www.nature.com/articles/s41588-019-0538-0"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Fulco et al., Activity-by-contact model of enhancer–promoter
+                regulation from thousands of CRISPR perturbations,{' '}
+                <em>Nature Genetics</em> (2019)
+              </a>
+              .
+            </p>
+          </div>
+        </Fade>
+      </Modal>
     </div>
   );
 };

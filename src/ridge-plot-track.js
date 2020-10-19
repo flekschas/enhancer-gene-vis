@@ -521,7 +521,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
       if (!fetchedTiles.length) return;
 
-      const [, visibleTrackHeight] = this.dimensions;
       const numRows = getNumRows(fetchedTiles);
 
       const [rowHeight] = this.getRowHeight();
