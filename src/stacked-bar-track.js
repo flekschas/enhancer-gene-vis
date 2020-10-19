@@ -1,3 +1,8 @@
+import {
+  DEFAULT_COLOR_MAP,
+  DEFAULT_COLOR_MAP_DARK,
+  DEFAULT_COLOR_MAP_LIGHT,
+} from './constants';
 import { createColorTexture } from './utils';
 
 const DEFAULT_TILE_SIZE = 1024;
@@ -63,42 +68,6 @@ const FS = `
     gl_FragColor = vec4(r, g, b, 1.0);
   }
 `;
-
-const DEFAULT_COLOR_MAP = [
-  // '#c17da5',
-  '#c76526',
-  '#dca237',
-  '#eee462',
-  '#469b76',
-  '#3170ad',
-  '#6fb2e4',
-  '#000000',
-  '#999999',
-];
-
-const DEFAULT_COLOR_MAP_DARK = [
-  // '#a1688a',
-  '#a65420',
-  '#b7872e',
-  '#9f9841',
-  '#3a8162',
-  '#295d90',
-  '#4a7798',
-  '#000000',
-  '#666666',
-];
-
-const DEFAULT_COLOR_MAP_LIGHT = [
-  // '#f5e9f0',
-  '#f6e5db',
-  '#f9f0de',
-  '#fcfbe5',
-  '#e0eee8',
-  '#dde7f1',
-  '#e7f2fb',
-  '#d5d5d5',
-  '#ffffff',
-];
 
 const getIs2d = (tile) =>
   tile.tileData.length && tile.tileData[0].yStart !== undefined;
@@ -704,7 +673,7 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
       [base, track] = super.superSVG();
 
-      base.setAttribute('class', 'exported-arcs-track');
+      base.setAttribute('class', 'exported-stacked-bar-track');
       const output = document.createElement('g');
 
       track.appendChild(output);
@@ -713,31 +682,53 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         `translate(${this.position[0]},${this.position[1]})`
       );
 
-      const strokeColor = this.options.strokeColor
-        ? this.options.strokeColor
-        : 'blue';
-      const strokeWidth = this.options.strokeWidth
-        ? this.options.strokeWidth
-        : 2;
+      const segments = Object.values(this.fetchedTiles).flatMap(
+        this.histToSegments.bind(this)
+      );
 
-      this.visibleAndFetchedTiles().forEach((tile) => {
-        this.polys = [];
+      segments.forEach(({ xStart, xEnd, yStart, yEnd, colorIdx }) => {
+        const r = document.createElement('rect');
 
-        // call drawTile with storePolyStr = true so that
-        // we record path strings to use in the SVG
-        this.drawTile(tile, true);
+        r.setAttribute('x', xEnd);
+        r.setAttribute('y', yEnd);
+        r.setAttribute('width', Math.abs(xEnd - xStart));
+        r.setAttribute('height', Math.abs(yEnd - yStart));
+        r.setAttribute('fill', this.colorMap[colorIdx]);
+        r.setAttribute('stroke-width', 0);
 
-        for (const { polyStr, opacity } of this.polys) {
-          const g = document.createElement('path');
-          g.setAttribute('fill', 'transparent');
-          g.setAttribute('stroke', strokeColor);
-          g.setAttribute('stroke-width', strokeWidth);
-          g.setAttribute('opacity', opacity);
-
-          g.setAttribute('d', polyStr);
-          output.appendChild(g);
-        }
+        output.appendChild(r);
       });
+
+      const gAxis = document.createElement('g');
+      gAxis.setAttribute('id', 'axis');
+
+      // append the axis to base so that it's not clipped
+      base.appendChild(gAxis);
+      gAxis.setAttribute(
+        'transform',
+        `translate(${this.axis.pAxis.position.x}, ${this.axis.pAxis.position.y})`
+      );
+
+      if (
+        this.options.axisPositionHorizontal === 'left' ||
+        this.options.axisPositionVertical === 'top'
+      ) {
+        const gDrawnAxis = this.axis.exportAxisLeftSVG(
+          this.valueScale,
+          this.dimensions[1]
+        );
+        gAxis.appendChild(gDrawnAxis);
+      } else if (
+        this.options.axisPositionHorizontal === 'right' ||
+        this.options.axisPositionVertical === 'bottom'
+      ) {
+        const gDrawnAxis = this.axis.exportAxisRightSVG(
+          this.valueScale,
+          this.dimensions[1]
+        );
+        gAxis.appendChild(gDrawnAxis);
+      }
+
       return [base, track];
     }
   }
@@ -752,7 +743,7 @@ createStackedBarTrack.config = {
   type: 'stacked-bar',
   datatype: ['bedlike'],
   orientation: '1d',
-  name: 'Arcs1D',
+  name: 'Advanced Stacked Bars Track',
   thumbnail: new DOMParser().parseFromString(icon, 'text/xml').documentElement,
   availableOptions: [
     'arcStyle',
