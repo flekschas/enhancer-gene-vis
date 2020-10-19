@@ -50,6 +50,15 @@ import './Viewer.css';
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme) => ({
+  black: {
+    color: 'black',
+  },
+  gray: {
+    color: theme.palette.grey['400'],
+  },
+  pink: {
+    color: '#cc0078',
+  },
   root: {
     position: 'absolute',
     display: 'flex',
@@ -101,7 +110,6 @@ const useStyles = makeStyles((theme) => ({
     letterSpacing: '-0.1rem',
     paddingRight: '0.3rem',
   },
-  logoEnhancerGene: {},
   grow: {
     flexGrow: 1,
   },
@@ -140,6 +148,10 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: '20rem',
     padding: '0.5rem',
     fontSize: '0.8rem',
+  },
+  higlassEnhancerInfoBar: {
+    padding: '2px 4px',
+    color: theme.palette.grey['600'],
   },
   higlassDnaAccessibilityInfoBar: {
     display: 'flex',
@@ -721,11 +733,7 @@ const Viewer = (props) => {
                 ABC
               </Grid>
               <Grid item>
-                <Grid
-                  container
-                  direction="column"
-                  className={classes.logoEnhancerGene}
-                >
+                <Grid container direction="column">
                   <Grid item>Enhancer-Gene</Grid>
                   <Grid item>Connections</Grid>
                 </Grid>
@@ -921,6 +929,38 @@ const Viewer = (props) => {
                   sizeMode: 'bounded',
                 }}
               />
+            </Grid>
+            <Grid item className={classes.higlassEnhancerInfoBar}>
+              {focusGene && focusVariant && (
+                <Typography className={classes.higlassTitleBarTitle} noWrap>
+                  <span className={classes.pink}>■</span> Enhancers containing{' '}
+                  <em>{focusVariant}</em> and predicted to regulate{' '}
+                  <em>{focusGene}</em>
+                </Typography>
+              )}
+              {focusGene && !focusVariant && (
+                <Typography className={classes.higlassTitleBarTitle} noWrap>
+                  <span className={classes.pink}>■</span> Enhancers predicted to
+                  regulate <em>{focusGene}</em>
+                </Typography>
+              )}
+              {!focusGene && focusVariant && (
+                <Typography className={classes.higlassTitleBarTitle} noWrap>
+                  <span className={classes.pink}>■</span> Enhancers containing{' '}
+                  <em>{focusVariant}</em>
+                </Typography>
+              )}
+              {focusGene || focusVariant ? (
+                <Typography className={classes.higlassTitleBarTitle} noWrap>
+                  <span className={classes.gray}>■</span> All other predicted
+                  enhancers
+                </Typography>
+              ) : (
+                <Typography className={classes.higlassTitleBarTitle} noWrap>
+                  <span className={classes.black}>■</span> All predicted
+                  enhancers
+                </Typography>
+              )}
             </Grid>
           </Grid>
           <div className={classes.higlassSeparator} />
