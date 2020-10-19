@@ -58,3 +58,16 @@ export const toAbsPosition = (position, chromInfo) => {
   }
   return absPosition;
 };
+
+export const toFixed = (number, decimals, forced) => {
+  let string = number.toFixed(decimals);
+  if (!forced) {
+    while (string[string.length - 1] === '0') {
+      string = string.substring(0, string.length - 1);
+    }
+    if (string[string.length - 1] === '.') {
+      string = string.substring(0, string.length - 1);
+    }
+  }
+  return string;
+};

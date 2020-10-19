@@ -31,7 +31,7 @@ import SearchField from './SearchField';
 
 import useQueryString from './use-query-string';
 import usePrevious from './use-previous';
-import { toAbsPosition } from './utils';
+import { toAbsPosition, toFixed } from './utils';
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
@@ -80,29 +80,38 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1),
     backgroundColor: 'white',
   },
+  grow: {
+    flexGrow: 1,
+  },
   higlass: {
     display: 'flex',
     flexGrow: 1,
   },
-  higlassPrimary: {
+  higlassEnhancer: {
     flexGrow: 1,
+    margin: '-8px 0 -8px -8px',
   },
-  higlassSecondary: {
+  higlassDnaAccessibility: {
     width: '20rem',
+    margin: '-8px -8px -8px 0',
   },
   higlassTitleBarFontSize: {
     fontSize: '0.8rem',
   },
   higlassEnhancersTitleBar: {
     position: 'relative',
-    margin: '-8px 0 0 -8px',
     padding: '4px 0 4px 8px',
     background: theme.palette.grey['100'],
   },
   higlassDnaAccessibilityTitleBar: {
-    margin: '-8px -8px 0 0',
     padding: '4px 8px 4px 0',
     background: theme.palette.grey['100'],
+  },
+  higlassDnaAccessibilityInfoBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '2px 4px',
+    color: theme.palette.grey['600'],
   },
   higlassSeparator: {
     width: 1,
@@ -376,6 +385,14 @@ const Viewer = (props) => {
       dnaAccessLabels,
       props.chromInfo,
     ]
+  );
+
+  const dnaAccessibilityRegionSize = useMemo(
+    () =>
+      focusVariantPosition
+        ? 5
+        : Math.round((xDomainEndAbs - xDomainStartAbs) / 1000),
+    [focusVariantPosition, xDomainStartAbs, xDomainEndAbs]
   );
 
   const numericalXDomainStart = useMemo(
@@ -764,7 +781,11 @@ const Viewer = (props) => {
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <div className={classes.higlass}>
-          <Grid container direction="column" className={classes.higlassPrimary}>
+          <Grid
+            container
+            direction="column"
+            className={classes.higlassEnhancer}
+          >
             <Grid item className={classes.higlassEnhancersTitleBar}>
               <Typography
                 align="center"
@@ -774,7 +795,7 @@ const Viewer = (props) => {
                 <strong>Predicted Enhancers</strong>
               </Typography>
             </Grid>
-            <Grid item className={classes.higlassPrimary}>
+            <Grid item className={classes.grow}>
               <HiGlassComponent
                 ref={higlassEnhancerInitHandler}
                 viewConfig={viewConfigEnhancer}
@@ -788,7 +809,7 @@ const Viewer = (props) => {
           <Grid
             container
             direction="column"
-            className={classes.higlassSecondary}
+            className={classes.higlassDnaAccessibility}
           >
             <Grid item className={classes.higlassDnaAccessibilityTitleBar}>
               <Typography
@@ -799,7 +820,7 @@ const Viewer = (props) => {
                 <strong>DNA Accessibility</strong>
               </Typography>
             </Grid>
-            <Grid item className={classes.higlassPrimary}>
+            <Grid item className={classes.grow}>
               <HiGlassComponent
                 ref={higlassDnaAccessibilityInitHandler}
                 viewConfig={viewConfigDnaAccessibility}
@@ -818,6 +839,18 @@ const Viewer = (props) => {
                   viewPaddingRight: 16,
                 }}
               />
+            </Grid>
+            <Grid item className={classes.higlassDnaAccessibilityInfoBar}>
+              <span>├</span>
+              <Typography
+                align="center"
+                className={classes.higlassTitleBarFontSize}
+                noWrap
+              >
+                {toFixed(dnaAccessibilityRegionSize, 1)}{' '}
+                <abbr title="kilo base pairs">kbp</abbr>
+              </Typography>
+              <span>┤</span>
             </Grid>
           </Grid>
         </div>
