@@ -17,14 +17,17 @@ import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormLabel from '@material-ui/core/FormLabel';
 import Grid from '@material-ui/core/Grid';
+import IconButton from '@material-ui/core/IconButton';
 import InputLabel from '@material-ui/core/InputLabel';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
+import Popover from '@material-ui/core/Popover';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Switch from '@material-ui/core/Switch';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
+import HelpIcon from '@material-ui/icons/Help';
 import SearchIcon from '@material-ui/icons/Search';
 
 import SearchField from './SearchField';
@@ -95,17 +98,29 @@ const useStyles = makeStyles((theme) => ({
     width: '20rem',
     margin: '-8px -8px -8px 0',
   },
-  higlassTitleBarFontSize: {
+  higlassTitleBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'relative',
+    padding: '2px',
+    fontSize: '0.8rem',
+    background: theme.palette.grey['100'],
+  },
+  higlassTitleBarTitle: {
+    padding: '0 2px',
     fontSize: '0.8rem',
   },
-  higlassEnhancersTitleBar: {
-    position: 'relative',
-    padding: '4px 0 4px 8px',
-    background: theme.palette.grey['100'],
+  higlassTitleBarHelp: {
+    color: theme.palette.grey['400'],
+    '&:hover': {
+      color: 'black',
+    },
   },
-  higlassDnaAccessibilityTitleBar: {
-    padding: '4px 8px 4px 0',
-    background: theme.palette.grey['100'],
+  higlassTitleBarHelpPopeover: {
+    maxWidth: '20rem',
+    padding: '0.5rem',
+    fontSize: '0.8rem',
   },
   higlassDnaAccessibilityInfoBar: {
     display: 'flex',
@@ -278,6 +293,14 @@ const Viewer = (props) => {
   const prevFocusVariantOption = usePrevious(focusVariantOption);
   const higlassEnhancerApi = useRef(null);
   const higlassDnaAccessApi = useRef(null);
+  const [
+    higlassEnhancerHelpAnchorEl,
+    setHiglassEnhancerHelpAnchorEl,
+  ] = useState(null);
+  const [
+    higlassDnaAccessHelpAnchorEl,
+    setHiglassDnaAccessHelpAnchorEl,
+  ] = useState(null);
 
   // Derived State
   const focusGeneVariantOptions = useMemo(() => {
@@ -604,6 +627,32 @@ const Viewer = (props) => {
     }
   }, []);
 
+  const higlassEnhancerHelpClickHandler = (event) => {
+    setHiglassEnhancerHelpAnchorEl(event.currentTarget);
+  };
+
+  const higlassEnhancerHelpCloseHandler = () => {
+    setHiglassEnhancerHelpAnchorEl(null);
+  };
+
+  const higlassDnaAccessHelpClickHandler = (event) => {
+    setHiglassDnaAccessHelpAnchorEl(event.currentTarget);
+  };
+
+  const higlassDnaAccessHelpCloseHandler = () => {
+    setHiglassDnaAccessHelpAnchorEl(null);
+  };
+
+  const higlassEnhancerHelpOpen = Boolean(higlassEnhancerHelpAnchorEl);
+  const higlassEnhancerHelpId = higlassEnhancerHelpOpen
+    ? 'simple-popover'
+    : undefined;
+
+  const higlassDnaAccessHelpOpen = Boolean(higlassDnaAccessHelpAnchorEl);
+  const higlassDnaAccessHelpId = higlassEnhancerHelpOpen
+    ? 'simple-popover'
+    : undefined;
+
   // Run on every render
   const classes = useStyles();
 
@@ -786,14 +835,46 @@ const Viewer = (props) => {
             direction="column"
             className={classes.higlassEnhancer}
           >
-            <Grid item className={classes.higlassEnhancersTitleBar}>
+            <Grid item className={classes.higlassTitleBar}>
               <Typography
                 align="center"
-                className={classes.higlassTitleBarFontSize}
+                className={classes.higlassTitleBarTitle}
                 noWrap
               >
                 <strong>Predicted Enhancers</strong>
               </Typography>
+              <IconButton
+                aria-label="help"
+                aria-describedby={higlassEnhancerHelpId}
+                className={classes.higlassTitleBarHelp}
+                size="small"
+                onClick={higlassEnhancerHelpClickHandler}
+              >
+                <HelpIcon fontSize="inherit" />
+              </IconButton>
+              <Popover
+                id={higlassEnhancerHelpId}
+                open={higlassEnhancerHelpOpen}
+                anchorEl={higlassEnhancerHelpAnchorEl}
+                onClose={higlassEnhancerHelpCloseHandler}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+              >
+                <Typography className={classes.higlassTitleBarHelpPopeover}>
+                  This panel visualizes the predicted enhancers by sample type
+                  as a matrix-like track. Each rectangle representes an
+                  enhancer. You can filter enhancers via their target gene or by
+                  variant (the dot plot below the gene annotations). Click on a
+                  variant or gene to select it. Selections are shown in
+                  pink/red.
+                </Typography>
+              </Popover>
             </Grid>
             <Grid item className={classes.grow}>
               <HiGlassComponent
@@ -811,14 +892,44 @@ const Viewer = (props) => {
             direction="column"
             className={classes.higlassDnaAccessibility}
           >
-            <Grid item className={classes.higlassDnaAccessibilityTitleBar}>
+            <Grid item className={classes.higlassTitleBar}>
               <Typography
                 align="center"
-                className={classes.higlassTitleBarFontSize}
+                className={classes.higlassTitleBarTitle}
                 noWrap
               >
                 <strong>DNA Accessibility</strong>
               </Typography>
+              <IconButton
+                aria-label="help"
+                aria-describedby={higlassDnaAccessHelpId}
+                className={classes.higlassTitleBarHelp}
+                size="small"
+                onClick={higlassDnaAccessHelpClickHandler}
+              >
+                <HelpIcon fontSize="inherit" />
+              </IconButton>
+              <Popover
+                id={higlassDnaAccessHelpId}
+                open={higlassDnaAccessHelpOpen}
+                anchorEl={higlassDnaAccessHelpAnchorEl}
+                onClose={higlassDnaAccessHelpCloseHandler}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+              >
+                <Typography className={classes.higlassTitleBarHelpPopeover}>
+                  This panel visualizes the DNA accessibility of all 131
+                  samples. Each track is individually normalized. Mouse over a
+                  track to see the underlying value. To focus on a specific
+                  locus specify a focus variant.
+                </Typography>
+              </Popover>
             </Grid>
             <Grid item className={classes.grow}>
               <HiGlassComponent
@@ -844,7 +955,7 @@ const Viewer = (props) => {
               <span>├</span>
               <Typography
                 align="center"
-                className={classes.higlassTitleBarFontSize}
+                className={classes.higlassTitleBarTitle}
                 noWrap
               >
                 {toFixed(dnaAccessibilityRegionSize, 1)}{' '}
