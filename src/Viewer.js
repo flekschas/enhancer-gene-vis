@@ -39,7 +39,7 @@ import SearchField from './SearchField';
 
 import useQueryString from './use-query-string';
 import usePrevious from './use-previous';
-import { toAbsPosition, toFixed } from './utils';
+import { download, toAbsPosition, toFixed } from './utils';
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
@@ -124,8 +124,23 @@ const useStyles = makeStyles((theme) => ({
     width: drawerWidth,
     flexShrink: 0,
   },
+  drawerGrid: {
+    height: '100%',
+  },
   drawerPaper: {
     width: drawerWidth,
+  },
+  settings: {
+    position: 'relative',
+    flexGrow: 1,
+  },
+  settingsContent: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    overflow: 'hidden auto',
   },
   textInput: {
     minWidth: '100%',
@@ -741,6 +756,16 @@ const Viewer = (props) => {
     setInfoOpen(false);
   };
 
+  const higlassExportAsSvg = () => {
+    const enhancerSvg = higlassEnhancerApi.current.exportAsSvg();
+    // const dnaAccessSvg = higlassDnaAccessApi.current.exportAsSvg();
+
+    download(
+      'abc-enhancers.svg',
+      new Blob([enhancerSvg], { type: 'image/svg+xml' })
+    );
+  };
+
   // Run on every render
   const classes = useStyles();
 
@@ -783,141 +808,171 @@ const Viewer = (props) => {
         }}
         anchor="left"
       >
-        <ButtonBase className={classes.toolbar}>
-          <h1 className={classes.h1} onClick={infoOpenHandler}>
-            <Logo />
-          </h1>
-        </ButtonBase>
-        <Divider />
-        <Box m={1}>
-          <Box m={0}>
-            <FormControl variant="outlined" margin="dense" fullWidth>
-              <InputLabel htmlFor="x-domain-start">Region Start</InputLabel>
-              <OutlinedInput
-                id="x-domain-start"
-                label="Region Start"
-                onChange={xDomainStartChangeHandler}
-                value={xDomainStart}
-              />
-            </FormControl>
-          </Box>
-          <Box m={0}>
-            <FormControl variant="outlined" margin="dense" fullWidth>
-              <InputLabel htmlFor="x-domain-end">Region End</InputLabel>
-              <OutlinedInput
-                id="x-domain-end"
-                label="Region End"
-                onChange={xDomainEndChangeHandler}
-                value={xDomainEnd}
-              />
-            </FormControl>
-          </Box>
-          <Box m={0}>
-            <Button
-              variant="contained"
-              margin="dense"
-              onClick={higlassEnhancerZoomToXDomain}
-              fullWidth
-              disableElevation
-            >
-              Go
-            </Button>
-          </Box>
-        </Box>
-        <Divider />
-        <Box m={1}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={hideUnfocused === 'true'}
-                onChange={hideUnfocusedChangeHandler}
-                name="hideUnfocused"
-              />
-            }
-            label="Hide unfocused"
-          />
-        </Box>
-        <Box m={1}>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Variant y-scale</FormLabel>
-            <RadioGroup
-              aria-label="variantYScale"
-              name="variantYScale"
-              value={variantYScale}
-              onChange={variantYScaleChangeHandler}
-            >
-              <FormControlLabel
-                label="p-value"
-                control={<Radio size="small" />}
-                value="pValue"
-              />
-              <FormControlLabel
-                label="Posterior probability"
-                control={<Radio size="small" />}
-                value="posteriorProbability"
-              />
-            </RadioGroup>
-          </FormControl>
-        </Box>
-        <Box m={1}>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">Matrix coloring</FormLabel>
-            <RadioGroup
-              aria-label="matrixColoring"
-              name="matrixColoring"
-              value={matrixColoring}
-              onChange={matrixColoringChangeHandler}
-            >
-              <FormControlLabel
-                label="Solid"
-                control={<Radio size="small" />}
-                value="solid"
-              />
-              <FormControlLabel
-                label="Number of predictions"
-                control={<Radio size="small" />}
-                value="frequency"
-              />
-              <FormControlLabel
-                label="Highest prediction score"
-                control={<Radio size="small" />}
-                value="highestImportance"
-              />
-              <FormControlLabel
-                label="Prediction score of the closest TSS interaction"
-                control={<Radio size="small" />}
-                value="closestImportance"
-              />
-            </RadioGroup>
-          </FormControl>
-        </Box>
-        <Box m={1}>
-          <FormControl component="fieldset">
-            <FormLabel component="legend">DNA accessibility labels</FormLabel>
-            <RadioGroup
-              aria-label="dnaAccessLabels"
-              name="dnaAccessLabels"
-              value={dnaAccessLabels}
-              onChange={dnaAccessLabelsChangeHandler}
-            >
-              <FormControlLabel
-                label="Indicator"
-                control={<Radio size="small" />}
-                value="indicator"
-              />
-              <FormControlLabel
-                label="Text"
-                control={<Radio size="small" />}
-                value="text"
-              />
-              <FormControlLabel
-                label="Hidden"
-                control={<Radio size="small" />}
-                value="hidden"
-              />
-            </RadioGroup>
-          </FormControl>
-        </Box>
+        <Grid container direction="column" className={classes.drawerGrid}>
+          <Grid item>
+            <ButtonBase className={classes.toolbar}>
+              <h1 className={classes.h1} onClick={infoOpenHandler}>
+                <Logo />
+              </h1>
+            </ButtonBase>
+            <Divider />
+          </Grid>
+          <Grid container item className={classes.grow} direction="column">
+            <Grid item>
+              <Box m={1}>
+                <Box m={0}>
+                  <FormControl variant="outlined" margin="dense" fullWidth>
+                    <InputLabel htmlFor="x-domain-start">
+                      Region Start
+                    </InputLabel>
+                    <OutlinedInput
+                      id="x-domain-start"
+                      label="Region Start"
+                      onChange={xDomainStartChangeHandler}
+                      value={xDomainStart}
+                    />
+                  </FormControl>
+                </Box>
+                <Box m={0}>
+                  <FormControl variant="outlined" margin="dense" fullWidth>
+                    <InputLabel htmlFor="x-domain-end">Region End</InputLabel>
+                    <OutlinedInput
+                      id="x-domain-end"
+                      label="Region End"
+                      onChange={xDomainEndChangeHandler}
+                      value={xDomainEnd}
+                    />
+                  </FormControl>
+                </Box>
+                <Box m={0}>
+                  <Button
+                    variant="contained"
+                    margin="dense"
+                    onClick={higlassEnhancerZoomToXDomain}
+                    fullWidth
+                    disableElevation
+                  >
+                    Go
+                  </Button>
+                </Box>
+              </Box>
+              <Divider />
+            </Grid>
+            <Grid item className={classes.settings}>
+              <Box m={0} className={classes.settingsContent}>
+                <Box m={1}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={hideUnfocused === 'true'}
+                        onChange={hideUnfocusedChangeHandler}
+                        name="hideUnfocused"
+                      />
+                    }
+                    label="Hide unfocused"
+                  />
+                </Box>
+                <Box m={1}>
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend">Variant y-scale</FormLabel>
+                    <RadioGroup
+                      aria-label="variantYScale"
+                      name="variantYScale"
+                      value={variantYScale}
+                      onChange={variantYScaleChangeHandler}
+                    >
+                      <FormControlLabel
+                        label="p-value"
+                        control={<Radio size="small" />}
+                        value="pValue"
+                      />
+                      <FormControlLabel
+                        label="Posterior probability"
+                        control={<Radio size="small" />}
+                        value="posteriorProbability"
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Box>
+                <Box m={1}>
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend">Matrix coloring</FormLabel>
+                    <RadioGroup
+                      aria-label="matrixColoring"
+                      name="matrixColoring"
+                      value={matrixColoring}
+                      onChange={matrixColoringChangeHandler}
+                    >
+                      <FormControlLabel
+                        label="Solid"
+                        control={<Radio size="small" />}
+                        value="solid"
+                      />
+                      <FormControlLabel
+                        label="Number of predictions"
+                        control={<Radio size="small" />}
+                        value="frequency"
+                      />
+                      <FormControlLabel
+                        label="Highest prediction score"
+                        control={<Radio size="small" />}
+                        value="highestImportance"
+                      />
+                      <FormControlLabel
+                        label="Prediction score of the closest TSS interaction"
+                        control={<Radio size="small" />}
+                        value="closestImportance"
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Box>
+                <Box m={1}>
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend">
+                      DNA accessibility labels
+                    </FormLabel>
+                    <RadioGroup
+                      aria-label="dnaAccessLabels"
+                      name="dnaAccessLabels"
+                      value={dnaAccessLabels}
+                      onChange={dnaAccessLabelsChangeHandler}
+                    >
+                      <FormControlLabel
+                        label="Indicator"
+                        control={<Radio size="small" />}
+                        value="indicator"
+                      />
+                      <FormControlLabel
+                        label="Text"
+                        control={<Radio size="small" />}
+                        value="text"
+                      />
+                      <FormControlLabel
+                        label="Hidden"
+                        control={<Radio size="small" />}
+                        value="hidden"
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Box>
+              </Box>
+            </Grid>
+            <Grid item>
+              <Divider />
+              <Box m={1}>
+                <Button
+                  variant="contained"
+                  margin="dense"
+                  onClick={higlassExportAsSvg}
+                  fullWidth
+                  disableElevation
+                >
+                  Export as SVG
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </Grid>
       </Drawer>
       <main className={classes.content}>
         <div className={classes.toolbar} />
