@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme) => ({
     '& .MuiFormLabel-root': {
       color: 'black',
       fontWeight: 'bold',
-      transform: 'translate(12px, 24px) scale(1.25)',
+      transform: 'translate(12px, 21px) scale(1.25)',
     },
     '& .MuiInputLabel-shrink': {
       fontWeight: 'normal',
