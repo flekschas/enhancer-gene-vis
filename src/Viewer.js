@@ -44,6 +44,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import Logo from './Logo';
 import SearchField from './SearchField';
 
+import useDebounce from './use-debounce';
 import useQueryString from './use-query-string';
 import usePrevious from './use-previous';
 import { download, toAbsPosition, toFixed } from './utils';
@@ -466,6 +467,9 @@ const Viewer = (props) => {
     [xDomainEnd, props.chromInfo]
   );
 
+  const xDomainStartAbsDb = useDebounce(xDomainStartAbs, 1000);
+  const xDomainEndAbsDb = useDebounce(xDomainEndAbs, 1000);
+
   const viewConfigEnhancer = useMemo(
     () =>
       pipe(
@@ -494,6 +498,21 @@ const Viewer = (props) => {
     ]
   );
 
+  const getDnaAccessibilityXDomain = () => {
+    if (focusVariantPosition) {
+      return [focusVariantPosition - 2500, focusVariantPosition + 2500];
+    }
+
+    if (focusGeneStartPosition && focusGeneEndPosition) {
+      const midPos =
+        focusGeneStartPosition +
+        (focusGeneEndPosition - focusGeneStartPosition) / 2;
+      return [midPos - 2500, midPos + 2500];
+    }
+
+    return [xDomainStartAbs, xDomainEndAbs];
+  };
+
   const viewConfigDnaAccessibility = useMemo(
     () =>
       pipe(
@@ -501,8 +520,13 @@ const Viewer = (props) => {
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigDnaAccessLabels(dnaAccessLabels),
         updateViewConfigXDomain(
-          focusVariantPosition ? focusVariantPosition - 2500 : xDomainStartAbs,
-          focusVariantPosition ? focusVariantPosition + 2500 : xDomainEndAbs,
+          ...getDnaAccessibilityXDomain(
+            focusVariantPosition,
+            focusGeneStartPosition,
+            focusGeneEndPosition,
+            xDomainStartAbsDb,
+            xDomainEndAbsDb
+          ),
           true
         )
       )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
@@ -511,6 +535,10 @@ const Viewer = (props) => {
       // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
       // updating the view-config on every pan or zoom event.
       focusVariantPosition,
+      focusGeneStartPosition,
+      focusGeneEndPosition,
+      xDomainStartAbsDb,
+      xDomainEndAbsDb,
       variantYScale,
       dnaAccessLabels,
       props.chromInfo,
@@ -1092,6 +1120,7 @@ const Viewer = (props) => {
                 viewConfig={viewConfigEnhancer}
                 options={{
                   sizeMode: 'bounded',
+                  globalMousePosition: true,
                 }}
               />
             </Grid>
@@ -1190,6 +1219,7 @@ const Viewer = (props) => {
                   viewPaddingBottom: 0,
                   viewPaddingLeft: 0,
                   viewPaddingRight: 16,
+                  globalMousePosition: true,
                 }}
               />
             </Grid>
