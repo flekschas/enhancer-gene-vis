@@ -287,12 +287,12 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
           {
             type: 'combined',
             uid: 'genes-tss-viewport',
-            height: 50,
+            height: 52,
             contents: [
               {
                 type: 'horizontal-gene-annotations',
                 uid: 'genes',
-                height: 50,
+                height: 52,
                 server: 'https://resgen.io/api/v1',
                 tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
                 options: {
@@ -310,7 +310,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
               {
                 type: 'tss',
                 uid: 'tss',
-                height: 50,
+                height: 52,
                 // server: 'http://localhost:9876/api/v1',
                 // tilesetUid: 'RefSeqCurated170308bedCollapsedGeneBoundsTSS500bp',
                 server: 'https://resgen.io/api/v1',
@@ -328,7 +328,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                 uid: 'viewport-details-genes',
                 type: 'viewport-projection-horizontal',
                 fromViewUid: 'details',
-                height: 50,
+                height: 52,
                 options: {
                   projectionFillColor: '#cc0078',
                   projectionStrokeColor: '#cc0078',
@@ -557,7 +557,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             type: 'horizontal-chromosome-labels',
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
-            height: 12,
+            height: 17,
             options: {
               // tickPositions: 'ends',
               color: '#999999',
@@ -573,7 +573,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             type: 'horizontal-gene-annotations',
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
-            height: 48,
+            height: 52,
             options: {
               fontSize: 9,
               plusStrandColor: 'black',
