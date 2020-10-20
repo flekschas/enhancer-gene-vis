@@ -333,6 +333,20 @@ const updateViewConfigDnaAccessLabels = (labels) => (viewConfig) => {
   return viewConfig;
 };
 
+const extractSvgCore = (svg) => {
+  const fifthLn = nthIndexOf(svg, '\n', 4);
+  const lastLn = svg.lastIndexOf('\n');
+  const width = +svg.substring(
+    svg.indexOf('width="') + 7,
+    svg.indexOf('px', svg.indexOf('width="') + 7)
+  );
+  const height = +svg.substring(
+    svg.indexOf('height="') + 8,
+    svg.indexOf('px', svg.indexOf('height="') + 8)
+  );
+  return [svg.substring(fifthLn + 1, lastLn), width, height];
+};
+
 const Viewer = (props) => {
   const [infoOpen, setInfoOpen] = useQueryString('info', true, {
     decoder: (v) => v === 'true',
@@ -762,20 +776,6 @@ const Viewer = (props) => {
 
   const infoCloseHandler = () => {
     setInfoOpen(false);
-  };
-
-  const extractSvgCore = (svg) => {
-    const fifthLn = nthIndexOf(svg, '\n', 4);
-    const lastLn = svg.lastIndexOf('\n');
-    const width = +svg.substring(
-      svg.indexOf('width="') + 7,
-      svg.indexOf('px', svg.indexOf('width="') + 7)
-    );
-    const height = +svg.substring(
-      svg.indexOf('height="') + 8,
-      svg.indexOf('px', svg.indexOf('height="') + 8)
-    );
-    return [svg.substring(fifthLn + 1, lastLn), width, height];
   };
 
   const mergeSvgs = (enhancerSvg, dnaAccessSvg) => {
