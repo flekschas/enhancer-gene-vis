@@ -6,7 +6,14 @@ import React, {
   useState,
 } from 'react';
 import { HiGlassComponent } from 'higlass';
-import { debounce, deepClone, isString, pipe } from '@flekschas/utils';
+import {
+  debounce,
+  deepClone,
+  isString,
+  nthIndexOf,
+  pipe,
+} from '@flekschas/utils';
+
 import AppBar from '@material-ui/core/AppBar';
 import Backdrop from '@material-ui/core/Backdrop';
 import Box from '@material-ui/core/Box';
@@ -47,6 +54,7 @@ import {
   DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
   GENE_SEARCH_URL,
   VARIANT_SEARCH_URL,
+  SVG_SKELETON,
 } from './constants';
 
 import 'higlass/dist/hglib.css';
@@ -756,13 +764,68 @@ const Viewer = (props) => {
     setInfoOpen(false);
   };
 
+  const extractSvgCore = (svg) => {
+    const fifthLn = nthIndexOf(svg, '\n', 4);
+    const lastLn = svg.lastIndexOf('\n');
+    const width = +svg.substring(
+      svg.indexOf('width="') + 7,
+      svg.indexOf('px', svg.indexOf('width="') + 7)
+    );
+    const height = +svg.substring(
+      svg.indexOf('height="') + 8,
+      svg.indexOf('px', svg.indexOf('height="') + 8)
+    );
+    return [svg.substring(fifthLn + 1, lastLn), width, height];
+  };
+
+  const mergeSvgs = (enhancerSvg, dnaAccessSvg) => {
+    const [enhancerCoreSvg, enhancerWidth, enhancerHeight] = extractSvgCore(
+      enhancerSvg
+    );
+    const [dnaAccessCoreSvg, dnaAccessWidth, dnaAccessHeight] = extractSvgCore(
+      dnaAccessSvg
+    );
+
+    const actualEnhancerHeight = viewConfigEnhancer.views[0].tracks.top.reduce(
+      (height, track) => height + track.height,
+      0
+    );
+    const actualDnaAccessHeight = viewConfigDnaAccessibility.views[0].tracks.top.reduce(
+      (height, track) => height + track.height,
+      0
+    );
+    const padding = 24;
+
+    let mergedSvg = SVG_SKELETON;
+    mergedSvg = mergedSvg.replace(
+      '_WIDTH_',
+      enhancerWidth + dnaAccessWidth + padding
+    );
+    mergedSvg = mergedSvg.replace(
+      '_HEIGHT_',
+      Math.max(
+        enhancerHeight,
+        dnaAccessHeight,
+        actualEnhancerHeight,
+        actualDnaAccessHeight
+      )
+    );
+    mergedSvg = mergedSvg.replace('_ENHANCER_', enhancerCoreSvg);
+    mergedSvg = mergedSvg.replace('_DNA_ACCESS_X_', enhancerWidth + padding);
+    mergedSvg = mergedSvg.replace('_DNA_ACCESS_', dnaAccessCoreSvg);
+
+    return mergedSvg;
+  };
+
   const higlassExportAsSvg = () => {
-    const enhancerSvg = higlassEnhancerApi.current.exportAsSvg();
-    // const dnaAccessSvg = higlassDnaAccessApi.current.exportAsSvg();
+    const mergedSvg = mergeSvgs(
+      higlassEnhancerApi.current.exportAsSvg(),
+      higlassDnaAccessApi.current.exportAsSvg()
+    );
 
     download(
       'abc-enhancers.svg',
-      new Blob([enhancerSvg], { type: 'image/svg+xml' })
+      new Blob([mergedSvg], { type: 'image/svg+xml' })
     );
   };
 

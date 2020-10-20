@@ -1,3 +1,16 @@
+export const SVG_SKELETON = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns="http://www.w3.org/2000/svg" version="1.1" width="_WIDTH_px" height="_HEIGHT_px">
+    <g id="enhancer-view">
+    _ENHANCER_
+    </g>
+    <g id="dna-accessibility-view" transform="translate(_DNA_ACCESS_X_,0)">
+    _DNA_ACCESS_
+    </g>
+</svg>`;
+
 export const DEFAULT_COLOR_MAP = [
   // '#c17da5',
   '#c76526',
