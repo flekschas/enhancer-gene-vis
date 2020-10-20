@@ -6,6 +6,7 @@ import {
   minNan,
   sumNan,
 } from '@flekschas/utils';
+import { line } from 'd3-shape';
 
 import {
   DEFAULT_COLOR_MAP,
@@ -587,7 +588,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
             const x = this._xScale(tile.tileData.binXPos[j]);
             const yStart = this.rowScale(i);
             const y = yStart + this.valueScaleByRow(value, i);
-            // We're duplicating the the point as for every point on the line we
+            // We're duplicating the point as for every point on the line we
             // need two x,y vertices to render triangles.
             positionsByRow[i].push(x, y, x, y);
             colorIndicesByRow[i].push(-1, -1); // -1 refers to the line color
@@ -852,6 +853,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
      * @param {Number} trakcY: The y position relative to the track's start and end
      */
     getVisibleData(trackX, trackY) {
+      if (!this.hasFetchedTiles()) return '';
+
       const zoomLevel = this.calculateZoomLevel();
 
       const numRows = getNumRows(this.fetchedTiles);
@@ -985,6 +988,114 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       if (!this.tilesetInfo) return '';
 
       return this.getVisibleData(trackX, trackY);
+    }
+
+    exportSVG() {
+      const svgns = 'http://www.w3.org/2000/svg';
+
+      let track = null;
+      let base = null;
+
+      [base, track] = super.exportSVG();
+
+      base.setAttribute('class', 'ridge-plot-track');
+      const output = document.createElement('g');
+
+      track.appendChild(output);
+      output.setAttribute(
+        'transform',
+        `translate(${this.position[0]}, ${this.position[1]})`
+      );
+
+      const tiles = Object.values(this.fetchedTiles);
+
+      const numRows = getNumRows(tiles);
+      const [rowHeight] = this.getRowHeight(numRows);
+      const stride = this.markArea ? 8 : 4;
+
+      const [positions] = this.tilesToData(tiles, {
+        maxRows: numRows,
+        markArea: this.markArea,
+        rowHeight,
+      });
+
+      const createLine = line()
+        .x((d) => d[0])
+        .y((d) => d[1]);
+
+      const posPerRow = positions.length / numRows;
+
+      const posToPoints = (pos) => {
+        const arr = [];
+        const start = stride;
+        const end = pos.length - stride;
+
+        for (let i = start; i < end; i += stride) {
+          arr.push([pos[i], pos[i + 1]]);
+        }
+
+        return arr;
+      };
+
+      let fill = this.markArea
+        ? (this.options.colorRange && this.options.colorRange[0]) || '#ffffff'
+        : 'none';
+      if (this.markArea && this.options.colorRange) {
+        const numColors = this.options.colorRange.length;
+        const defs = document.createElementNS(svgns, 'defs');
+        const linearGradient = document.createElementNS(
+          svgns,
+          'linearGradient'
+        );
+        linearGradient.setAttribute('id', 'RidgePlotGradient');
+        linearGradient.setAttribute('x1', '0');
+        linearGradient.setAttribute('y1', '1');
+        linearGradient.setAttribute('x2', '0');
+        linearGradient.setAttribute('y2', '0');
+        this.options.colorRange.forEach((color, i) => {
+          const stop = document.createElementNS(svgns, 'stop');
+          stop.setAttribute(
+            'offset',
+            `${Math.round((i / (numColors - 1)) * 100)}%`
+          );
+          stop.setAttribute('stop-color', color);
+          linearGradient.appendChild(stop);
+        });
+        defs.appendChild(linearGradient);
+        base.insertBefore(defs, base.firstChild);
+        fill = 'url(#RidgePlotGradient)';
+      }
+
+      for (let i = 0; i < numRows; i++) {
+        const arr = posToPoints(
+          positions.subarray(i * posPerRow, (i + 1) * posPerRow)
+        );
+
+        const l = document.createElement('path');
+        let d = createLine(arr);
+
+        const y0 = this.rowScale(i) + this.valueScaleByRow(0, i);
+
+        // We extend the line a little to the left and right and anchor them at
+        // y = 0 to avoid weird glitches with the fill.
+        const firstComma = d.indexOf(',');
+        const firstX = +d.substring(1, firstComma);
+        const firstY = +d.substring(firstComma + 1, d.indexOf('L'));
+        d = `M${firstX - 1},${y0}L${firstX - 1},${firstY}L${d.substring(1)}`;
+        const lastComma = d.lastIndexOf(',');
+        const lastX = +d.substring(d.lastIndexOf('L') + 1, lastComma);
+        const lastY = +d.substring(lastComma + 1);
+        d += `L${lastX + 1},${lastY}L${lastX + 1},${y0}`;
+
+        l.setAttribute('d', d);
+        l.setAttribute('fill', fill);
+        l.setAttribute('stroke', this.options.markColor || 'black');
+        l.setAttribute('stroke-width', (this.options.markSize || 2) / 8);
+
+        output.appendChild(l);
+      }
+
+      return [base, track];
     }
   }
 
