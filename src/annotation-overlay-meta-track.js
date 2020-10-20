@@ -40,6 +40,7 @@ function createAnnotationOverlayMetaTrack(HGC, ...args) {
         .filter((track) => track);
 
       this.annotationDrawnHandlerBound = this.annotationDrawnHandler.bind(this);
+      this.tilesDrawnEndHandlerBound = this.tilesDrawnEndHandler.bind(this);
 
       this.drawnAnnotations = new Map();
       this.tracksDrawingTiles = new Set();
@@ -49,14 +50,8 @@ function createAnnotationOverlayMetaTrack(HGC, ...args) {
       // Augment annotation tracks
       this.annotationTracks.forEach((track) => {
         track.subscribe('annotationDrawn', this.annotationDrawnHandlerBound);
+        track.subscribe('tilesDrawn', this.tilesDrawnEndHandlerBound);
       });
-
-      this.pubSubs.push(
-        pubSub.subscribe(
-          'TiledPixiTrack.tilesDrawnEnd',
-          this.tilesDrawnEndHandler.bind(this)
-        )
-      );
     }
 
     /**
@@ -84,14 +79,6 @@ function createAnnotationOverlayMetaTrack(HGC, ...args) {
       });
     }
 
-    /**
-     * Callback function passed into the annotation tracks to trigger tree
-     * building of the spatial RTree.
-     *
-     * @description
-     * Simple counter that call `this.buildTree()` once the number of annotation
-     * tracks is reached.
-     */
     tilesDrawnEndHandler({ uuid }) {
       if (!this.annotationTrackIds.has(uuid)) return;
 

@@ -100,7 +100,12 @@ function createTssTrack(HGC, ...args) {
     rerender() {
       // Monkey patch because TiledPixiTrack doesn't always fire correctly
       this.draw();
-      this.pubSub.publish('TiledPixiTrack.tilesDrawnEnd', { uuid: this.uuid });
+      this.publish('tilesDrawn', { uuid: this.uuid });
+    }
+
+    updateExistingGraphics() {
+      super.updateExistingGraphics();
+      this.publish('tilesDrawn', { uuid: this.uuid });
     }
 
     getMouseOverHtml() {
