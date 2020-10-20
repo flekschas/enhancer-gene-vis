@@ -443,17 +443,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       };
     }
 
-    renderIndicatorPoints() {
-      this.drawnAtScale = scaleLinear()
-        .domain([...this.xScale().domain()])
-        .range([...this.xScale().range()]);
-
-      const isHighlighting = !!(
-        this.focusStyle === 'highlighting' &&
-        ((this.focusGene && this.getGene) ||
-          (this.focusRegion && this.getRegion))
-      );
-
+    getPoints(isHighlighting) {
       let reducerVar = [];
       let addFn = (accumulator, item) =>
         accumulator.push(this.itemToIndicatorCategory(item, isHighlighting));
@@ -495,9 +485,23 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const filterFn = this.isItemInFocus();
       const dataToPoint = this.itemToIndicatorReducer(filterFn, addFn);
 
-      const points = Object.values(this.fetchedTiles).flatMap((tile) =>
+      return Object.values(this.fetchedTiles).flatMap((tile) =>
         Object.values(tile.tileData.reduce(dataToPoint, reducerVar))
       );
+    }
+
+    renderIndicatorPoints() {
+      this.drawnAtScale = scaleLinear()
+        .domain([...this.xScale().domain()])
+        .range([...this.xScale().range()]);
+
+      const isHighlighting = !!(
+        this.focusStyle === 'highlighting' &&
+        ((this.focusGene && this.getGene) ||
+          (this.focusRegion && this.getRegion))
+      );
+
+      const points = this.getPoints(isHighlighting);
 
       const positions = new Float32Array(points.flatMap(pointToPosition));
       const indices = new Uint16Array(points.flatMap(pointToIndex));
@@ -602,6 +606,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         this.pAxis.lineStyle(1, 0x000000, 1.0, 0.0);
         this.pAxis.moveTo(0, yStart);
         this.pAxis.lineTo(xTickOffset, yStart);
+
         if (this.options.stratification.axisShowGroupSeparator) {
           dashedXLineTo(this.pAxis, 0, xTickEnd, yStart, 5);
         }
@@ -612,9 +617,145 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.pAxis.moveTo(0, 0);
       this.pAxis.lineTo(0, yEnd);
       this.pAxis.lineTo(xTickOffset, yEnd);
+
       if (this.options.stratification.axisShowGroupSeparator) {
         dashedXLineTo(this.pAxis, 0, xTickEnd, yEnd, 5);
       }
+    }
+
+    renderIndicatorCategoryAxisAsSvg() {
+      const gAxis = document.createElement('g');
+      gAxis.setAttribute('id', 'axis');
+
+      const [width] = this.dimensions;
+      const [left, top] = this.position;
+
+      this.pAxis.position.x = this.axisAlign === 'right' ? left + width : left;
+      this.pAxis.position.y = top;
+
+      gAxis.setAttribute(
+        'transform',
+        `translate(${this.pAxis.position.x}, ${this.pAxis.position.y})`
+      );
+
+      let yStart = 0;
+      let yEnd = 0;
+
+      const xTickOffset = this.axisAlign === 'right' ? -5 : 5;
+      const xTickEnd = this.axisAlign === 'right' ? -width : width;
+      const xLabelOffset = this.axisAlign === 'right' ? -3 : 3;
+
+      const createRect = (x, y, w, h, f, o) => {
+        const r = document.createElement('rect');
+
+        r.setAttribute('x', x);
+        r.setAttribute('y', y);
+        r.setAttribute('width', w);
+        r.setAttribute('height', h);
+        r.setAttribute('fill', f);
+        r.setAttribute('fill-opacity', o);
+        r.setAttribute('stroke-width', 0);
+
+        return r;
+      };
+
+      const createText = (pixiText) => {
+        const t = document.createElement('text');
+
+        t.setAttribute('x', pixiText.x);
+        t.setAttribute('y', pixiText.y + pixiText.height / (4 / 1));
+        t.setAttribute('fill', pixiText._style._fill);
+        t.setAttribute(
+          'text-anchor',
+          pixiText._style._align === 'right' ? 'end' : 'start'
+        );
+        t.setAttribute('style', `font: ${pixiText._font};`);
+
+        t.textContent = pixiText.text;
+
+        return t;
+      };
+
+      const createLine = ({
+        stroke = '#000000',
+        strokeWidth = 1,
+        strokeDasharray = null,
+      } = {}) => (x1, y1, x2, y2) => {
+        const l = document.createElement('line');
+
+        l.setAttribute('x1', x1);
+        l.setAttribute('y1', y1);
+        l.setAttribute('x2', x2);
+        l.setAttribute('y2', y2);
+        l.setAttribute('stroke', stroke);
+        l.setAttribute('stroke-width', strokeWidth);
+
+        if (strokeDasharray)
+          l.setAttribute('stroke-dasharray', strokeDasharray);
+
+        return l;
+      };
+
+      const createDashedLine = createLine({ strokeDasharray: '5' });
+
+      const isHighlighting = this.options.focusStyle === 'highlighting';
+      const backgroundOpacity = 0.66;
+
+      this.groupLabelsPixiText.forEach((labelPixiText, i) => {
+        const height = this.categoryHeightScale(this.groupSizes[i]);
+        yEnd += height;
+        labelPixiText.x = xLabelOffset;
+        labelPixiText.y = yStart + height / 2;
+        labelPixiText.anchor.x = this.axisAlign === 'right' ? 1 : 0;
+        labelPixiText.anchor.y = 0.5;
+
+        // Background color
+        const backgroundColor = isHighlighting
+          ? '#ffffff'
+          : `#${this.groupToColor.get(i)[1].toString(16)}`;
+
+        if (this.axisAlign === 'right') {
+          gAxis.appendChild(
+            createRect(
+              labelPixiText.x - labelPixiText.width,
+              labelPixiText.y - labelPixiText.height / (4 / 1),
+              labelPixiText.width,
+              labelPixiText.height,
+              backgroundColor,
+              backgroundOpacity
+            )
+          );
+        } else {
+          gAxis.appendChild(
+            createRect(
+              labelPixiText.x,
+              labelPixiText.y - labelPixiText.height / (4 / 1),
+              labelPixiText.width,
+              labelPixiText.height,
+              backgroundColor,
+              backgroundOpacity
+            )
+          );
+        }
+
+        gAxis.appendChild(createText(labelPixiText));
+
+        gAxis.appendChild(createLine()(0, yStart, xTickOffset, yStart));
+
+        if (this.options.stratification.axisShowGroupSeparator) {
+          gAxis.appendChild(createDashedLine(0, yStart, xTickEnd, yStart));
+        }
+
+        yStart = yEnd;
+      });
+
+      gAxis.appendChild(createLine()(0, 0, 0, yEnd));
+
+      if (this.options.stratification.axisShowGroupSeparator) {
+        gAxis.appendChild(createDashedLine(0, yEnd, xTickEnd, yEnd));
+      }
+
+      return gAxis;
     }
 
     updateIndicators() {
@@ -745,7 +886,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       [base, track] = super.superSVG();
 
-      base.setAttribute('class', 'exported-arcs-track');
+      base.setAttribute('class', 'exported-stratified-bed-track');
       const output = document.createElement('g');
 
       track.appendChild(output);
@@ -754,22 +895,34 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         `translate(${this.position[0]},${this.position[1]})`
       );
 
-      this.visibleAndFetchedTiles().forEach((tile) => {
-        this.polys = [];
+      const isHighlighting = !!(
+        this.focusStyle === 'highlighting' &&
+        ((this.focusGene && this.getGene) ||
+          (this.focusRegion && this.getRegion))
+      );
 
-        // call drawTile with storePolyStr = true so that
-        // we record path strings to use in the SVG
-        this.drawTile(tile, true);
+      const points = this.getPoints(isHighlighting);
+      const color = isHighlighting
+        ? this.options.markColorDehighlight || '#999999'
+        : this.options.markColor || 'black';
+      const colorHighlight = this.options.markColorHighlight || 'red';
 
-        for (const { polyStr, opacity } of this.polys) {
-          const g = document.createElement('path');
-          g.setAttribute('fill', 'transparent');
-          g.setAttribute('opacity', opacity);
+      points.forEach(({ cX, y, widthHalf, opacity, highlight, height }, i) => {
+        const r = document.createElement('rect');
 
-          g.setAttribute('d', polyStr);
-          output.appendChild(g);
-        }
+        r.setAttribute('x', cX - widthHalf);
+        r.setAttribute('y', y);
+        r.setAttribute('width', widthHalf * 2);
+        r.setAttribute('height', height);
+        r.setAttribute('fill', highlight ? colorHighlight : color);
+        r.setAttribute('fill-opacity', opacity);
+        r.setAttribute('stroke-width', 0);
+
+        output.appendChild(r);
       });
+
+      base.appendChild(this.renderIndicatorCategoryAxisAsSvg());
+
       return [base, track];
     }
   }
