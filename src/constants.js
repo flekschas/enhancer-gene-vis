@@ -1,3 +1,5 @@
+export const EPS = 1e-6;
+
 export const SVG_SKELETON = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg
@@ -430,10 +432,11 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
             // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
             tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
-            height: 403,
+            height: 430,
             uid: 'indicatorByCellTypes',
             options: {
               axisAlign: 'right',
+              legendAlign: 'right',
               labelPosition: 'hidden',
               markColor: 'black',
               markColorHighlight: '#bf0071',

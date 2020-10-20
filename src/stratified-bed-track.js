@@ -4,8 +4,9 @@ import {
   DEFAULT_COLOR_MAP,
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP_LIGHT,
+  EPS,
 } from './constants';
-import { contains, dashedXLineTo } from './utils';
+import { contains, dashedXLineTo, toFixed } from './utils';
 
 const VS = `
   precision mediump float;
@@ -146,6 +147,12 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
   class StratifiedBedTrack extends HGC.tracks.HorizontalLine1DPixiTrack {
     constructor(context, options) {
       super(context, options);
+
+      this.pLegend = new PIXI.Graphics();
+      this.pMasked.addChild(this.pLegend);
+
+      this.legendMin = Infinity;
+      this.legendMax = -Infinity;
 
       this.updateOptions();
     }
@@ -300,7 +307,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
         case 'highestImportance':
         case 'closestImportance': {
-          const importanceDomain = this.options.importanceDomain || [1000, 1];
+          const importanceDomain = this.options.importanceDomain || [1, 1000];
           const opacityLinearScale = scaleLinear()
             .domain(importanceDomain)
             .range([1, 10]);
@@ -623,143 +630,133 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       }
     }
 
-    renderIndicatorCategoryAxisAsSvg() {
-      const gAxis = document.createElement('g');
-      gAxis.setAttribute('id', 'axis');
+    renderIndicatorLegend() {
+      this.pLegend.clear();
 
-      const [width] = this.dimensions;
-      const [left, top] = this.position;
-
-      this.pAxis.position.x = this.axisAlign === 'right' ? left + width : left;
-      this.pAxis.position.y = top;
-
-      gAxis.setAttribute(
-        'transform',
-        `translate(${this.pAxis.position.x}, ${this.pAxis.position.y})`
-      );
-
-      let yStart = 0;
-      let yEnd = 0;
-
-      const xTickOffset = this.axisAlign === 'right' ? -5 : 5;
-      const xTickEnd = this.axisAlign === 'right' ? -width : width;
-      const xLabelOffset = this.axisAlign === 'right' ? -3 : 3;
-
-      const createRect = (x, y, w, h, f, o) => {
-        const r = document.createElement('rect');
-
-        r.setAttribute('x', x);
-        r.setAttribute('y', y);
-        r.setAttribute('width', w);
-        r.setAttribute('height', h);
-        r.setAttribute('fill', f);
-        r.setAttribute('fill-opacity', o);
-        r.setAttribute('stroke-width', 0);
-
-        return r;
-      };
-
-      const createText = (pixiText) => {
-        const t = document.createElement('text');
-
-        t.setAttribute('x', pixiText.x);
-        t.setAttribute('y', pixiText.y + pixiText.height / (4 / 1));
-        t.setAttribute('fill', pixiText._style._fill);
-        t.setAttribute(
-          'text-anchor',
-          pixiText._style._align === 'right' ? 'end' : 'start'
-        );
-        t.setAttribute('style', `font: ${pixiText._font};`);
-
-        t.textContent = pixiText.text;
-
-        return t;
-      };
-
-      const createLine = ({
-        stroke = '#000000',
-        strokeWidth = 1,
-        strokeDasharray = null,
-      } = {}) => (x1, y1, x2, y2) => {
-        const l = document.createElement('line');
-
-        l.setAttribute('x1', x1);
-        l.setAttribute('y1', y1);
-        l.setAttribute('x2', x2);
-        l.setAttribute('y2', y2);
-        l.setAttribute('stroke', stroke);
-        l.setAttribute('stroke-width', strokeWidth);
-
-        if (strokeDasharray)
-          l.setAttribute('stroke-dasharray', strokeDasharray);
-
-        return l;
-      };
-
-      const createDashedLine = createLine({ strokeDasharray: '5' });
-
-      const isHighlighting = this.options.focusStyle === 'highlighting';
-      const backgroundOpacity = 0.66;
-
-      this.groupLabelsPixiText.forEach((labelPixiText, i) => {
-        const height = this.categoryHeightScale(this.groupSizes[i]);
-        yEnd += height;
-        labelPixiText.x = xLabelOffset;
-        labelPixiText.y = yStart + height / 2;
-        labelPixiText.anchor.x = this.axisAlign === 'right' ? 1 : 0;
-        labelPixiText.anchor.y = 0.5;
-
-        // Background color
-        const backgroundColor = isHighlighting
-          ? '#ffffff'
-          : `#${this.groupToColor.get(i)[1].toString(16)}`;
-
-        if (this.axisAlign === 'right') {
-          gAxis.appendChild(
-            createRect(
-              labelPixiText.x - labelPixiText.width,
-              labelPixiText.y - labelPixiText.height / (4 / 1),
-              labelPixiText.width,
-              labelPixiText.height,
-              backgroundColor,
-              backgroundOpacity
-            )
-          );
-        } else {
-          gAxis.appendChild(
-            createRect(
-              labelPixiText.x,
-              labelPixiText.y - labelPixiText.height / (4 / 1),
-              labelPixiText.width,
-              labelPixiText.height,
-              backgroundColor,
-              backgroundOpacity
-            )
-          );
+      if (this.opacityEncoding.indexOf('Importance') === -1) {
+        if (this.legendMinText) {
+          this.pLegend.removeChild(this.legendMinText);
+          this.legendMinText.destroy();
+          this.legendMinText = undefined;
         }
-
-        gAxis.appendChild(createText(labelPixiText));
-
-        gAxis.appendChild(createLine()(0, yStart, xTickOffset, yStart));
-
-        if (this.options.stratification.axisShowGroupSeparator) {
-          gAxis.appendChild(createDashedLine(0, yStart, xTickEnd, yStart));
+        if (this.legendMaxText) {
+          this.pLegend.removeChild(this.legendMaxText);
+          this.legendMaxText.destroy();
+          this.legendMaxText = undefined;
         }
-
-        yStart = yEnd;
-      });
-
-      gAxis.appendChild(createLine()(0, 0, 0, yEnd));
-
-      if (this.options.stratification.axisShowGroupSeparator) {
-        gAxis.appendChild(createDashedLine(0, yEnd, xTickEnd, yEnd));
+        return;
       }
 
-      return gAxis;
+      const padding = 6;
+      const [width] = this.dimensions;
+      const [left, top] = this.position;
+      const [, y] = this.categoryHeightScale.range();
+      const isRightAligned = this.options.legendAlign === 'right';
+      const isHighlighting = !!(
+        this.focusStyle === 'highlighting' &&
+        ((this.focusGene && this.getGene) ||
+          (this.focusRegion && this.getRegion))
+      );
+
+      this.pLegend.position.x = isRightAligned ? left + width : left;
+      this.pLegend.position.y = top + y + padding;
+
+      const [minValue, maxValue] = this.options.importanceDomain || [1, 1000];
+
+      if (Math.abs(minValue - this.legendMin) > EPS) {
+        if (this.legendMinText) {
+          this.pLegend.removeChild(this.legendMinText);
+          this.legendMinText.destroy();
+        }
+        this.legendMinText = new PIXI.Text(toFixed(minValue, 3), {
+          fontSize: this.labelSize,
+          align: isRightAligned ? 'right' : 'left',
+          fill: 0x808080,
+        });
+        this.legendMinText.x = 0;
+        this.legendMinText.y = padding / 2;
+        this.legendMinText.anchor.x = isRightAligned ? 1 : 0;
+        this.pLegend.addChild(this.legendMinText);
+      }
+
+      if (Math.abs(maxValue - this.legendMax) > EPS) {
+        if (this.legendMaxText) {
+          this.pLegend.removeChild(this.legendMaxText);
+          this.legendMaxText.destroy();
+        }
+        this.legendMaxText = new PIXI.Text(toFixed(maxValue, 3), {
+          fontSize: this.labelSize,
+          align: isRightAligned ? 'right' : 'left',
+          fill: 0x808080,
+        });
+        this.legendMaxText.x = 0;
+        this.legendMaxText.y = padding / 2;
+        this.legendMaxText.anchor.x = isRightAligned ? 1 : 0;
+        this.pLegend.addChild(this.legendMaxText);
+      }
+
+      const legendRectWidth = 42;
+      const minTextWidth = this.legendMinText.getBounds().width;
+      const maxTextWidth = this.legendMaxText.getBounds().width;
+      const offset = isRightAligned
+        ? -(maxTextWidth + legendRectWidth + padding)
+        : minTextWidth + padding;
+
+      this.pLegend.beginFill(0xffffff);
+      this.pLegend.lineStyle(1, 0xcccccc);
+      if (isRightAligned) {
+        this.legendMinText.x = offset - padding;
+        this.pLegend.drawRoundedRect(
+          -(legendRectWidth + minTextWidth + maxTextWidth + 3 * padding + 0.5),
+          0,
+          legendRectWidth + minTextWidth + maxTextWidth + 3 * padding,
+          18 + (isHighlighting * padding) / 2,
+          3
+        );
+      } else {
+        this.legendMaxText.x = offset + legendRectWidth + 2 * padding;
+        this.pLegend.drawRoundedRect(
+          0.5,
+          0,
+          legendRectWidth + minTextWidth + maxTextWidth + 3 * padding,
+          18 + (isHighlighting * padding) / 2,
+          3
+        );
+      }
+      this.pLegend.endFill();
+      this.pLegend.lineStyle(0);
+
+      for (let i = 0; i < 5; i++) {
+        const opacity = this.opacityScale(minValue + (i / 4) * maxValue);
+
+        this.pLegend.beginFill(this.markColor, opacity);
+        this.pLegend.drawRect(
+          i * 9 + offset,
+          padding / 2 + !isHighlighting * 3,
+          6,
+          6
+        );
+        this.pLegend.endFill();
+
+        if (isHighlighting) {
+          this.pLegend.beginFill(this.markColorHighlight, opacity);
+          this.pLegend.drawRect(i * 9 + offset, padding / 2 + 9, 6, 6);
+          this.pLegend.endFill();
+        }
+      }
+
+      if (isRightAligned) {
+        this.legendMinText.x = offset - padding;
+        this.legendMaxText.x = -padding / 2;
+      } else {
+        this.legendMinText.x = padding / 2;
+        this.legendMaxText.x = offset + legendRectWidth + 2 * padding;
+      }
     }
 
     updateIndicators() {
-      this.renderIndicatorCategoryAxis(this.valueScaleInverted);
+      this.renderIndicatorCategoryAxis();
+      this.renderIndicatorLegend();
       this.renderIndicatorPoints();
     }
 
@@ -870,6 +867,139 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.refreshTiles();
       this.draw();
+    }
+
+    renderIndicatorCategoryAxisAsSvg() {
+      const gAxis = document.createElement('g');
+      gAxis.setAttribute('id', 'axis');
+
+      const [width] = this.dimensions;
+      const [left, top] = this.position;
+
+      this.pAxis.position.x = this.axisAlign === 'right' ? left + width : left;
+      this.pAxis.position.y = top;
+
+      gAxis.setAttribute(
+        'transform',
+        `translate(${this.pAxis.position.x}, ${this.pAxis.position.y})`
+      );
+
+      let yStart = 0;
+      let yEnd = 0;
+
+      const xTickOffset = this.axisAlign === 'right' ? -5 : 5;
+      const xTickEnd = this.axisAlign === 'right' ? -width : width;
+      const xLabelOffset = this.axisAlign === 'right' ? -3 : 3;
+
+      const createRect = (x, y, w, h, f, o) => {
+        const r = document.createElement('rect');
+
+        r.setAttribute('x', x);
+        r.setAttribute('y', y);
+        r.setAttribute('width', w);
+        r.setAttribute('height', h);
+        r.setAttribute('fill', f);
+        r.setAttribute('fill-opacity', o);
+        r.setAttribute('stroke-width', 0);
+
+        return r;
+      };
+
+      const createText = (pixiText) => {
+        const t = document.createElement('text');
+
+        t.setAttribute('x', pixiText.x);
+        t.setAttribute('y', pixiText.y + pixiText.height / (4 / 1));
+        t.setAttribute('fill', pixiText._style._fill);
+        t.setAttribute(
+          'text-anchor',
+          pixiText._style._align === 'right' ? 'end' : 'start'
+        );
+        t.setAttribute('style', `font: ${pixiText._font};`);
+
+        t.textContent = pixiText.text;
+
+        return t;
+      };
+
+      const createLine = ({
+        stroke = '#000000',
+        strokeWidth = 1,
+        strokeDasharray = null,
+      } = {}) => (x1, y1, x2, y2) => {
+        const l = document.createElement('line');
+
+        l.setAttribute('x1', x1);
+        l.setAttribute('y1', y1);
+        l.setAttribute('x2', x2);
+        l.setAttribute('y2', y2);
+        l.setAttribute('stroke', stroke);
+        l.setAttribute('stroke-width', strokeWidth);
+
+        if (strokeDasharray)
+          l.setAttribute('stroke-dasharray', strokeDasharray);
+
+        return l;
+      };
+
+      const createDashedLine = createLine({ strokeDasharray: '5' });
+
+      const isHighlighting = this.options.focusStyle === 'highlighting';
+      const backgroundOpacity = 0.66;
+
+      this.groupLabelsPixiText.forEach((labelPixiText, i) => {
+        const height = this.categoryHeightScale(this.groupSizes[i]);
+        yEnd += height;
+        labelPixiText.x = xLabelOffset;
+        labelPixiText.y = yStart + height / 2;
+
+        // Background color
+        const backgroundColor = isHighlighting
+          ? '#ffffff'
+          : `#${this.groupToColor.get(i)[1].toString(16)}`;
+
+        if (this.axisAlign === 'right') {
+          gAxis.appendChild(
+            createRect(
+              labelPixiText.x - labelPixiText.width,
+              labelPixiText.y - labelPixiText.height / (4 / 1),
+              labelPixiText.width,
+              labelPixiText.height,
+              backgroundColor,
+              backgroundOpacity
+            )
+          );
+        } else {
+          gAxis.appendChild(
+            createRect(
+              labelPixiText.x,
+              labelPixiText.y - labelPixiText.height / (4 / 1),
+              labelPixiText.width,
+              labelPixiText.height,
+              backgroundColor,
+              backgroundOpacity
+            )
+          );
+        }
+
+        gAxis.appendChild(createText(labelPixiText));
+
+        gAxis.appendChild(createLine()(0, yStart, xTickOffset, yStart));
+
+        if (this.options.stratification.axisShowGroupSeparator) {
+          gAxis.appendChild(createDashedLine(0, yStart, xTickEnd, yStart));
+        }
+
+        yStart = yEnd;
+      });
+
+      gAxis.appendChild(createLine()(0, 0, 0, yEnd));
+
+      if (this.options.stratification.axisShowGroupSeparator) {
+        gAxis.appendChild(createDashedLine(0, yEnd, xTickEnd, yEnd));
+      }
+
+      return gAxis;
     }
 
     /**
