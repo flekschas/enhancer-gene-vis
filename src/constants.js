@@ -302,6 +302,9 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                   geneAnnotationHeight: 12,
                   geneLabelPosition: 'outside',
                   geneStrandSpacing: 2,
+                  showMousePosition: true,
+                  showGlobalMousePosition: true,
+                  mousePositionColor: '#cccccc',
                 },
               },
               {
@@ -358,6 +361,9 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                 1680373143 + 81046453 + 25,
               ],
               name: 'IBD SNPs',
+              showMousePosition: true,
+              showGlobalMousePosition: true,
+              mousePositionColor: '#cccccc',
               toolTip: {
                 name: {
                   field: 3,
@@ -410,6 +416,9 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
               ],
               name: 'By Celltype',
               stratification: DEFAULT_STRATIFICATION,
+              showMousePosition: true,
+              showGlobalMousePosition: true,
+              mousePositionColor: '#cccccc',
             },
           },
           {
@@ -447,6 +456,9 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
               name: 'By Celltype',
               axisPositionHorizontal: 'right',
               stratification: DEFAULT_STRATIFICATION,
+              showMousePosition: true,
+              showGlobalMousePosition: true,
+              mousePositionColor: '#cccccc',
             },
           },
         ],
@@ -569,6 +581,9 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               geneAnnotationHeight: 12,
               geneLabelPosition: 'outside',
               geneStrandSpacing: 2,
+              showMousePosition: true,
+              showGlobalMousePosition: true,
+              mousePositionColor: '#cccccc',
             },
           },
           {
@@ -593,6 +608,9 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
                 1680373143 + 81046453 + 25,
               ],
               name: 'IBD SNPs',
+              showMousePosition: true,
+              showGlobalMousePosition: true,
+              mousePositionColor: '#cccccc',
               toolTip: {
                 name: {
                   field: 3,
@@ -788,6 +806,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               showRowLabels: true,
               rowLabelSize: 10,
               showMousePosition: true,
+              showGlobalMousePosition: true,
               mousePositionColor: '#cccccc',
             },
           },
