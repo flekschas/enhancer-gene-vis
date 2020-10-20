@@ -306,7 +306,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                   geneStrandSpacing: 2,
                   showMousePosition: true,
                   showGlobalMousePosition: true,
-                  mousePositionColor: '#cccccc',
+                  mousePositionColor: 'black',
                 },
               },
               {
@@ -365,7 +365,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
               name: 'IBD SNPs',
               showMousePosition: true,
               showGlobalMousePosition: true,
-              mousePositionColor: '#cccccc',
+              mousePositionColor: 'black',
               toolTip: {
                 name: {
                   field: 3,
@@ -420,7 +420,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
               stratification: DEFAULT_STRATIFICATION,
               showMousePosition: true,
               showGlobalMousePosition: true,
-              mousePositionColor: '#cccccc',
+              mousePositionColor: 'black',
             },
           },
           {
@@ -461,7 +461,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
               stratification: DEFAULT_STRATIFICATION,
               showMousePosition: true,
               showGlobalMousePosition: true,
-              mousePositionColor: '#cccccc',
+              mousePositionColor: 'black',
             },
           },
         ],
@@ -586,7 +586,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               geneStrandSpacing: 2,
               showMousePosition: true,
               showGlobalMousePosition: true,
-              mousePositionColor: '#cccccc',
+              mousePositionColor: 'black',
             },
           },
           {
@@ -613,7 +613,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               name: 'IBD SNPs',
               showMousePosition: true,
               showGlobalMousePosition: true,
-              mousePositionColor: '#cccccc',
+              mousePositionColor: 'black',
               toolTip: {
                 name: {
                   field: 3,
@@ -810,7 +810,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               rowLabelSize: 10,
               showMousePosition: true,
               showGlobalMousePosition: true,
-              mousePositionColor: '#cccccc',
+              mousePositionColor: 'black',
             },
           },
         ],

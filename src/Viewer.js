@@ -200,6 +200,9 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: '20rem',
     padding: '0.5rem',
     fontSize: '0.8rem',
+    '&+p': {
+      paddingTop: 0,
+    },
   },
   higlassEnhancerInfoBar: {
     display: 'flex',
@@ -1111,10 +1114,14 @@ const Viewer = (props) => {
                 <Typography className={classes.higlassTitleBarHelpPopeover}>
                   This panel visualizes the predicted enhancers by sample type
                   as a matrix-like track. Each rectangle representes an
-                  enhancer. You can filter enhancers via their target gene or by
-                  variant (the dot plot below the gene annotations). Click on a
-                  variant or gene to select it. Selections are shown in
-                  pink/red.
+                  enhancer. Promoter regions are indicated by translucent light
+                  gray overlays.
+                </Typography>
+                <Typography className={classes.higlassTitleBarHelpPopeover}>
+                  {' '}
+                  You can filter enhancers via their target gene or by variant
+                  (the dot plot below the gene annotations). Click on a variant
+                  or gene to select it. Selections are shown in pink/red.
                 </Typography>
               </Popover>
             </Grid>
