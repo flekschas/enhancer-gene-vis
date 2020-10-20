@@ -202,6 +202,10 @@ const useStyles = makeStyles((theme) => ({
     fontSize: '0.8rem',
   },
   higlassEnhancerInfoBar: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-end',
+    minHeight: '2.625rem',
     padding: '2px 4px',
     color: theme.palette.grey['600'],
   },
