@@ -138,6 +138,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
   const { PIXI } = HGC.libraries;
   const { scaleLinear, scaleLog } = HGC.libraries.d3Scale;
   const { tileProxy } = HGC.services;
+  const { MAX_CLICK_DELAY } = HGC.configs;
 
   const opacityLogScale = scaleLog()
     .domain([1, 10])
@@ -153,6 +154,22 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.legendMin = Infinity;
       this.legendMax = -Infinity;
+
+      // Needed for interaction tracking because interaction tracking on the
+      // mesh causes errors...
+      this.bg = new PIXI.Sprite(PIXI.Texture.WHITE);
+      [this.bg.width, this.bg.height] = this.dimensions;
+      this.bg.interactive = true;
+      this.bg.interactiveChildren = false;
+
+      let mousedownTime = performance.now();
+      this.bg.mousedown = () => {
+        mousedownTime = performance.now();
+      };
+      this.bg.mouseup = (e) => {
+        if (performance.now() - mousedownTime < MAX_CLICK_DELAY)
+          this.clickHandler(e);
+      };
 
       this.updateOptions();
     }
@@ -534,12 +551,16 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const mesh = new PIXI.Mesh(geometry, shader);
 
       const newGraphics = new PIXI.Graphics();
+      newGraphics.addChild(this.bg);
       newGraphics.addChild(mesh);
+
+      [this.bg.width, this.bg.height] = this.dimensions;
 
       // eslint-disable-next-line
       this.pMain.x = this.position[0];
 
       if (this.indicatorPointGraphics) {
+        this.indicatorPointGraphics.removeChild(this.bg);
         this.pMain.removeChild(this.indicatorPointGraphics);
       }
 
@@ -791,15 +812,8 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       }
     }
 
-    /**
-     * Shows value and type for each bar
-     *
-     * @param trackX relative x-coordinate of mouse
-     * @param trackY relative y-coordinate of mouse
-     * @returns string with embedded values and svg square for color
-     */
-    getMouseOverHtml(trackX, trackY) {
-      if (!this.tilesetInfo) return '';
+    getElementAtPosition(relX, relY) {
+      if (!this.tilesetInfo) return undefined;
 
       const zoomLevel = this.calculateZoomLevel();
       const tileWidth = tileProxy.calculateTileWidth(
@@ -811,18 +825,18 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       // the position of the tile containing the query position
       const tileId = this.tileToLocalId([
         zoomLevel,
-        Math.floor(this._xScale.invert(trackX) / tileWidth),
+        Math.floor(this._xScale.invert(relX) / tileWidth),
       ]);
       const fetchedTile = this.fetchedTiles[tileId];
 
-      if (!fetchedTile) return '';
+      if (!fetchedTile) return undefined;
 
       const category = this.yToCategory.get(
-        Math.floor(this.categoryHeightScale.invert(trackY))
+        Math.floor(this.categoryHeightScale.invert(relY))
       );
 
-      const xAbsLo = this._xScale.invert(trackX - 1);
-      const xAbsHi = this._xScale.invert(trackX + 1);
+      const xAbsLo = this._xScale.invert(relX - 1);
+      const xAbsHi = this._xScale.invert(relX + 1);
 
       let foundItem;
       fetchedTile.intervalTree.queryInterval(xAbsLo, xAbsHi, (interval) => {
@@ -834,17 +848,47 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         return false;
       });
 
-      if (foundItem) {
+      return {
+        item: foundItem,
+        category,
+        tileId,
+      };
+    }
+
+    getMouseOverHtml(relX, relY) {
+      const element = this.getElementAtPosition(relX, relY);
+
+      if (!element) return '';
+
+      const { item, category } = element;
+
+      if (item) {
         const [color, bg] = this.groupToColor.get(
           this.categoryToGroup.get(category)
         );
         const colorHex = `#${color.toString(16)}`;
         const bgHex = `#${bg.toString(16)}`;
-        const value = this.getImportance(foundItem).toFixed(2);
+        const value = this.getImportance(item).toFixed(2);
         return `<div style="margin: -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${category}:</strong> ${value}</div>`;
       }
 
       return '';
+    }
+
+    clickHandler(event) {
+      const [offsetX, offsetY] = this.position;
+      const relX = event.data.global.x - offsetX;
+      const relY = event.data.global.y - offsetY;
+
+      const element = this.getElementAtPosition(relX, relY);
+
+      if (element) {
+        this.pubSub.publish('app.click', {
+          type: 'annotation',
+          event,
+          payload: element,
+        });
+      }
     }
 
     setPosition(newPosition) {
