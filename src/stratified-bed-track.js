@@ -78,33 +78,20 @@ const pointToHighlight = (pt) => [
   pt.highlight,
 ];
 
-const getIs2d = (tile) =>
-  tile.tileData.length && tile.tileData[0].yStart !== undefined;
-
-const get1dItemWidth = (item) => item.xEnd - item.xStart;
-
-const get2dItemWidth = (item) =>
+const getItemDistance = (item) =>
   Math.abs(
-    item.xStart +
-      (item.xEnd - item.xStart) / 2 -
-      (item.yStart + (item.yEnd - item.yStart) / 2)
+    +item.fields[1] +
+      (+item.fields[2] - +item.fields[1]) / 2 -
+      (+item.fields[4] + (+item.fields[4] - +item.fields[5]) / 2)
   );
 
-const get1dStart = (item) => item.xStart;
-
-const get2dStart = (item) => item.xStart + (item.xEnd - item.xStart) / 2;
-
-const get1dEnd = (item) => item.xEnd;
-
-const get2dEnd = (item) => item.yStart + (item.yEnd - item.yStart) / 2;
-
-const getMaxWidth = (fetchedTiles) =>
+const getMaxDistance = (fetchedTiles) =>
   Object.values(fetchedTiles).reduce(
-    (maxWidth, tile) =>
+    (maxDist, tile) =>
       Math.max(
-        maxWidth,
+        maxDist,
         tile.tileData.reduce(
-          (maxWidthItem, item) => Math.max(maxWidthItem, item.width),
+          (maxDistItem, item) => Math.max(maxDistItem, item.distance),
           0
         )
       ),
@@ -175,19 +162,13 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
     }
 
     initTile(tile) {
-      const is2d = getIs2d(tile);
-      const getItemWidth = is2d ? get2dItemWidth : get1dItemWidth;
-      const getStart = is2d ? get2dStart : get1dStart;
-      const getEnd = is2d ? get2dEnd : get1dEnd;
-
       const intervals = [];
 
       tile.tileData.forEach((item, i) => {
-        item.width = getItemWidth(item);
-        item.start = getStart(item);
-        item.end = getEnd(item);
+        item.distance = getItemDistance(item) || -1;
+        item.cX = item.xStart + (item.xEnd - item.xStart) / 2;
         item.regionId = getRegionId(item);
-        item.isLeftToRight = item.start < item.end;
+        item.isLeftToRight = item.xStart < item.xEnd;
         intervals.push([item.xStart, item.xEnd, i]);
       });
 
@@ -313,7 +294,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.getImportance = this.options.importanceField
         ? (item) => +item.fields[this.options.importanceField]
-        : (item) => item.width;
+        : (item) => item.distance;
 
       this.opacityEncoding = this.options.opacityEncoding || 'solid';
 
@@ -380,10 +361,10 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       const [, height] = this.dimensions;
 
-      this.maxWidth = getMaxWidth(this.fetchedTiles);
+      this.maxDist = getMaxDistance(this.fetchedTiles);
 
       this.heightScale = scaleLinear()
-        .domain([0, this.maxWidth])
+        .domain([0, this.maxDist])
         .range([Math.min(12, height / 10), height]);
 
       this.categoryHeightScale = scaleLinear()
@@ -391,17 +372,17 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         .range([0, this.numCategories * this.rowHeight]);
 
       this.valueScale = scaleLinear()
-        .domain([0, this.maxWidth])
+        .domain([0, this.maxDist])
         .range([height, 0]);
 
       this.valueScaleInverted = scaleLinear()
-        .domain([0, this.maxWidth])
+        .domain([0, this.maxDist])
         .range([0, height]);
     }
 
     itemToIndicatorCategory(item, isHighlighting) {
       return {
-        cX: this._xScale(item.start),
+        cX: this._xScale(item.cX),
         y: this.categoryHeightScale(
           this.categoryToY.get(this.getCategory(item))
         ),
@@ -496,7 +477,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         addFn = (accumulator, item) => {
           if (
             !accumulator[item.regionId] ||
-            item.width < accumulator[item.regionId].__item.width
+            item.distance < accumulator[item.regionId].__item.distance
           ) {
             accumulator[item.regionId] = this.itemToIndicatorCategory(
               item,
