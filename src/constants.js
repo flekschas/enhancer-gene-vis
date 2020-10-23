@@ -596,7 +596,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             // tilesetUid: 'IBDCombinedset1-2variantonly-pval',
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'VF5-RDXWTxidGMJU7FeaxA',
-            height: 132,
+            height: 36,
             options: {
               axisPositionHorizontal: 'right',
               markColor: 'black',
@@ -604,7 +604,6 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
               markSize: 2,
               markOpacity: 0.33,
               markOpacityFocus: 0.66,
-              // axisPositionHorizontal: 'right',
               valueColumn: 7,
               focusRegion: [
                 1680373143 + 81046453 - 25,
