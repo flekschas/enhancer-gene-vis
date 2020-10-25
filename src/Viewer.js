@@ -357,7 +357,7 @@ const extractSvgCore = (svg) => {
 
 const Viewer = (props) => {
   const [infoOpen, setInfoOpen] = useQueryString('info', true, {
-    decoder: (v) => v === 'true',
+    decoder: (v) => (v === undefined ? undefined : v === 'true'),
   });
   const [focusGene, setFocusGene] = useQueryString('gene', '');
   const [focusVariant, setFocusVariant] = useQueryString(
@@ -1302,7 +1302,6 @@ const Viewer = (props) => {
                 className={classes.startExploring}
                 onClick={infoCloseHandler}
                 variant="contained"
-                primary
                 disableElevation
               >
                 Start Exploring!
