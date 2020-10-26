@@ -43,6 +43,7 @@ import SearchIcon from '@material-ui/icons/Search';
 
 import Logo from './Logo';
 import SearchField from './SearchField';
+import Welcome from './Welcome';
 
 import useDebounce from './use-debounce';
 import useQueryString from './use-query-string';
@@ -100,6 +101,8 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: '0.25rem',
     boxShadow: theme.shadows[4],
     maxWidth: '60rem',
+    maxHeight: 'calc(100vh - 8rem)',
+    overflow: 'auto',
     padding: theme.spacing(2, 4),
     outline: 0,
     '&>h2': {
@@ -109,17 +112,6 @@ const useStyles = makeStyles((theme) => ({
     },
     '&>p': {
       fontSize: '1.125em',
-    },
-  },
-  startExploring: {
-    color: 'white',
-    background: '#cc0078 linear-gradient(45deg, #cc0078 30%, #cc0066 90%)',
-    boxShadow: '0 1px 6px 1px rgba(255, 76, 151, .3)',
-    '&:hover': {
-      boxShadow: '0 1px 6px 1px rgba(255, 76, 151, .5)',
-    },
-    '&:focus': {
-      boxShadow: '0 1px 6px 1px rgba(255, 76, 151, .5)',
     },
   },
   appBar: {
@@ -692,6 +684,8 @@ const Viewer = (props) => {
         score: event.payload.importance,
         type: 'variant',
       });
+    } else if (event.type === 'annotation') {
+      console.log('clicked on annotation', event.payload);
     }
   };
 
@@ -1263,50 +1257,7 @@ const Viewer = (props) => {
       >
         <Fade in={infoOpen}>
           <div className={classes.paper}>
-            <Typography
-              id="info-title"
-              align="center"
-              variant="h5"
-              component="h2"
-              noWrap
-            >
-              <Logo
-                styles={{
-                  width: 'auto',
-                }}
-              />
-            </Typography>
-            <p id="info-description">
-              This web application visualizes genome-wide enhancer-gene
-              interactions that were predicted with the{' '}
-              <em>Activity-By-Contact</em> (ABC) model. You can interactively
-              browse the entire human genome and filter enhancers by gene and
-              containing variant.
-            </p>
-            <p>
-              For information regarding the ABC model please refer to our
-              initial publication:{' '}
-              <a
-                href="https://www.nature.com/articles/s41588-019-0538-0"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Fulco et al., Activity-by-contact model of enhancer–promoter
-                regulation from thousands of CRISPR perturbations,{' '}
-                <em>Nature Genetics</em> (2019)
-              </a>
-              .
-            </p>
-            <Typography align="center">
-              <Button
-                className={classes.startExploring}
-                onClick={infoCloseHandler}
-                variant="contained"
-                disableElevation
-              >
-                Start Exploring!
-              </Button>
-            </Typography>
+            <Welcome infoCloseHandler={infoCloseHandler} />
           </div>
         </Fade>
       </Modal>
