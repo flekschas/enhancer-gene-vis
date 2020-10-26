@@ -470,7 +470,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
         {
           uid: 'region-focus',
           includes: [
-            'chroms',
+            'chroms-viewport',
             'genes-tss-viewport',
             'ibd-snps',
             'stacked-bars',
