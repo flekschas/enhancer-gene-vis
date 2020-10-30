@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React, {
   useCallback,
   useEffect,
@@ -41,6 +42,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import HelpIcon from '@material-ui/icons/Help';
 import SearchIcon from '@material-ui/icons/Search';
 
+import EnhancerGenePlot from './EnhancerGenePlot';
 import Logo from './Logo';
 import SearchField from './SearchField';
 import Welcome from './Welcome';
@@ -157,9 +159,20 @@ const useStyles = makeStyles((theme) => ({
   grow: {
     flexGrow: 1,
   },
+  fullWidthHeight: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
   higlass: {
     display: 'flex',
     flexGrow: 1,
+  },
+  higlassEnhancerContainer: {
+    flexWrap: 'nowrap',
+    minHeight: '100%',
   },
   higlassEnhancer: {
     flexGrow: 1,
@@ -347,6 +360,31 @@ const extractSvgCore = (svg) => {
   return [svg.substring(fifthLn + 1, lastLn), width, height];
 };
 
+const locationSearch = async (query) => {
+  if (!query) return undefined;
+
+  const match = query.match(/^chr(\d+):(\d)+$/);
+  if (
+    match &&
+    ((+match[1] > 0 && +match[1] < 23) ||
+      +match[1].toLowerCase() === 'x' ||
+      +match[1].toLowerCase() === 'y')
+  ) {
+    return [
+      {
+        chr: `chr${match[1]}`,
+        txStart: +match[2],
+        txEnd: +match[2] + 1,
+        score: 0,
+        geneName: query,
+        type: 'nucleotide',
+      },
+    ];
+  }
+
+  return undefined;
+};
+
 const Viewer = (props) => {
   const [infoOpen, setInfoOpen] = useQueryString('info', true, {
     decoder: (v) => (v === undefined ? undefined : v === 'true'),
@@ -456,6 +494,11 @@ const Viewer = (props) => {
     [focusVariantOption, props.chromInfo]
   );
 
+  const focusVariantRelPosition = useMemo(
+    () => (focusVariantOption ? +focusVariantOption.txStart : null),
+    [focusVariantOption]
+  );
+
   const xDomainStartAbs = useMemo(
     () => toAbsPosition(xDomainStart, props.chromInfo),
     [xDomainStart, props.chromInfo]
@@ -495,6 +538,15 @@ const Viewer = (props) => {
       matrixColoring,
       variantYScale,
     ]
+  );
+
+  const viewConfigEnhancerHeight = useMemo(
+    () =>
+      viewConfigEnhancer.views[0].tracks.top.reduce(
+        (height, track) => height + track.height,
+        0
+      ),
+    [viewConfigEnhancer]
   );
 
   const getDnaAccessibilityXDomain = () => {
@@ -878,6 +930,7 @@ const Viewer = (props) => {
                   <span style={{ marginLeft: 3 }}>Gene or Variant</span>
                 </Grid>
               }
+              customSearch={locationSearch}
               searchUrl={[
                 { url: GENE_SEARCH_URL, type: 'gene' },
                 { url: VARIANT_SEARCH_URL, type: 'variant' },
@@ -1119,47 +1172,89 @@ const Viewer = (props) => {
                 </Typography>
               </Popover>
             </Grid>
-            <Grid item className={classes.grow}>
-              <HiGlassComponent
-                ref={higlassEnhancerInitHandler}
-                viewConfig={viewConfigEnhancer}
-                options={{
-                  sizeMode: 'bounded',
-                  globalMousePosition: true,
-                }}
-              />
-            </Grid>
-            <Grid item className={classes.higlassEnhancerInfoBar}>
-              {focusGene && focusVariant && (
-                <Typography className={classes.higlassTitleBarTitle} noWrap>
-                  <span className={classes.pink}>■</span> Enhancers containing{' '}
-                  <em>{focusVariant}</em> and predicted to regulate{' '}
-                  <em>{focusGene}</em>
-                </Typography>
-              )}
-              {focusGene && !focusVariant && (
-                <Typography className={classes.higlassTitleBarTitle} noWrap>
-                  <span className={classes.pink}>■</span> Enhancers predicted to
-                  regulate <em>{focusGene}</em>
-                </Typography>
-              )}
-              {!focusGene && focusVariant && (
-                <Typography className={classes.higlassTitleBarTitle} noWrap>
-                  <span className={classes.pink}>■</span> Enhancers containing{' '}
-                  <em>{focusVariant}</em>
-                </Typography>
-              )}
-              {focusGene || focusVariant ? (
-                <Typography className={classes.higlassTitleBarTitle} noWrap>
-                  <span className={classes.gray}>■</span> All other predicted
-                  enhancers
-                </Typography>
-              ) : (
-                <Typography className={classes.higlassTitleBarTitle} noWrap>
-                  <span className={classes.black}>■</span> All predicted
-                  enhancers
-                </Typography>
-              )}
+            <Grid
+              item
+              className={classes.grow}
+              style={{ position: 'relative' }}
+            >
+              <div
+                className={classes.fullWidthHeight}
+                style={{ overflow: 'auto' }}
+              >
+                <Grid
+                  container
+                  direction="column"
+                  className={classes.higlassEnhancerContainer}
+                >
+                  <Grid
+                    item
+                    className={classes.grow}
+                    style={{ height: `${viewConfigEnhancerHeight}px` }}
+                  >
+                    <HiGlassComponent
+                      ref={higlassEnhancerInitHandler}
+                      viewConfig={viewConfigEnhancer}
+                      options={{
+                        sizeMode: 'bounded',
+                        globalMousePosition: true,
+                      }}
+                    />
+                  </Grid>
+                  <Grid item className={classes.higlassEnhancerInfoBar}>
+                    {focusGene && focusVariant && (
+                      <Typography
+                        className={classes.higlassTitleBarTitle}
+                        noWrap
+                      >
+                        <span className={classes.pink}>■</span> Enhancers
+                        containing <em>{focusVariant}</em> and predicted to
+                        regulate <em>{focusGene}</em>
+                      </Typography>
+                    )}
+                    {focusGene && !focusVariant && (
+                      <Typography
+                        className={classes.higlassTitleBarTitle}
+                        noWrap
+                      >
+                        <span className={classes.pink}>■</span> Enhancers
+                        predicted to regulate <em>{focusGene}</em>
+                      </Typography>
+                    )}
+                    {!focusGene && focusVariant && (
+                      <Typography
+                        className={classes.higlassTitleBarTitle}
+                        noWrap
+                      >
+                        <span className={classes.pink}>■</span> Enhancers
+                        containing <em>{focusVariant}</em>
+                      </Typography>
+                    )}
+                    {focusGene || focusVariant ? (
+                      <Typography
+                        className={classes.higlassTitleBarTitle}
+                        noWrap
+                      >
+                        <span className={classes.gray}>■</span> All other
+                        predicted enhancers
+                      </Typography>
+                    ) : (
+                      <Typography
+                        className={classes.higlassTitleBarTitle}
+                        noWrap
+                      >
+                        <span className={classes.black}>■</span> All predicted
+                        enhancers
+                      </Typography>
+                    )}
+                  </Grid>
+                  <Grid item>
+                    <EnhancerGenePlot
+                      position={focusVariantPosition}
+                      relPosition={focusVariantRelPosition}
+                    />
+                  </Grid>
+                </Grid>
+              </div>
             </Grid>
           </Grid>
           <div className={classes.higlassSeparator} />
@@ -1263,6 +1358,10 @@ const Viewer = (props) => {
       </Modal>
     </div>
   );
+};
+
+Viewer.propTypes = {
+  chromInfo: PropTypes.object.isRequired,
 };
 
 export default Viewer;

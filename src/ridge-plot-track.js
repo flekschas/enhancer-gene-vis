@@ -6,7 +6,7 @@ import {
   minNan,
   sumNan,
 } from '@flekschas/utils';
-import { line } from 'd3-shape';
+import { line } from 'd3';
 
 import {
   DEFAULT_COLOR_MAP,

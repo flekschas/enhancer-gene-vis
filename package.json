@@ -23,7 +23,7 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
-    "d3-shape": "^2.0.0",
+    "d3": "^6.2.0",
     "higlass": "^1.11.2",
     "higlass-multivec": "^0.2.6",
     "higlass-register": "^0.3.0",
@@ -35,7 +35,8 @@
     "react": "^16.13.1",
     "react-bootstrap": "0.32.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1"
+    "react-scripts": "3.4.1",
+    "tinyqueue": "^2.0.3"
   },
   "devDependencies": {
     "eslint-config-airbnb": "^18.2.0",

@@ -112,6 +112,8 @@ export default function SearchField(props) {
   const autocompleteClasses = { ...classes };
   delete autocompleteClasses.textFieldRoot;
 
+  const { customSearch, searchUrl } = props;
+
   useEffect(() => {
     let active = true;
 
@@ -119,20 +121,20 @@ export default function SearchField(props) {
 
     setOptions([]);
 
-    const results = Array.isArray(props.searchUrl)
-      ? props.searchUrl.map((url) =>
-          fetchJsonFromUrl(url, debouncedSearchQuery)
-        )
-      : fetchJsonFromUrl(props.searchUrl, debouncedSearchQuery);
+    const whenResults = Array.isArray(searchUrl)
+      ? searchUrl.map((url) => fetchJsonFromUrl(url, debouncedSearchQuery))
+      : [fetchJsonFromUrl(searchUrl, debouncedSearchQuery)];
 
-    Promise.all(results).then((resultList) => {
-      if (active) setOptions(resultList.flat());
+    if (customSearch) whenResults.push(customSearch(debouncedSearchQuery));
+
+    Promise.all(whenResults).then((results) => {
+      if (active) setOptions(results.flat().filter(identity));
     });
 
     return () => {
       active = false;
     };
-  }, [props.searchUrl, open, debouncedSearchQuery]);
+  }, [searchUrl, customSearch, open, debouncedSearchQuery]);
 
   useEffect(() => {
     if (!open) {
@@ -223,6 +225,7 @@ SearchField.defaultProps = {
 };
 
 SearchField.propTypes = {
+  customSearch: PropTypes.func,
   fullWidth: PropTypes.bool,
   id: PropTypes.string,
   label: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
