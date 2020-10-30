@@ -246,6 +246,12 @@ const useStyles = makeStyles((theme) => ({
   higlassEnhancerGenePlot: {
     minHeight: '6rem',
   },
+  higlassEnhancerGenePlotPlaceholder: {
+    minHeight: '6rem',
+    fontStyle: 'italic',
+    color: theme.palette.grey['600'],
+    background: theme.palette.grey['100'],
+  },
   higlassDnaAccessibilityInfoBar: {
     color: theme.palette.grey['600'],
     padding: '2px 4px',
@@ -1355,7 +1361,12 @@ const Viewer = (props) => {
                         relPosition={focusVariantRelPosition}
                       />
                     ) : (
-                      <Grid container justify="center" alignItems="center">
+                      <Grid
+                        container
+                        justify="center"
+                        alignItems="center"
+                        className={classes.higlassEnhancerGenePlotPlaceholder}
+                      >
                         <Typography>Select a variant to see details</Typography>
                       </Grid>
                     )}
