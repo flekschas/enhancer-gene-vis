@@ -32,7 +32,6 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Modal from '@material-ui/core/Modal';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
 import Popover from '@material-ui/core/Popover';
-import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Switch from '@material-ui/core/Switch';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -41,6 +40,8 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import InfoIcon from '@material-ui/icons/Info';
 import HelpIcon from '@material-ui/icons/Help';
+import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked';
+import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
 import SearchIcon from '@material-ui/icons/Search';
 
 import EnhancerGenePlot from './EnhancerGenePlot';
@@ -116,6 +117,16 @@ const useStyles = makeStyles((theme) => ({
     '&>p': {
       fontSize: '1.125em',
     },
+  },
+  iconRadio: {
+    padding: theme.spacing(0.25, 0),
+    marginLeft: -theme.spacing(1) / 2,
+  },
+  iconRadioActive: {
+    color: 'black',
+  },
+  iconRadioLegend: {
+    margin: theme.spacing(2, 0, 0.25, 0),
   },
   appBar: {
     width: `calc(100% - ${drawerWidth}px)`,
@@ -739,16 +750,24 @@ const Viewer = (props) => {
     setHideUnfocused(event.target.checked.toString());
   };
 
-  const variantYScaleChangeHandler = (event) => {
-    setVariantYScale(event.target.value);
+  const changeVariantYScale = (value) => () => {
+    setVariantYScale(value);
   };
 
   const matrixColoringChangeHandler = (event) => {
     setMatrixColoring(event.target.value);
   };
 
+  const changeMatrixColoring = (value) => () => {
+    setMatrixColoring(value);
+  };
+
   const dnaAccessLabelsChangeHandler = (event) => {
     setDnaAccessLabels(event.target.value);
+  };
+
+  const changeDnaAccessLabels = (value) => () => {
+    setDnaAccessLabels(value);
   };
 
   const xDomainStartChangeHandler = (event) => {
@@ -1079,83 +1098,230 @@ const Viewer = (props) => {
                 </Box>
                 <Box m={1}>
                   <FormControl component="fieldset">
-                    <FormLabel component="legend">Variant y-scale</FormLabel>
+                    <FormLabel
+                      component="legend"
+                      className={classes.iconRadioLegend}
+                    >
+                      Variant y-scale
+                    </FormLabel>
                     <RadioGroup
                       aria-label="variantYScale"
                       name="variantYScale"
                       value={variantYScale}
-                      onChange={variantYScaleChangeHandler}
                     >
                       <FormControlLabel
                         label="p-value"
-                        control={<Radio size="small" />}
                         value="pValue"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeVariantYScale('pValue')}
+                          >
+                            {variantYScale === 'pValue' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                       <FormControlLabel
                         label="Posterior probability"
-                        control={<Radio size="small" />}
                         value="posteriorProbability"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeVariantYScale(
+                              'posteriorProbability'
+                            )}
+                          >
+                            {variantYScale === 'posteriorProbability' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                     </RadioGroup>
                   </FormControl>
                 </Box>
                 <Box m={1}>
                   <FormControl component="fieldset">
-                    <FormLabel component="legend">Matrix coloring</FormLabel>
+                    <FormLabel
+                      component="legend"
+                      className={classes.iconRadioLegend}
+                    >
+                      Matrix coloring
+                    </FormLabel>
                     <RadioGroup
                       aria-label="matrixColoring"
                       name="matrixColoring"
                       value={matrixColoring}
-                      onChange={matrixColoringChangeHandler}
                     >
                       <FormControlLabel
                         label="Solid"
-                        control={<Radio size="small" />}
                         value="solid"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeMatrixColoring('solid')}
+                          >
+                            {matrixColoring === 'solid' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                       <FormControlLabel
                         label="Number of predictions"
-                        control={<Radio size="small" />}
                         value="frequency"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeMatrixColoring('frequency')}
+                          >
+                            {matrixColoring === 'frequency' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                       <FormControlLabel
                         label="Highest prediction score"
-                        control={<Radio size="small" />}
                         value="highestImportance"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeMatrixColoring('highestImportance')}
+                          >
+                            {matrixColoring === 'highestImportance' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                       <FormControlLabel
                         label="Prediction score of the closest TSS interaction"
-                        control={<Radio size="small" />}
                         value="closestImportance"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeMatrixColoring('closestImportance')}
+                          >
+                            {matrixColoring === 'closestImportance' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                     </RadioGroup>
                   </FormControl>
                 </Box>
                 <Box m={1}>
                   <FormControl component="fieldset">
-                    <FormLabel component="legend">
+                    <FormLabel
+                      component="legend"
+                      className={classes.iconRadioLegend}
+                    >
                       DNA accessibility labels
                     </FormLabel>
                     <RadioGroup
                       aria-label="dnaAccessLabels"
                       name="dnaAccessLabels"
                       value={dnaAccessLabels}
-                      onChange={dnaAccessLabelsChangeHandler}
                     >
                       <FormControlLabel
                         label="Indicator"
-                        control={<Radio size="small" />}
                         value="indicator"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeDnaAccessLabels('indicator')}
+                          >
+                            {dnaAccessLabels === 'indicator' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                       <FormControlLabel
                         label="Text"
-                        control={<Radio size="small" />}
                         value="text"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeDnaAccessLabels('text')}
+                          >
+                            {dnaAccessLabels === 'text' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                       <FormControlLabel
                         label="Hidden"
-                        control={<Radio size="small" />}
                         value="hidden"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeDnaAccessLabels('hidden')}
+                          >
+                            {dnaAccessLabels === 'hidden' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
                       />
                     </RadioGroup>
                   </FormControl>
