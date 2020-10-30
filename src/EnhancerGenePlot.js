@@ -279,7 +279,7 @@ const renderEnhancerGenePlot = (node, width, data, tile) => {
     .selectAll('circle')
     .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
     .join('circle')
-    .attr('cx', (d) => d.x + 2)
+    .attr('cx', (d) => genesUpstreamScale.bandwidth() - (d.x + 2))
     .attr('cy', (d) => d.y)
     .attr('r', circleRadius);
 
