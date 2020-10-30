@@ -39,6 +39,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
+import InfoIcon from '@material-ui/icons/Info';
 import HelpIcon from '@material-ui/icons/Help';
 import SearchIcon from '@material-ui/icons/Search';
 
@@ -183,20 +184,26 @@ const useStyles = makeStyles((theme) => ({
     margin: '-8px -8px -8px 0',
   },
   higlassTitleBar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     position: 'relative',
     padding: '2px',
     fontSize: '0.8rem',
     background: theme.palette.grey['100'],
   },
-  higlassTitleBarTitle: {
-    padding: '0 2px',
+  higlassTitleBarText: {
     fontSize: '0.8rem',
   },
-  higlassTitleBarHelp: {
+  higlassTitleBarTitle: {
+    padding: '0 2px',
+    fontWeight: 'bold',
+  },
+  higlassTitleBarIcon: {
     color: theme.palette.grey['400'],
+    '&:hover': {
+      color: 'black',
+    },
+  },
+  higlassTitleBarIconActive: {
+    color: 'black',
     '&:hover': {
       color: 'black',
     },
@@ -209,23 +216,49 @@ const useStyles = makeStyles((theme) => ({
       paddingTop: 0,
     },
   },
+  higlassInfoBarTitle: {
+    display: 'block',
+    fontSize: '0.8rem',
+    fontWeight: 'bold',
+    '&::after': {
+      content: ':',
+    },
+  },
   higlassEnhancerInfoBar: {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-end',
-    minHeight: '2.625rem',
-    padding: '2px 4px',
+    minHeight: 'min-content',
+    padding: '0 4px',
     color: theme.palette.grey['600'],
+    borderTop: `1px solid ${theme.palette.grey['300']}`,
+    '&:first-child': {
+      borderTop: 0,
+    },
+    '& >*:first-child': {
+      paddingTop: 2,
+    },
+    '& >*:last-child': {
+      paddingBottom: 2,
+      borderBottom: `1px solid ${theme.palette.grey['100']}`,
+    },
+  },
+  higlassEnhancerGenePlot: {
+    minHeight: '6rem',
   },
   higlassDnaAccessibilityInfoBar: {
+    color: theme.palette.grey['600'],
+    padding: '2px 4px',
+    borderBottom: `1px solid ${theme.palette.grey['100']}`,
+  },
+  higlassDnaAccessibilityInfoBarRegion: {
     display: 'flex',
     justifyContent: 'space-between',
-    padding: '2px 4px',
-    color: theme.palette.grey['600'],
   },
   higlassSeparator: {
+    zIndex: 1,
+    margin: `-${theme.spacing(1)}px 0`,
     width: 1,
-    margin: '-8px 0',
     background: theme.palette.grey['300'],
   },
   toolbarExtra: {
@@ -386,29 +419,20 @@ const locationSearch = async (query) => {
 };
 
 const Viewer = (props) => {
-  const [infoOpen, setInfoOpen] = useQueryString('info', true, {
+  const [infoOpen, setInfoOpen] = useQueryString('i', true, {
     decoder: (v) => (v === undefined ? undefined : v === 'true'),
   });
-  const [focusGene, setFocusGene] = useQueryString('gene', '');
-  const [focusVariant, setFocusVariant] = useQueryString(
-    'variant',
-    'rs1250566'
-  );
+  const [focusGene, setFocusGene] = useQueryString('g', '');
+  const [focusVariant, setFocusVariant] = useQueryString('v', 'rs1250566');
   const [hideUnfocused, setHideUnfocused] = useQueryString('hide-unfocused');
-  const [matrixColoring, setMatrixColoring] = useQueryString(
-    'matrix-coloring',
-    'solid'
-  );
-  const [variantYScale, setVariantYScale] = useQueryString(
-    'varient-scale',
-    'pValue'
-  );
+  const [matrixColoring, setMatrixColoring] = useQueryString('mc', 'solid');
+  const [variantYScale, setVariantYScale] = useQueryString('vs', 'pValue');
   const [dnaAccessLabels, setDnaAccessLabels] = useQueryString(
-    'access-labels',
+    'al',
     'indicator'
   );
   const [xDomainStart, setXDomainStart] = useQueryString(
-    'start',
+    's',
     props.chromInfo.absToChr(DEFAULT_X_DOMAIN_START).slice(0, 2).join(':'),
     {
       encoder: chrPosUrlEncoder,
@@ -416,11 +440,25 @@ const Viewer = (props) => {
     }
   );
   const [xDomainEnd, setXDomainEnd] = useQueryString(
-    'end',
+    'e',
     props.chromInfo.absToChr(DEFAULT_X_DOMAIN_END).slice(0, 2).join(':'),
     {
       encoder: chrPosUrlEncoder,
       decoder: chrPosUrlDecoder,
+    }
+  );
+  const [showEnhancerDetails, setShowEnhancerDetails] = useQueryString(
+    'ed',
+    true,
+    {
+      decoder: (v) => (v === undefined ? undefined : v === 'true'),
+    }
+  );
+  const [showDnaAccessDetails, setShowDnaAccessDetails] = useQueryString(
+    'ad',
+    true,
+    {
+      decoder: (v) => (v === undefined ? undefined : v === 'true'),
     }
   );
 
@@ -859,6 +897,14 @@ const Viewer = (props) => {
     setInfoOpen(false);
   };
 
+  const higlassEnhancerDetailsClickHandler = () => {
+    setShowEnhancerDetails(!showEnhancerDetails);
+  };
+
+  const higlassDnaAccessDetailsClickHandler = () => {
+    setShowDnaAccessDetails(!showDnaAccessDetails);
+  };
+
   const mergeSvgs = (enhancerSvg, dnaAccessSvg) => {
     const [enhancerCoreSvg, enhancerWidth, enhancerHeight] = extractSvgCore(
       enhancerSvg
@@ -912,6 +958,14 @@ const Viewer = (props) => {
 
   // Run on every render
   const classes = useStyles();
+
+  const higlassEnhancerDetailsIconClass = showEnhancerDetails
+    ? classes.higlassTitleBarIconActive
+    : classes.higlassTitleBarIcon;
+
+  const higlassDnaAccessDetailsIconClass = showDnaAccessDetails
+    ? classes.higlassTitleBarIconActive
+    : classes.higlassTitleBarIcon;
 
   return (
     <div className={classes.root}>
@@ -1127,50 +1181,70 @@ const Viewer = (props) => {
             direction="column"
             className={classes.higlassEnhancer}
           >
-            <Grid item className={classes.higlassTitleBar}>
-              <Typography
-                align="center"
-                className={classes.higlassTitleBarTitle}
-                noWrap
-              >
-                <strong>Predicted Enhancers</strong>
-              </Typography>
-              <IconButton
-                aria-label="help"
-                aria-describedby={higlassEnhancerHelpId}
-                className={classes.higlassTitleBarHelp}
-                size="small"
-                onClick={higlassEnhancerHelpClickHandler}
-              >
-                <HelpIcon fontSize="inherit" />
-              </IconButton>
-              <Popover
-                id={higlassEnhancerHelpId}
-                open={higlassEnhancerHelpOpen}
-                anchorEl={higlassEnhancerHelpAnchorEl}
-                onClose={higlassEnhancerHelpCloseHandler}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-              >
-                <Typography className={classes.higlassTitleBarHelpPopeover}>
-                  This panel visualizes the predicted enhancers by sample type
-                  as a matrix-like track. Each rectangle representes an
-                  enhancer. Promoter regions are indicated by translucent light
-                  gray overlays.
+            <Grid
+              item
+              className={classes.higlassTitleBar}
+              container
+              justify="space-between"
+              alignItems="center"
+              wrap="nowrap"
+            >
+              <Grid item container wrap="nowrap" alignItems="center">
+                <Typography
+                  component="h3"
+                  className={`${classes.higlassTitleBarText} ${classes.higlassTitleBarTitle}`}
+                  noWrap
+                >
+                  Enhancers
                 </Typography>
-                <Typography className={classes.higlassTitleBarHelpPopeover}>
-                  {' '}
-                  You can filter enhancers via their target gene or by variant
-                  (the dot plot below the gene annotations). Click on a variant
-                  or gene to select it. Selections are shown in pink/red.
-                </Typography>
-              </Popover>
+                <IconButton
+                  aria-label="help"
+                  aria-describedby={higlassEnhancerHelpId}
+                  className={classes.higlassTitleBarIcon}
+                  size="small"
+                  onClick={higlassEnhancerHelpClickHandler}
+                >
+                  <HelpIcon fontSize="inherit" />
+                </IconButton>
+                <Popover
+                  id={higlassEnhancerHelpId}
+                  open={higlassEnhancerHelpOpen}
+                  anchorEl={higlassEnhancerHelpAnchorEl}
+                  onClose={higlassEnhancerHelpCloseHandler}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                >
+                  <Typography className={classes.higlassTitleBarHelpPopeover}>
+                    This panel visualizes the predicted enhancers by sample type
+                    as a matrix-like track. Each rectangle representes an
+                    enhancer. Promoter regions are indicated by translucent
+                    light gray overlays.
+                  </Typography>
+                  <Typography className={classes.higlassTitleBarHelpPopeover}>
+                    {' '}
+                    You can filter enhancers via their target gene or by variant
+                    (the dot plot below the gene annotations). Click on a
+                    variant or gene to select it. Selections are shown in
+                    pink/red.
+                  </Typography>
+                </Popover>
+              </Grid>
+              <Grid item>
+                <IconButton
+                  aria-label="details"
+                  className={higlassEnhancerDetailsIconClass}
+                  size="small"
+                  onClick={higlassEnhancerDetailsClickHandler}
+                >
+                  <InfoIcon fontSize="inherit" />
+                </IconButton>
+              </Grid>
             </Grid>
             <Grid
               item
@@ -1186,6 +1260,62 @@ const Viewer = (props) => {
                   direction="column"
                   className={classes.higlassEnhancerContainer}
                 >
+                  {showEnhancerDetails && (
+                    <Grid item className={classes.higlassEnhancerInfoBar}>
+                      <Typography
+                        component="h4"
+                        className={classes.higlassInfoBarTitle}
+                        noWrap
+                      >
+                        Enhancer Regions
+                      </Typography>
+                      {focusGene && focusVariant && (
+                        <Typography
+                          className={classes.higlassTitleBarText}
+                          noWrap
+                        >
+                          <span className={classes.pink}>■</span> Enhancers
+                          containing <em>{focusVariant}</em> and predicted to
+                          regulate <em>{focusGene}</em>
+                        </Typography>
+                      )}
+                      {focusGene && !focusVariant && (
+                        <Typography
+                          className={classes.higlassTitleBarText}
+                          noWrap
+                        >
+                          <span className={classes.pink}>■</span> Enhancers
+                          predicted to regulate <em>{focusGene}</em>
+                        </Typography>
+                      )}
+                      {!focusGene && focusVariant && (
+                        <Typography
+                          className={classes.higlassTitleBarText}
+                          noWrap
+                        >
+                          <span className={classes.pink}>■</span> Enhancers
+                          containing <em>{focusVariant}</em>
+                        </Typography>
+                      )}
+                      {focusGene || focusVariant ? (
+                        <Typography
+                          className={classes.higlassTitleBarText}
+                          noWrap
+                        >
+                          <span className={classes.gray}>■</span> All other
+                          predicted enhancers
+                        </Typography>
+                      ) : (
+                        <Typography
+                          className={classes.higlassTitleBarText}
+                          noWrap
+                        >
+                          <span className={classes.black}>■</span> All predicted
+                          enhancers
+                        </Typography>
+                      )}
+                    </Grid>
+                  )}
                   <Grid
                     item
                     className={classes.grow}
@@ -1201,57 +1331,34 @@ const Viewer = (props) => {
                     />
                   </Grid>
                   <Grid item className={classes.higlassEnhancerInfoBar}>
-                    {focusGene && focusVariant && (
+                    {showEnhancerDetails && (
                       <Typography
-                        className={classes.higlassTitleBarTitle}
+                        component="h4"
+                        className={classes.higlassInfoBarTitle}
                         noWrap
                       >
-                        <span className={classes.pink}>■</span> Enhancers
-                        containing <em>{focusVariant}</em> and predicted to
-                        regulate <em>{focusGene}</em>
+                        Enhancer-Gene Connections
                       </Typography>
                     )}
-                    {focusGene && !focusVariant && (
-                      <Typography
-                        className={classes.higlassTitleBarTitle}
-                        noWrap
-                      >
-                        <span className={classes.pink}>■</span> Enhancers
-                        predicted to regulate <em>{focusGene}</em>
-                      </Typography>
-                    )}
-                    {!focusGene && focusVariant && (
-                      <Typography
-                        className={classes.higlassTitleBarTitle}
-                        noWrap
-                      >
-                        <span className={classes.pink}>■</span> Enhancers
-                        containing <em>{focusVariant}</em>
-                      </Typography>
-                    )}
-                    {focusGene || focusVariant ? (
-                      <Typography
-                        className={classes.higlassTitleBarTitle}
-                        noWrap
-                      >
-                        <span className={classes.gray}>■</span> All other
-                        predicted enhancers
-                      </Typography>
-                    ) : (
-                      <Typography
-                        className={classes.higlassTitleBarTitle}
-                        noWrap
-                      >
-                        <span className={classes.black}>■</span> All predicted
-                        enhancers
+                    {showEnhancerDetails && focusVariant && (
+                      <Typography className={classes.higlassTitleBarText}>
+                        Enhancer overlapping <em>{focusVariant}</em> and its
+                        predicted connections to upstream (left) and downstream
+                        (right) genes.
                       </Typography>
                     )}
                   </Grid>
-                  <Grid item>
-                    <EnhancerGenePlot
-                      position={focusVariantPosition}
-                      relPosition={focusVariantRelPosition}
-                    />
+                  <Grid item className={classes.higlassEnhancerGenePlot}>
+                    {focusVariant ? (
+                      <EnhancerGenePlot
+                        position={focusVariantPosition}
+                        relPosition={focusVariantRelPosition}
+                      />
+                    ) : (
+                      <Grid container justify="center" alignItems="center">
+                        <Typography>Select a variant to see details</Typography>
+                      </Grid>
+                    )}
                   </Grid>
                 </Grid>
               </div>
@@ -1263,77 +1370,109 @@ const Viewer = (props) => {
             direction="column"
             className={classes.higlassDnaAccessibility}
           >
-            <Grid item className={classes.higlassTitleBar}>
-              <Typography
-                align="center"
-                className={classes.higlassTitleBarTitle}
-                noWrap
-              >
-                <strong>DNA Accessibility</strong>
-              </Typography>
-              <IconButton
-                aria-label="help"
-                aria-describedby={higlassDnaAccessHelpId}
-                className={classes.higlassTitleBarHelp}
-                size="small"
-                onClick={higlassDnaAccessHelpClickHandler}
-              >
-                <HelpIcon fontSize="inherit" />
-              </IconButton>
-              <Popover
-                id={higlassDnaAccessHelpId}
-                open={higlassDnaAccessHelpOpen}
-                anchorEl={higlassDnaAccessHelpAnchorEl}
-                onClose={higlassDnaAccessHelpCloseHandler}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-              >
-                <Typography className={classes.higlassTitleBarHelpPopeover}>
-                  This panel visualizes the DNA accessibility of all 131
-                  samples. Each track is individually normalized. Mouse over a
-                  track to see the underlying value. To focus on a specific
-                  locus specify a focus variant.
+            <Grid
+              item
+              className={classes.higlassTitleBar}
+              container
+              justify="space-between"
+              alignItems="center"
+              wrap="nowrap"
+            >
+              <Grid item container alignItems="center" wrap="nowrap">
+                <Typography
+                  component="h3"
+                  className={`${classes.higlassTitleBarText} ${classes.higlassTitleBarTitle}`}
+                  noWrap
+                >
+                  DNA Accessibility
                 </Typography>
-              </Popover>
+                <IconButton
+                  aria-label="help"
+                  aria-describedby={higlassDnaAccessHelpId}
+                  className={classes.higlassTitleBarIcon}
+                  size="small"
+                  onClick={higlassDnaAccessHelpClickHandler}
+                >
+                  <HelpIcon fontSize="inherit" />
+                </IconButton>
+                <Popover
+                  id={higlassDnaAccessHelpId}
+                  open={higlassDnaAccessHelpOpen}
+                  anchorEl={higlassDnaAccessHelpAnchorEl}
+                  onClose={higlassDnaAccessHelpCloseHandler}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                >
+                  <Typography className={classes.higlassTitleBarHelpPopeover}>
+                    This panel visualizes the DNA accessibility of all 131
+                    samples. Each track is individually normalized. Mouse over a
+                    track to see the underlying value. To focus on a specific
+                    locus specify a focus variant.
+                  </Typography>
+                </Popover>
+              </Grid>
+              <Grid item>
+                <IconButton
+                  aria-label="info"
+                  className={higlassDnaAccessDetailsIconClass}
+                  size="small"
+                  onClick={higlassDnaAccessDetailsClickHandler}
+                >
+                  <InfoIcon fontSize="inherit" />
+                </IconButton>
+              </Grid>
             </Grid>
-            <Grid item className={classes.grow}>
-              <HiGlassComponent
-                ref={higlassDnaAccessibilityInitHandler}
-                viewConfig={viewConfigDnaAccessibility}
-                options={{
-                  sizeMode: 'scroll',
-                  pixelPreciseMarginPadding: true,
-                  containerPaddingX: 0,
-                  containerPaddingY: 0,
-                  viewMarginTop: 0,
-                  viewMarginBottom: 0,
-                  viewMarginLeft: 0,
-                  viewMarginRight: 0,
-                  viewPaddingTop: 0,
-                  viewPaddingBottom: 0,
-                  viewPaddingLeft: 0,
-                  viewPaddingRight: 16,
-                  globalMousePosition: true,
-                }}
-              />
-            </Grid>
-            <Grid item className={classes.higlassDnaAccessibilityInfoBar}>
-              <span>├</span>
-              <Typography
-                align="center"
-                className={classes.higlassTitleBarTitle}
-                noWrap
-              >
-                {toFixed(dnaAccessibilityRegionSize, 1)}{' '}
-                <abbr title="kilo base pairs">kbp</abbr>
-              </Typography>
-              <span>┤</span>
+            <Grid item container direction="column" className={classes.grow}>
+              {showDnaAccessDetails && (
+                <Grid item className={classes.higlassDnaAccessibilityInfoBar}>
+                  <Typography
+                    component="h4"
+                    className={classes.higlassInfoBarTitle}
+                    noWrap
+                  >
+                    DNase- or ATAC-Seq Assays
+                  </Typography>
+                  <div className={classes.higlassDnaAccessibilityInfoBarRegion}>
+                    <span>├</span>
+                    <Typography
+                      align="center"
+                      className={classes.higlassTitleBarText}
+                      noWrap
+                    >
+                      {toFixed(dnaAccessibilityRegionSize, 1)}{' '}
+                      <abbr title="kilo base pairs">kbp</abbr>
+                    </Typography>
+                    <span>┤</span>
+                  </div>
+                </Grid>
+              )}
+              <Grid item className={classes.grow}>
+                <HiGlassComponent
+                  ref={higlassDnaAccessibilityInitHandler}
+                  viewConfig={viewConfigDnaAccessibility}
+                  options={{
+                    sizeMode: 'scroll',
+                    pixelPreciseMarginPadding: true,
+                    containerPaddingX: 0,
+                    containerPaddingY: 0,
+                    viewMarginTop: 0,
+                    viewMarginBottom: 0,
+                    viewMarginLeft: 0,
+                    viewMarginRight: 0,
+                    viewPaddingTop: 0,
+                    viewPaddingBottom: 0,
+                    viewPaddingLeft: 0,
+                    viewPaddingRight: 16,
+                    globalMousePosition: true,
+                  }}
+                />
+              </Grid>
             </Grid>
           </Grid>
         </div>
