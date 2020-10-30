@@ -754,16 +754,8 @@ const Viewer = (props) => {
     setVariantYScale(value);
   };
 
-  const matrixColoringChangeHandler = (event) => {
-    setMatrixColoring(event.target.value);
-  };
-
   const changeMatrixColoring = (value) => () => {
     setMatrixColoring(value);
-  };
-
-  const dnaAccessLabelsChangeHandler = (event) => {
-    setDnaAccessLabels(event.target.value);
   };
 
   const changeDnaAccessLabels = (value) => () => {
