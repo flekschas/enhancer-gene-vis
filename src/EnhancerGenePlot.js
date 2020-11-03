@@ -35,15 +35,6 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     height: '100%',
   },
-  'tooltip-c-0': {
-    arrow: {
-      color: DEFAULT_COLOR_MAP_LIGHT[0],
-    },
-    tooltip: {
-      color: DEFAULT_COLOR_MAP_DARK[0],
-      backgroundColor: DEFAULT_COLOR_MAP_LIGHT[0],
-    },
-  },
 }));
 
 const useTooltipStyles = DEFAULT_COLOR_MAP_LIGHT.map((color, i) =>
@@ -55,6 +46,12 @@ const useTooltipStyles = DEFAULT_COLOR_MAP_LIGHT.map((color, i) =>
       color: DEFAULT_COLOR_MAP_DARK[i],
       backgroundColor: color,
       boxShadow: '0 0 3px 0 rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+      '& .value': {
+        color: 'white',
+        background: DEFAULT_COLOR_MAP_DARK[i],
+        padding: '0 0.25em',
+        borderRadius: '0.25rem',
+      },
     },
   }))
 );
@@ -293,6 +290,8 @@ const plotEnhancerGeneConnections = (
       textColor = DEFAULT_COLOR_MAP_DARK,
       showText = true,
       showZero = true,
+      showTooltip = false,
+      tooltipTitleGetter = null,
     } = {}
   ) => {
     selection
@@ -305,18 +304,23 @@ const plotEnhancerGeneConnections = (
       .attr('y', (d) => (rowHeight - categorySizeScale(valueGetter(d))) / 2)
       .attr('width', (d) => categorySizeScale(valueGetter(d)))
       .attr('height', (d) => categorySizeScale(valueGetter(d)))
-      .attr('opacity', (d) => +(valueGetter(d) > 0))
-      .on('mouseenter', (event, d) => {
-        const bBox = event.target.getBoundingClientRect();
-        openTooltip(bBox.x + bBox.width / 2, bBox.y, valueGetter(d), {
-          arrow: true,
-          placement: 'top',
-          classes: tooltipClasses[d.row % tooltipClasses.length],
+      .attr('opacity', (d) => +(valueGetter(d) > 0));
+
+    if (showTooltip)
+      selection
+        .on('mouseenter', (event, d) => {
+          const bBox = event.target.getBoundingClientRect();
+          const title =
+            (tooltipTitleGetter && tooltipTitleGetter(d)) || valueGetter(d);
+          openTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
+            arrow: true,
+            placement: 'top',
+            classes: tooltipClasses[d.row % tooltipClasses.length],
+          });
+        })
+        .on('mouseleave', () => {
+          closeTooltip();
         });
-      })
-      .on('mouseleave', () => {
-        closeTooltip();
-      });
 
     if (showText) {
       selection
@@ -432,6 +436,14 @@ const plotEnhancerGeneConnections = (
         showText: false,
         cellWidth: genesUpstreamScale.bandwidth(),
         fillColor: DEFAULT_COLOR_MAP,
+        showTooltip: true,
+        tooltipTitleGetter: (d) => (
+          <React.Fragment>
+            <strong className="value">{d.length}</strong> out of {d.size}{' '}
+            {Object.values(categories)[d.row].name} samples have predicted
+            enhancer activity.
+          </React.Fragment>
+        ),
       });
       break;
 
@@ -534,6 +546,14 @@ const plotEnhancerGeneConnections = (
         showText: false,
         cellWidth: genesDownstreamScale.bandwidth(),
         fillColor: DEFAULT_COLOR_MAP,
+        showTooltip: true,
+        tooltipTitleGetter: (d) => (
+          <React.Fragment>
+            <strong className="value">{d.length}</strong> out of {d.size}{' '}
+            {Object.values(categories)[d.row].name} samples have predicted
+            enhancer activity.
+          </React.Fragment>
+        ),
       });
       break;
 
@@ -824,6 +844,7 @@ const EnhancerGenePlot = ({
         genePadding,
         openTooltip,
         closeTooltip,
+        classes,
         tooltipClasses,
       });
     },
