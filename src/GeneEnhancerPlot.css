@@ -1,5 +1,5 @@
-.enhancer-box-text,
-.gene-upstream-label {
+.box-text,
+.gene-label {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -7,7 +7,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.enhancer-box-text {
+.box-text {
   font-size: 12px;
   font-weight: bold;
 }

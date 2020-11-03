@@ -257,7 +257,7 @@ const useStyles = makeStyles((theme) => ({
     },
     '& >*:last-child': {
       paddingBottom: 2,
-      borderBottom: `1px solid ${theme.palette.grey['100']}`,
+      borderBottom: `1px dotted ${theme.palette.grey['300']}`,
     },
   },
   higlassEnhancerGenePlot: {
@@ -272,7 +272,7 @@ const useStyles = makeStyles((theme) => ({
   higlassDnaAccessibilityInfoBar: {
     color: theme.palette.grey['600'],
     padding: '2px 4px',
-    borderBottom: `1px solid ${theme.palette.grey['100']}`,
+    borderBottom: `1px dotted ${theme.palette.grey['300']}`,
   },
   higlassDnaAccessibilityInfoBarRegion: {
     display: 'flex',
@@ -493,6 +493,10 @@ const Viewer = (props) => {
   const [genePadding, setGenePadding] = useQueryString('gp', true, {
     decoder: (v) => (v === undefined ? undefined : v === 'true'),
   });
+  const [geneCellEncoding, setGeneCellEncoding] = useQueryString(
+    'gce',
+    'distribution'
+  );
 
   const [focusGeneOption, setFocusGeneOption] = useState(null);
   const [focusVariantOption, setFocusVariantOption] = useState(null);
@@ -779,6 +783,10 @@ const Viewer = (props) => {
 
   const changeDnaAccessLabels = (value) => () => {
     setDnaAccessLabels(value);
+  };
+
+  const changeGeneCellEncoding = (value) => () => {
+    setGeneCellEncoding(value);
   };
 
   const xDomainStartChangeHandler = (event) => {
@@ -1284,6 +1292,82 @@ const Viewer = (props) => {
                     label="Gene padding"
                   />
                 </Box>
+                <Box m={1}>
+                  <FormControl component="fieldset">
+                    <FormLabel
+                      component="legend"
+                      className={classes.iconRadioLegend}
+                    >
+                      Gene Cell Encoding
+                    </FormLabel>
+                    <RadioGroup
+                      aria-label="geneCellEncoding"
+                      name="geneCellEncoding"
+                      value={geneCellEncoding}
+                    >
+                      <FormControlLabel
+                        label="Number of predictions"
+                        value="number"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeGeneCellEncoding('number')}
+                          >
+                            {geneCellEncoding === 'number' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
+                      />
+                      <FormControlLabel
+                        label="Percentage of samples with predictions"
+                        value="percent"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeGeneCellEncoding('percent')}
+                          >
+                            {geneCellEncoding === 'percent' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
+                      />
+                      <FormControlLabel
+                        label="Distribution"
+                        value="distribution"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeGeneCellEncoding('distribution')}
+                          >
+                            {geneCellEncoding === 'distribution' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Box>
                 <Divider />
                 <Box className={classes.settingsTitle}>
                   <Typography variant="subtitle2" component="h6">
@@ -1563,6 +1647,7 @@ const Viewer = (props) => {
                   <Grid item className={classes.higlassEnhancerGenePlot}>
                     {focusVariant ? (
                       <EnhancerGenePlot
+                        geneCellEncoding={geneCellEncoding}
                         position={focusVariantPosition}
                         relPosition={focusVariantRelPosition}
                         genePadding={genePadding}

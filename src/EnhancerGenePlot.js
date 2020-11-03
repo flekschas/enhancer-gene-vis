@@ -14,6 +14,7 @@ import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
 
 import {
+  DEFAULT_COLOR_MAP,
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP_LIGHT,
   DEFAULT_STRATIFICATION,
@@ -114,11 +115,15 @@ const dodge = (data, radius, yScale) => {
   return circles;
 };
 
-const renderEnhancerGenePlot = (
+const plotEnhancerGeneConnections = (
   node,
   width,
   data,
-  { cellEncoding = 'beeswarm', genePadding = false } = {}
+  {
+    geneCellEncoding = 'distribution',
+    prevGeneCellEncoding,
+    genePadding = false,
+  } = {}
 ) => {
   if (!width || !data) return;
 
@@ -235,11 +240,12 @@ const renderEnhancerGenePlot = (
     .domain([minVisibleAbsDist, maxVisibleAbsDist])
     .range([2, paddingBottom]);
 
-  const renderBeeswarm = (g, isRightAligned) => {
-    g.attr(
-      'fill',
-      (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
-    )
+  const plotBeeswarm = (selection, { isRightAligned = false } = {}) => {
+    selection
+      .attr(
+        'fill',
+        (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
+      )
       .selectAll('circle')
       .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
       .join('circle')
@@ -252,50 +258,67 @@ const renderEnhancerGenePlot = (
       .attr('r', circleRadius);
   };
 
+  const plotBox = (
+    selection,
+    valueGetter,
+    {
+      cellWidth = rowHeight,
+      fillColor = DEFAULT_COLOR_MAP_LIGHT,
+      textColor = DEFAULT_COLOR_MAP_DARK,
+      showText = true,
+      showZero = true,
+    } = {}
+  ) => {
+    selection
+      .selectAll('.bg')
+      .data((d) => [d])
+      .join('rect')
+      .attr('class', 'bg')
+      .attr('fill', (d) => fillColor[d.row % fillColor.length])
+      .attr('x', (d) => (cellWidth - categorySizeScale(valueGetter(d))) / 2)
+      .attr('y', (d) => (rowHeight - categorySizeScale(valueGetter(d))) / 2)
+      .attr('width', (d) => categorySizeScale(valueGetter(d)))
+      .attr('height', (d) => categorySizeScale(valueGetter(d)))
+      .attr('opacity', (d) => +(valueGetter(d) > 0));
+
+    if (showText) {
+      selection
+        .selectAll('.box-text')
+        .data((d) => [d])
+        .join('text')
+        .attr('class', 'box-text')
+        .attr('fill', (d) => textColor[d.row % textColor.length])
+        .attr('dominant-baseline', 'middle')
+        .attr('text-anchor', 'middle')
+        .attr('x', cellWidth / 2)
+        .attr('y', rowHeight / 2)
+        .attr('opacity', (d) => +(valueGetter(d) > 0 || showZero))
+        .text((d) => valueGetter(d));
+    }
+  };
+
   // ---------------------------------------------------------------------------
   // Category summary
-  svg
+  const enhancerG = svg
     .select('#enhancers')
     .attr('transform', `translate(${width / 2 - rowHeight / 2}, 0)`);
 
   // Draw background
-  svg
-    .select('#enhancers')
-    .selectAll('.enhancer-box-bg')
-    .data(Object.values(data.categoryAggregation), (d) => d.category.name)
-    .join('rect')
-    .attr('class', 'enhancer-box-bg')
-    .attr(
-      'fill',
-      (d, i) => DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP_LIGHT.length]
+  const enhancerGCellG = enhancerG
+    .selectAll('.enhancer-gene-aggregate')
+    .data(
+      Object.values(data.categoryAggregation).map((d, i) => {
+        // Little hacky but necessary unfortunately
+        d.row = i;
+        return d;
+      }),
+      (d) => d.category.name
     )
-    .attr('x', (d) => (rowHeight - categorySizeScale(d.numEnhancers)) / 2)
-    .attr(
-      'y',
-      (d, i) =>
-        i * rowHeight +
-        (rowHeight - categorySizeScale(d.numEnhancers)) / 2 +
-        paddingTop
-    )
-    .attr('width', (d) => categorySizeScale(d.numEnhancers))
-    .attr('height', (d) => categorySizeScale(d.numEnhancers));
+    .join('g')
+    .attr('class', 'enhancer-gene-aggregate')
+    .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`);
 
-  // Draw text
-  svg
-    .select('#enhancers')
-    .selectAll('.enhancer-box-text')
-    .data(Object.values(data.categoryAggregation), (d) => d.category.name)
-    .join('text')
-    .attr('class', 'enhancer-box-text')
-    .attr(
-      'fill',
-      (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
-    )
-    .attr('dominant-baseline', 'middle')
-    .attr('text-anchor', 'middle')
-    .attr('x', rowHeight / 2)
-    .attr('y', (d, i) => (i + 0.5) * rowHeight + paddingTop)
-    .text((d) => d.numEnhancers);
+  plotBox(enhancerGCellG, (d) => d.numEnhancers);
 
   // Draw border
   svg
@@ -346,18 +369,46 @@ const renderEnhancerGenePlot = (
     .attr('y', paddingTop - geneLabelPadding)
     .text((d) => d.name);
 
-  // Draw cell plot
+  // Draw cell
   const genesUpstreamGCellG = genesUpstreamG
-    .selectAll('.gene-upstream-beeswarm')
+    .selectAll('.gene-upstream-cell')
     .data(
-      (d) => Object.values(d.samplesByCategory),
+      (d) =>
+        Object.values(d.samplesByCategory).map((item, i) => {
+          // Little hacky but necessary unfortunately
+          item.row = i;
+          return item;
+        }),
       (d) => d.name
     )
     .join('g')
-    .attr('class', 'gene-upstream-beeswarm')
+    .attr('class', 'gene-upstream-cell')
     .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`);
 
-  renderBeeswarm(genesUpstreamGCellG, true);
+  if (geneCellEncoding !== prevGeneCellEncoding) {
+    genesUpstreamGCellG.selectAll('*').remove();
+  }
+
+  switch (geneCellEncoding) {
+    case 'number':
+      plotBox(genesUpstreamGCellG, (d) => d.length, {
+        showText: false,
+        cellWidth: genesUpstreamScale.bandwidth(),
+        fillColor: DEFAULT_COLOR_MAP,
+      });
+      break;
+
+    case 'percent':
+      plotBox(genesUpstreamGCellG, (d) => d.length / d.size, {
+        showZero: false,
+      });
+      break;
+
+    case 'distribution':
+    default:
+      plotBeeswarm(genesUpstreamGCellG, { isRightAligned: true });
+      break;
+  }
 
   // Draw border
   genesUpstreamG
@@ -420,18 +471,46 @@ const renderEnhancerGenePlot = (
     .attr('y', paddingTop - geneLabelPadding)
     .text((d) => d.name);
 
-  // Draw beeswarm plot
+  // Draw cell
   const genesDownstreamGCellG = genesDownstreamG
-    .selectAll('.gene-downstream-beeswarm')
+    .selectAll('.gene-downstream-cell')
     .data(
-      (d) => Object.values(d.samplesByCategory),
+      (d) =>
+        Object.values(d.samplesByCategory).map((item, i) => {
+          // Little hacky but necessary unfortunately
+          item.row = i;
+          return item;
+        }),
       (d) => d.name
     )
     .join('g')
-    .attr('class', 'gene-downstream-beeswarm')
+    .attr('class', 'gene-downstream-cell')
     .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`);
 
-  renderBeeswarm(genesDownstreamGCellG);
+  if (geneCellEncoding !== prevGeneCellEncoding) {
+    genesDownstreamGCellG.selectAll('*').remove();
+  }
+
+  switch (geneCellEncoding) {
+    case 'number':
+      plotBox(genesDownstreamGCellG, (d) => d.length, {
+        showText: false,
+        cellWidth: genesDownstreamScale.bandwidth(),
+        fillColor: DEFAULT_COLOR_MAP,
+      });
+      break;
+
+    case 'percent':
+      plotBox(genesDownstreamGCellG, (d) => d.length / d.size, {
+        showZero: false,
+      });
+      break;
+
+    case 'distribution':
+    default:
+      plotBeeswarm(genesDownstreamGCellG);
+      break;
+  }
 
   // Draw border
   genesDownstreamG
@@ -491,7 +570,9 @@ const renderEnhancerGenePlot = (
         .tickSize(width)
         .tickFormat(function geneDistanceAxisTickFormat(d) {
           const s = (d / 1e5).toFixed(0);
-          return this.parentNode.nextSibling ? s : `${s} kbps`;
+          return this.parentNode.nextSibling
+            ? s
+            : `${s} kbps distance to enhancer`;
         })
         .tickValues(tickValues)
     )
@@ -515,7 +596,7 @@ const renderEnhancerGenePlot = (
 };
 
 const EnhancerGenePlot = ({
-  cellEncoding,
+  geneCellEncoding,
   position,
   relPosition,
   genePadding,
@@ -526,6 +607,7 @@ const EnhancerGenePlot = ({
   const [tilesetInfo, setTilesetInfo] = useState(null);
   const [width, setWidth] = useState(null);
   const prevWidth = usePrevious(width);
+  const prevGeneCellEncoding = usePrevious(geneCellEncoding);
 
   useEffect(() => {
     let active = true;
@@ -589,8 +671,9 @@ const EnhancerGenePlot = ({
             samplesByCategory: {},
           };
 
-          Object.keys(categories).forEach((category) => {
-            genes[geneName].samplesByCategory[category] = [];
+          Object.values(categories).forEach(({ name, size }) => {
+            genes[geneName].samplesByCategory[name] = [];
+            genes[geneName].samplesByCategory[name].size = size;
           });
 
           minAbsDistance = Math.min(minAbsDistance, absDistance);
@@ -602,7 +685,9 @@ const EnhancerGenePlot = ({
 
         const sample = entry.fields[10];
         genes[geneName].samplesByCategory[samples[sample].name].push({
-          name: geneName,
+          gene: geneName,
+          sample,
+          sampleCategory: samples[sample].name,
           value: entry.importance,
         });
         maxScore = Math.max(maxScore, entry.importance);
@@ -687,9 +772,18 @@ const EnhancerGenePlot = ({
     [plotEl]
   );
 
-  useEffect(() => {
-    renderEnhancerGenePlot(plotEl, width, data, { cellEncoding, genePadding });
-  }, [plotEl, width, data, cellEncoding, genePadding]);
+  useEffect(
+    () => {
+      plotEnhancerGeneConnections(plotEl, width, data, {
+        geneCellEncoding,
+        prevGeneCellEncoding,
+        genePadding,
+      });
+    },
+    // `prevGeneCellEncoding` is ommitted on purpose to avoid circular updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [plotEl, width, data, geneCellEncoding, genePadding]
+  );
 
   return (
     <Grid container style={styles}>
@@ -710,7 +804,7 @@ const EnhancerGenePlot = ({
 };
 
 EnhancerGenePlot.defaultProps = {
-  cellEncoding: 'beeswarm',
+  geneCellEncoding: 'distribution',
   position: null,
   relPosition: null,
   genePadding: false,
@@ -718,7 +812,7 @@ EnhancerGenePlot.defaultProps = {
 };
 
 EnhancerGenePlot.propTypes = {
-  cellEncoding: PropTypes.string,
+  geneCellEncoding: PropTypes.oneOf(['number', 'percent', 'distribution']),
   position: PropTypes.number,
   relPosition: PropTypes.number,
   genePadding: PropTypes.bool,
