@@ -89,3 +89,68 @@ export const toFixed = (number, decimals, forced) => {
   }
   return string;
 };
+
+export const scaleBand = () => {
+  let domain = [];
+  let fixedBandwidth = null;
+  let bandwidth = 1;
+  let range = [0, 1];
+  let rangeSize = range[1] - range[0];
+  let paddingInner = [];
+  // If `true` the padding will begin before the first bar!
+  let paddingInnerZeroBased = false;
+
+  const sum = (a, b) => a + b;
+
+  const update = () => {
+    rangeSize = range[1] - range[0];
+    bandwidth = (rangeSize - paddingInner.reduce(sum, 0)) / domain.length;
+  };
+
+  const scale = (v) => {
+    const idx = domain.indexOf(v);
+
+    if (idx === -1) return undefined;
+
+    return (
+      idx * (fixedBandwidth || bandwidth) +
+      paddingInner.slice(0, idx + paddingInnerZeroBased).reduce(sum, 0)
+    );
+  };
+
+  scale.domain = (newDomain) => {
+    domain = [...newDomain];
+    update();
+
+    return scale;
+  };
+
+  scale.range = (newRange) => {
+    range = [...newRange];
+    update();
+
+    return scale;
+  };
+
+  scale.bandwidth = () => fixedBandwidth || bandwidth;
+
+  scale.fixedBandwidth = (newFixedBandwidth) => {
+    fixedBandwidth = newFixedBandwidth;
+  };
+
+  scale.paddingInner = (newPaddingInner) => {
+    paddingInner = newPaddingInner;
+    update();
+
+    return scale;
+  };
+
+  scale.paddingInnerZeroBased = (newPaddingInnerZeroBased) => {
+    paddingInnerZeroBased = newPaddingInnerZeroBased;
+    update();
+
+    return scale;
+  };
+
+  return scale;
+};
