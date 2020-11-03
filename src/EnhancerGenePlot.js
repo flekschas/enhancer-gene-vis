@@ -294,7 +294,7 @@ const plotEnhancerGeneConnections = (
       tooltipTitleGetter = null,
     } = {}
   ) => {
-    selection
+    const bg = selection
       .selectAll('.bg')
       .data((d) => [d])
       .join('rect')
@@ -306,21 +306,22 @@ const plotEnhancerGeneConnections = (
       .attr('height', (d) => categorySizeScale(valueGetter(d)))
       .attr('opacity', (d) => +(valueGetter(d) > 0));
 
-    if (showTooltip)
-      selection
-        .on('mouseenter', (event, d) => {
-          const bBox = event.target.getBoundingClientRect();
-          const title =
-            (tooltipTitleGetter && tooltipTitleGetter(d)) || valueGetter(d);
-          openTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
-            arrow: true,
-            placement: 'top',
-            classes: tooltipClasses[d.row % tooltipClasses.length],
-          });
-        })
-        .on('mouseleave', () => {
-          closeTooltip();
+    if (showTooltip) {
+      bg.on('mouseenter', (event, d) => {
+        const bBox = event.target.getBoundingClientRect();
+        const title =
+          (tooltipTitleGetter && tooltipTitleGetter(d)) || valueGetter(d);
+        openTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
+          arrow: true,
+          placement: 'top',
+          classes: tooltipClasses[d.row % tooltipClasses.length],
         });
+      }).on('mouseleave', () => {
+        closeTooltip();
+      });
+    } else {
+      bg.on('mouseenter', null).on('mouseleave', null);
+    }
 
     if (showText) {
       selection
