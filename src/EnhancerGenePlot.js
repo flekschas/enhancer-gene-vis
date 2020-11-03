@@ -1,4 +1,4 @@
-import { scaleLinear, scaleLog, select } from 'd3';
+import { axisRight, scaleLinear, scaleLog, select } from 'd3';
 import PropTypes from 'prop-types';
 import React, {
   useCallback,
@@ -161,10 +161,6 @@ const renderEnhancerGenePlot = (
 
   const circleYScale = (v) => circleYScalePost(circleYScalePre(v));
 
-  const distanceHeightScale = scaleLinear()
-    .domain([data.minAbsDistance, data.maxAbsDistance])
-    .range([2, paddingBottom]);
-
   // ---------------------------------------------------------------------------
   // Gene setup
   const geneContainerWidth = width / 2 - rowHeight;
@@ -212,6 +208,32 @@ const renderEnhancerGenePlot = (
 
   genesUpstreamScale.fixedBandwidth(bandwidth);
   genesDownstreamScale.fixedBandwidth(bandwidth);
+
+  const minVisibleAbsDist = Math.min(
+    genesUpstream.reduce(
+      (minDist, gene) => Math.min(minDist, gene.absDistance),
+      Infinity
+    ),
+    genesDownstream.reduce(
+      (minDist, gene) => Math.min(minDist, gene.absDistance),
+      Infinity
+    )
+  );
+
+  const maxVisibleAbsDist = Math.max(
+    genesUpstream.reduce(
+      (maxDist, gene) => Math.max(maxDist, gene.absDistance),
+      0
+    ),
+    genesDownstream.reduce(
+      (maxDist, gene) => Math.max(maxDist, gene.absDistance),
+      0
+    )
+  );
+
+  const distanceHeightScale = scaleLinear()
+    .domain([minVisibleAbsDist, maxVisibleAbsDist])
+    .range([2, paddingBottom]);
 
   // ---------------------------------------------------------------------------
   // Category summary
@@ -442,13 +464,57 @@ const renderEnhancerGenePlot = (
     .attr('y', Object.values(categories).length * rowHeight + paddingTop)
     .attr('width', distanceBarWidth)
     .attr('height', (d) => distanceHeightScale(d.absDistance));
-};
 
-const getDistToClosestElement = (genePos, genes, enhancerPos) =>
-  Object.values(genes).reduce(
-    (d, gene) => Math.min(Math.abs(genePos - gene.position), d),
-    Math.abs(genePos - enhancerPos)
-  );
+  // ---------------------------------------------------------------------------
+  // Draw gene distance axis
+
+  const distRange = Math.ceil((maxVisibleAbsDist - minVisibleAbsDist) / 1e5);
+  const distStep = Math.ceil(distRange / 4);
+  const tickValues =
+    distRange <= 1
+      ? [minVisibleAbsDist, maxVisibleAbsDist]
+      : Array(4)
+          .fill()
+          .map(
+            (v, i) =>
+              Math.ceil(minVisibleAbsDist / 1e5) * 1e5 + i * (distStep * 1e5)
+          );
+
+  svg
+    .select('#gene-distance-axis')
+    .attr(
+      'transform',
+      `translate(0, ${
+        Object.values(categories).length * rowHeight + paddingTop
+      })`
+    )
+    .call(
+      axisRight(distanceHeightScale)
+        .tickSize(width)
+        .tickFormat(function geneDistanceAxisTickFormat(d) {
+          const s = (d / 1e5).toFixed(0);
+          return this.parentNode.nextSibling ? s : `${s} kbps`;
+        })
+        .tickValues(tickValues)
+    )
+    .call((g) => g.select('.domain').remove())
+    .call((g) =>
+      g
+        .selectAll('.tick line')
+        .attr('stroke', '#bbbbbb')
+        .attr('stroke-width', 0.5)
+        .attr('stroke-dasharray', '4,4')
+    )
+    .call((g) =>
+      g
+        .selectAll('.tick text')
+        .attr('fill', '#bbbbbb')
+        .attr('x', width / 2)
+        .attr('dy', 1)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'hanging')
+    );
+};
 
 const EnhancerGenePlot = ({
   position,
@@ -631,8 +697,9 @@ const EnhancerGenePlot = ({
       {isInit ? (
         <Grid item className={classes.plot}>
           <svg ref={plotElRef} className={classes.plotSvg}>
-            <g id="genes-upstream"></g>
             <g id="enhancers"></g>
+            <g id="gene-distance-axis"></g>
+            <g id="genes-upstream"></g>
             <g id="genes-downstream"></g>
           </svg>
         </Grid>
