@@ -118,7 +118,7 @@ const renderEnhancerGenePlot = (
   node,
   width,
   data,
-  { genePadding = false } = {}
+  { cellEncoding = 'beeswarm', genePadding = false } = {}
 ) => {
   if (!width || !data) return;
 
@@ -235,6 +235,23 @@ const renderEnhancerGenePlot = (
     .domain([minVisibleAbsDist, maxVisibleAbsDist])
     .range([2, paddingBottom]);
 
+  const renderBeeswarm = (g, isRightAligned) => {
+    g.attr(
+      'fill',
+      (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
+    )
+      .selectAll('circle')
+      .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
+      .join('circle')
+      .attr('cx', (d) =>
+        isRightAligned
+          ? genesUpstreamScale.bandwidth() - (d.x + 2 * beeswarmPadding)
+          : d.x + circleRadius + beeswarmPadding
+      )
+      .attr('cy', (d) => d.y)
+      .attr('r', circleRadius);
+  };
+
   // ---------------------------------------------------------------------------
   // Category summary
   svg
@@ -329,8 +346,8 @@ const renderEnhancerGenePlot = (
     .attr('y', paddingTop - geneLabelPadding)
     .text((d) => d.name);
 
-  // Draw beeswarm plot
-  genesUpstreamG
+  // Draw cell plot
+  const genesUpstreamGCellG = genesUpstreamG
     .selectAll('.gene-upstream-beeswarm')
     .data(
       (d) => Object.values(d.samplesByCategory),
@@ -338,20 +355,9 @@ const renderEnhancerGenePlot = (
     )
     .join('g')
     .attr('class', 'gene-upstream-beeswarm')
-    .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`)
-    .attr(
-      'fill',
-      (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
-    )
-    .selectAll('circle')
-    .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
-    .join('circle')
-    .attr(
-      'cx',
-      (d) => genesUpstreamScale.bandwidth() - (d.x + 2 * beeswarmPadding)
-    )
-    .attr('cy', (d) => d.y)
-    .attr('r', circleRadius);
+    .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`);
+
+  renderBeeswarm(genesUpstreamGCellG, true);
 
   // Draw border
   genesUpstreamG
@@ -415,7 +421,7 @@ const renderEnhancerGenePlot = (
     .text((d) => d.name);
 
   // Draw beeswarm plot
-  genesDownstreamG
+  const genesDownstreamGCellG = genesDownstreamG
     .selectAll('.gene-downstream-beeswarm')
     .data(
       (d) => Object.values(d.samplesByCategory),
@@ -423,17 +429,9 @@ const renderEnhancerGenePlot = (
     )
     .join('g')
     .attr('class', 'gene-downstream-beeswarm')
-    .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`)
-    .attr(
-      'fill',
-      (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
-    )
-    .selectAll('circle')
-    .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
-    .join('circle')
-    .attr('cx', (d) => d.x + circleRadius + beeswarmPadding)
-    .attr('cy', (d) => d.y)
-    .attr('r', circleRadius);
+    .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`);
+
+  renderBeeswarm(genesDownstreamGCellG);
 
   // Draw border
   genesDownstreamG
@@ -517,6 +515,7 @@ const renderEnhancerGenePlot = (
 };
 
 const EnhancerGenePlot = ({
+  cellEncoding,
   position,
   relPosition,
   genePadding,
@@ -689,8 +688,8 @@ const EnhancerGenePlot = ({
   );
 
   useEffect(() => {
-    renderEnhancerGenePlot(plotEl, width, data, { genePadding });
-  }, [plotEl, width, data, genePadding]);
+    renderEnhancerGenePlot(plotEl, width, data, { cellEncoding, genePadding });
+  }, [plotEl, width, data, cellEncoding, genePadding]);
 
   return (
     <Grid container style={styles}>
@@ -711,6 +710,7 @@ const EnhancerGenePlot = ({
 };
 
 EnhancerGenePlot.defaultProps = {
+  cellEncoding: 'beeswarm',
   position: null,
   relPosition: null,
   genePadding: false,
@@ -718,6 +718,7 @@ EnhancerGenePlot.defaultProps = {
 };
 
 EnhancerGenePlot.propTypes = {
+  cellEncoding: PropTypes.string,
   position: PropTypes.number,
   relPosition: PropTypes.number,
   genePadding: PropTypes.bool,
