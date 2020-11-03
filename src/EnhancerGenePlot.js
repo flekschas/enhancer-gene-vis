@@ -289,8 +289,13 @@ const renderEnhancerGenePlot = (
 
   // Draw labels
   genesUpstreamG
-    .append('text')
-    .attr('class', 'gene-upstream-label')
+    // the join is needed to avoid appending more and more text elements on
+    // subsequent calls of this function, which would happen if we used
+    // `append()` instead.
+    .selectAll('.gene-upstream-label')
+    .data((d) => [d])
+    .join('text')
+    .attr('class', 'gene-label gene-upstream-label')
     .attr('transform', 'rotate(-90)')
     .attr(
       'transform-origin',
@@ -345,8 +350,11 @@ const renderEnhancerGenePlot = (
 
   // Draw distance bars
   genesUpstreamG
-    .append('rect')
-    .attr('class', 'gene-downstream-distance-bar')
+    // Same reason we're using a join here as for the text labels above
+    .selectAll('.gene-upstream-distance-bar')
+    .data((d) => [d])
+    .join('rect')
+    .attr('class', 'gene-upstream-distance-bar')
     .attr('fill', '#bbbbbb')
     .attr('x', genesUpstreamScale.bandwidth() / 2 - distanceBarWidth / 2)
     .attr('y', Object.values(categories).length * rowHeight + paddingTop)
@@ -369,8 +377,10 @@ const renderEnhancerGenePlot = (
 
   // Draw labels
   genesDownstreamG
-    .append('text')
-    .attr('class', 'gene-upstream-label')
+    .selectAll('.gene-downstream-label')
+    .data((d) => [d])
+    .join('text')
+    .attr('class', 'gene-label gene-downstream-label')
     .attr('transform', 'rotate(-90)')
     .attr(
       'transform-origin',
@@ -422,7 +432,10 @@ const renderEnhancerGenePlot = (
 
   // Draw distance bars
   genesDownstreamG
-    .append('rect')
+    // Same reason we're using a join here as for the text labels above
+    .selectAll('.gene-downstream-distance-bar')
+    .data((d) => [d])
+    .join('rect')
     .attr('class', 'gene-downstream-distance-bar')
     .attr('fill', '#bbbbbb')
     .attr('x', genesDownstreamScale.bandwidth() / 2 - distanceBarWidth / 2)
