@@ -1,3 +1,4 @@
+import { identity } from '@flekschas/utils';
 import { axisRight, scaleLinear, scaleLog, select } from 'd3';
 import PropTypes from 'prop-types';
 import React, {
@@ -34,7 +35,29 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     height: '100%',
   },
+  'tooltip-c-0': {
+    arrow: {
+      color: DEFAULT_COLOR_MAP_LIGHT[0],
+    },
+    tooltip: {
+      color: DEFAULT_COLOR_MAP_DARK[0],
+      backgroundColor: DEFAULT_COLOR_MAP_LIGHT[0],
+    },
+  },
 }));
+
+const useTooltipStyles = DEFAULT_COLOR_MAP_LIGHT.map((color, i) =>
+  makeStyles((theme) => ({
+    arrow: {
+      color,
+    },
+    tooltip: {
+      color: DEFAULT_COLOR_MAP_DARK[i],
+      backgroundColor: color,
+      boxShadow: '0 0 3px 0 rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+    },
+  }))
+);
 
 const {
   server,
@@ -123,6 +146,9 @@ const plotEnhancerGeneConnections = (
     geneCellEncoding = 'distribution',
     prevGeneCellEncoding,
     genePadding = false,
+    openTooltip = identity,
+    closeTooltip = identity,
+    tooltipClasses = [],
   } = {}
 ) => {
   if (!width || !data) return;
@@ -279,7 +305,18 @@ const plotEnhancerGeneConnections = (
       .attr('y', (d) => (rowHeight - categorySizeScale(valueGetter(d))) / 2)
       .attr('width', (d) => categorySizeScale(valueGetter(d)))
       .attr('height', (d) => categorySizeScale(valueGetter(d)))
-      .attr('opacity', (d) => +(valueGetter(d) > 0));
+      .attr('opacity', (d) => +(valueGetter(d) > 0))
+      .on('mouseenter', (event, d) => {
+        const bBox = event.target.getBoundingClientRect();
+        openTooltip(bBox.x + bBox.width / 2, bBox.y, valueGetter(d), {
+          arrow: true,
+          placement: 'top',
+          classes: tooltipClasses[d.row % tooltipClasses.length],
+        });
+      })
+      .on('mouseleave', () => {
+        closeTooltip();
+      });
 
     if (showText) {
       selection
@@ -600,6 +637,8 @@ const EnhancerGenePlot = ({
   position,
   relPosition,
   genePadding,
+  openTooltip,
+  closeTooltip,
   styles,
 } = {}) => {
   const [plotEl, setPlotEl] = useState(null);
@@ -772,17 +811,33 @@ const EnhancerGenePlot = ({
     [plotEl]
   );
 
+  const tooltipClasses = [];
+  for (let i = 0; i < useTooltipStyles.length; i++) {
+    tooltipClasses.push(useTooltipStyles[i]());
+  }
+
   useEffect(
     () => {
       plotEnhancerGeneConnections(plotEl, width, data, {
         geneCellEncoding,
         prevGeneCellEncoding,
         genePadding,
+        openTooltip,
+        closeTooltip,
+        tooltipClasses,
       });
     },
     // `prevGeneCellEncoding` is ommitted on purpose to avoid circular updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [plotEl, width, data, geneCellEncoding, genePadding]
+    [
+      plotEl,
+      width,
+      data,
+      geneCellEncoding,
+      genePadding,
+      openTooltip,
+      closeTooltip,
+    ]
   );
 
   return (
@@ -808,6 +863,8 @@ EnhancerGenePlot.defaultProps = {
   position: null,
   relPosition: null,
   genePadding: false,
+  openTooltip: identity,
+  closeTooltip: identity,
   styles: {},
 };
 
@@ -816,6 +873,8 @@ EnhancerGenePlot.propTypes = {
   position: PropTypes.number,
   relPosition: PropTypes.number,
   genePadding: PropTypes.bool,
+  openTooltip: PropTypes.func,
+  closeTooltip: PropTypes.func,
   styles: PropTypes.object,
 };
 

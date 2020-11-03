@@ -43,6 +43,7 @@ import HelpIcon from '@material-ui/icons/Help';
 import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
 import SearchIcon from '@material-ui/icons/Search';
+import Tooltip from '@material-ui/core/Tooltip';
 
 import EnhancerGenePlot from './EnhancerGenePlot';
 import Logo from './Logo';
@@ -268,6 +269,14 @@ const useStyles = makeStyles((theme) => ({
     fontStyle: 'italic',
     color: theme.palette.grey['600'],
     background: theme.palette.grey['100'],
+  },
+  enhancerGeneTooltip: {
+    position: 'fixed',
+    zIndex: 10,
+    width: 1,
+    height: 1,
+    background: 'black',
+    pointerEvents: 'none',
   },
   higlassDnaAccessibilityInfoBar: {
     color: theme.palette.grey['600'],
@@ -512,6 +521,15 @@ const Viewer = (props) => {
     higlassDnaAccessHelpAnchorEl,
     setHiglassDnaAccessHelpAnchorEl,
   ] = useState(null);
+  const [enhancerGeneTooltip, setEnhancerGeneTooltip] = useState({
+    show: false,
+    title: '',
+    x: 0,
+    y: 0,
+    arrow: true,
+    placement: 'bottom',
+    classes: {},
+  });
 
   // Derived State
   const focusGeneVariantOptions = useMemo(
@@ -948,6 +966,38 @@ const Viewer = (props) => {
   const higlassDnaAccessDetailsClickHandler = () => {
     setShowDnaAccessDetails(!showDnaAccessDetails);
   };
+
+  const openEnhancerGeneTooltip = useCallback(
+    (
+      x,
+      y,
+      title,
+      { arrow = false, placement = 'bottom', classes = {} } = {}
+    ) => {
+      setEnhancerGeneTooltip({
+        show: true,
+        x,
+        y,
+        title,
+        arrow,
+        placement,
+        classes,
+      });
+    },
+    []
+  );
+
+  const closeEnhancerGeneTooltip = useCallback(() => {
+    setEnhancerGeneTooltip({
+      show: false,
+      title: '',
+      x: 0,
+      y: 0,
+      arrow: true,
+      placement: 'bottom',
+      classes: {},
+    });
+  }, []);
 
   const mergeSvgs = (enhancerSvg, dnaAccessSvg) => {
     const [enhancerCoreSvg, enhancerWidth, enhancerHeight] = extractSvgCore(
@@ -1638,9 +1688,9 @@ const Viewer = (props) => {
                     )}
                     {showEnhancerDetails && focusVariant && (
                       <Typography className={classes.higlassTitleBarText}>
-                        Enhancer overlapping <em>{focusVariant}</em> and its
-                        predicted connections to upstream (left) and downstream
-                        (right) genes.
+                        Enhancer region overlapping <em>{focusVariant}</em> and
+                        its predicted connections to upstream (left) and
+                        downstream (right) genes.
                       </Typography>
                     )}
                   </Grid>
@@ -1651,6 +1701,8 @@ const Viewer = (props) => {
                         position={focusVariantPosition}
                         relPosition={focusVariantRelPosition}
                         genePadding={genePadding}
+                        openTooltip={openEnhancerGeneTooltip}
+                        closeTooltip={closeEnhancerGeneTooltip}
                       />
                     ) : (
                       <Grid
@@ -1779,6 +1831,21 @@ const Viewer = (props) => {
             </Grid>
           </Grid>
         </div>
+        <Tooltip
+          open={enhancerGeneTooltip.show}
+          title={enhancerGeneTooltip.title}
+          arrow={enhancerGeneTooltip.arrow}
+          placement={enhancerGeneTooltip.placement}
+          classes={enhancerGeneTooltip.classes}
+        >
+          <div
+            className={classes.enhancerGeneTooltip}
+            style={{
+              top: enhancerGeneTooltip.y,
+              left: enhancerGeneTooltip.x,
+            }}
+          />
+        </Tooltip>
       </main>
       <Modal
         aria-labelledby="info-title"
