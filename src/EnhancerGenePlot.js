@@ -1,4 +1,4 @@
-import { scaleBand, scaleLinear, scaleLog, select } from 'd3';
+import { scaleLinear, scaleLog, select } from 'd3';
 import PropTypes from 'prop-types';
 import React, {
   useCallback,
@@ -19,6 +19,7 @@ import {
   DEFAULT_STRATIFICATION,
   DEFAULT_VIEW_CONFIG_ENHANCER,
 } from './constants';
+import { scaleBand } from './utils';
 import usePrevious from './use-previous';
 
 import './GeneEnhancerPlot.css';
@@ -113,7 +114,12 @@ const dodge = (data, radius, yScale) => {
   return circles;
 };
 
-const renderEnhancerGenePlot = (node, width, data, tile) => {
+const renderEnhancerGenePlot = (
+  node,
+  width,
+  data,
+  { genePadding = false } = {}
+) => {
   if (!width || !data) return;
 
   const svg = select(node);
@@ -126,6 +132,7 @@ const renderEnhancerGenePlot = (node, width, data, tile) => {
   const geneLabelPadding = 3;
   const beeswarmPadding = 1;
   const distanceBarWidth = 6;
+  const distPaddingRange = [0, 20];
   const height =
     Object.values(categories).length * rowHeight + paddingTop + paddingBottom;
 
@@ -147,22 +154,64 @@ const renderEnhancerGenePlot = (node, width, data, tile) => {
 
   const circleYScalePost = scaleLog()
     .domain([1, 10])
-    .range([rowHeight - circleRadius - 1, circleRadius + 1]);
+    .range([
+      rowHeight - circleRadius - beeswarmPadding,
+      circleRadius + beeswarmPadding,
+    ]);
 
   const circleYScale = (v) => circleYScalePost(circleYScalePre(v));
 
-  const distanceHeightScalePre = scaleLinear()
+  const distanceHeightScale = scaleLinear()
     .domain([data.minAbsDistance, data.maxAbsDistance])
-    .range([1, 10])
-    .clamp(true);
+    .range([2, paddingBottom]);
 
-  const distanceHeightScalePost = scaleLog()
-    .domain([1, 10])
-    .range([2, paddingBottom])
-    .clamp(true);
+  // ---------------------------------------------------------------------------
+  // Gene setup
+  const geneContainerWidth = width / 2 - rowHeight;
+  const maxGenes = Math.floor(geneContainerWidth / rowHeight);
 
-  const distanceHeightScale = (v) =>
-    distanceHeightScalePost(distanceHeightScalePre(v));
+  const genesUpstream = data.genesUpstreamByDist.slice(0, maxGenes).reverse();
+  const genesDownstream = data.genesDownstreamByDist.slice(0, maxGenes);
+
+  const [minRelDistance, maxRelDistance] = [
+    ...genesUpstream,
+    ...genesDownstream,
+  ].reduce(
+    (minMax, gene) => [
+      Math.min(minMax[0], gene.relDistance),
+      Math.max(minMax[1], gene.relDistance),
+    ],
+    [Infinity, 0]
+  );
+
+  const paddingScale = scaleLinear()
+    .domain([minRelDistance, maxRelDistance])
+    .range(distPaddingRange);
+
+  const genesUpstreamPadding = genePadding
+    ? genesUpstream.map((d) => Math.round(paddingScale(d.relDistance)))
+    : [];
+  const genesUpstreamScale = scaleBand()
+    .domain(genesUpstream.map((d) => d.name))
+    .range([0, width / 2 - rowHeight / 2])
+    .paddingInner(genesUpstreamPadding);
+
+  const genesDownstreamPadding = genePadding
+    ? genesDownstream.map((d) => Math.round(paddingScale(d.relDistance)))
+    : [];
+  const genesDownstreamScale = scaleBand()
+    .domain(genesDownstream.map((d) => d.name))
+    .range([0, width / 2 - rowHeight / 2])
+    .paddingInner(genesDownstreamPadding)
+    .paddingInnerZeroBased(true);
+
+  const bandwidth = Math.min(
+    genesUpstreamScale.bandwidth(),
+    genesDownstreamScale.bandwidth()
+  );
+
+  genesUpstreamScale.fixedBandwidth(bandwidth);
+  genesDownstreamScale.fixedBandwidth(bandwidth);
 
   // ---------------------------------------------------------------------------
   // Category summary
@@ -228,16 +277,7 @@ const renderEnhancerGenePlot = (node, width, data, tile) => {
     .attr('height', rowHeight);
 
   // ---------------------------------------------------------------------------
-  // Gene setup
-  const geneContainerWidth = width / 2 - rowHeight;
-  const maxGenes = Math.floor(geneContainerWidth / rowHeight);
-
-  // ---------------------------------------------------------------------------
   // Draw upstream genes
-  const genesUpstream = data.genesUpstreamByDist.slice(0, maxGenes).reverse();
-  const genesUpstreamScale = scaleBand()
-    .domain(genesUpstream.map((d) => d.name))
-    .range([0, width / 2 - rowHeight / 2]);
 
   const genesUpstreamG = svg
     .select('#genes-upstream')
@@ -279,7 +319,10 @@ const renderEnhancerGenePlot = (node, width, data, tile) => {
     .selectAll('circle')
     .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
     .join('circle')
-    .attr('cx', (d) => genesUpstreamScale.bandwidth() - (d.x + 2))
+    .attr(
+      'cx',
+      (d) => genesUpstreamScale.bandwidth() - (d.x + 2 * beeswarmPadding)
+    )
     .attr('cy', (d) => d.y)
     .attr('r', circleRadius);
 
@@ -312,11 +355,6 @@ const renderEnhancerGenePlot = (node, width, data, tile) => {
 
   // ---------------------------------------------------------------------------
   // Draw downstream genes
-  const genesDownstream = data.genesDownstreamByDist.slice(0, maxGenes);
-  const genesDownstreamScale = scaleBand()
-    .domain(genesDownstream.map((d) => d.name))
-    .range([0, width / 2 - rowHeight / 2]);
-
   svg
     .select('#genes-downstream')
     .attr('transform', `translate(${width / 2 + rowHeight / 2}, 0)`);
@@ -361,7 +399,7 @@ const renderEnhancerGenePlot = (node, width, data, tile) => {
     .selectAll('circle')
     .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
     .join('circle')
-    .attr('cx', (d) => d.x + circleRadius + 1)
+    .attr('cx', (d) => d.x + circleRadius + beeswarmPadding)
     .attr('cy', (d) => d.y)
     .attr('r', circleRadius);
 
@@ -399,7 +437,12 @@ const getDistToClosestElement = (genePos, genes, enhancerPos) =>
     Math.abs(genePos - enhancerPos)
   );
 
-const EnhancerGenePlot = ({ position, relPosition, styles } = {}) => {
+const EnhancerGenePlot = ({
+  position,
+  relPosition,
+  genePadding,
+  styles,
+} = {}) => {
   const [plotEl, setPlotEl] = useState(null);
   const [tile, setTile] = useState(null);
   const [tilesetInfo, setTilesetInfo] = useState(null);
@@ -438,7 +481,6 @@ const EnhancerGenePlot = ({ position, relPosition, styles } = {}) => {
       let maxScore = 0;
       let minAbsDistance = Infinity;
       let maxAbsDistance = 0;
-      let maxRelDistance = 0;
       const genes = {};
       const categoryAggregation = {};
 
@@ -461,16 +503,10 @@ const EnhancerGenePlot = ({ position, relPosition, styles } = {}) => {
           const distance = relGenePos - relPosition;
           const isDownstream = distance > 0;
           const absDistance = Math.abs(distance);
-          const relDistance = getDistToClosestElement(
-            relGenePos,
-            genes,
-            relPosition
-          );
           genes[geneName] = {
             name: geneName,
             position: relGenePos,
             absDistance,
-            relDistance,
             isDownstream,
             samplesByCategory: {},
           };
@@ -481,7 +517,6 @@ const EnhancerGenePlot = ({ position, relPosition, styles } = {}) => {
 
           minAbsDistance = Math.min(minAbsDistance, absDistance);
           maxAbsDistance = Math.max(maxAbsDistance, absDistance);
-          maxRelDistance = Math.max(maxRelDistance, relDistance);
 
           if (isDownstream) genesDownstreamByDist.push(genes[geneName]);
           else genesUpstreamByDist.push(genes[geneName]);
@@ -496,16 +531,6 @@ const EnhancerGenePlot = ({ position, relPosition, styles } = {}) => {
         categoryAggregation[samples[sample].name].numEnhancers++;
       });
 
-      const scoreScale = scaleLinear()
-        .domain([0, genes.maxScore])
-        .range([1, 20]);
-      const absDistScale = scaleLinear()
-        .domain([0, genes.maxAbsDistance])
-        .range([1, 20]);
-      const relDistScale = scaleLinear()
-        .domain([0, genes.maxRelDistance])
-        .range([1, 20]);
-
       const genesDownstreamByDistArr = [];
       while (genesDownstreamByDist.length)
         genesDownstreamByDistArr.push(genesDownstreamByDist.pop());
@@ -514,14 +539,22 @@ const EnhancerGenePlot = ({ position, relPosition, styles } = {}) => {
       while (genesUpstreamByDist.length)
         genesUpstreamByDistArr.push(genesUpstreamByDist.pop());
 
+      genesDownstreamByDistArr.forEach((gene, i) => {
+        const prevGene = genesDownstreamByDistArr[i - 1];
+        gene.relDistance =
+          gene.position - ((prevGene && prevGene.position) || relPosition);
+      });
+
+      genesUpstreamByDistArr.forEach((gene, i) => {
+        const prevGene = genesDownstreamByDistArr[i - 1];
+        gene.relDistance =
+          ((prevGene && prevGene.position) || relPosition) - gene.position;
+      });
+
       return {
         minAbsDistance,
         maxAbsDistance,
-        maxRelDistance,
         maxScore,
-        scoreScale,
-        absDistScale,
-        relDistScale,
         genes,
         genesDownstreamByDist: genesDownstreamByDistArr,
         genesUpstreamByDist: genesUpstreamByDistArr,
@@ -576,15 +609,9 @@ const EnhancerGenePlot = ({ position, relPosition, styles } = {}) => {
     [plotEl]
   );
 
-  useEffect(
-    () => {
-      renderEnhancerGenePlot(plotEl, width, data, tile);
-    },
-    // `tile` is excluded on purpose because `tile` has already been updated
-    // when `data` updates
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [plotEl, width, data]
-  );
+  useEffect(() => {
+    renderEnhancerGenePlot(plotEl, width, data, { genePadding });
+  }, [plotEl, width, data, genePadding]);
 
   return (
     <Grid container style={styles}>
@@ -606,12 +633,14 @@ const EnhancerGenePlot = ({ position, relPosition, styles } = {}) => {
 EnhancerGenePlot.defaultProps = {
   position: null,
   relPosition: null,
+  genePadding: false,
   styles: {},
 };
 
 EnhancerGenePlot.propTypes = {
   position: PropTypes.number,
   relPosition: PropTypes.number,
+  genePadding: PropTypes.bool,
   styles: PropTypes.object,
 };
 

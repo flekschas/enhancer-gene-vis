@@ -149,6 +149,12 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
     flexGrow: 1,
   },
+  settingsTitle: {
+    margin: theme.spacing(1, 1, -1, 1),
+    '& h6': {
+      fontWeight: 'bold',
+    },
+  },
   settingsContent: {
     position: 'absolute',
     top: 0,
@@ -370,10 +376,10 @@ const updateViewConfigFocusVariant = (position, trackIdxs = []) => (
 };
 
 const updateViewConfigFocusStyle = (hideUnfocused) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[4].options.focusStyle =
-    hideUnfocused === 'true' ? 'filtering' : 'highlighting';
-  viewConfig.views[0].tracks.top[4].options.stratification.axisNoGroupColor =
-    hideUnfocused !== 'true';
+  viewConfig.views[0].tracks.top[4].options.focusStyle = hideUnfocused
+    ? 'filtering'
+    : 'highlighting';
+  viewConfig.views[0].tracks.top[4].options.stratification.axisNoGroupColor = hideUnfocused;
 
   return viewConfig;
 };
@@ -441,7 +447,13 @@ const Viewer = (props) => {
   });
   const [focusGene, setFocusGene] = useQueryString('g', '');
   const [focusVariant, setFocusVariant] = useQueryString('v', 'rs1250566');
-  const [hideUnfocused, setHideUnfocused] = useQueryString('hide-unfocused');
+  const [hideUnfocused, setHideUnfocused] = useQueryString(
+    'hide-unfocused',
+    false,
+    {
+      decoder: (v) => (v === undefined ? undefined : v === 'true'),
+    }
+  );
   const [matrixColoring, setMatrixColoring] = useQueryString('mc', 'solid');
   const [variantYScale, setVariantYScale] = useQueryString('vs', 'pValue');
   const [dnaAccessLabels, setDnaAccessLabels] = useQueryString(
@@ -478,6 +490,9 @@ const Viewer = (props) => {
       decoder: (v) => (v === undefined ? undefined : v === 'true'),
     }
   );
+  const [genePadding, setGenePadding] = useQueryString('gp', true, {
+    decoder: (v) => (v === undefined ? undefined : v === 'true'),
+  });
 
   const [focusGeneOption, setFocusGeneOption] = useState(null);
   const [focusVariantOption, setFocusVariantOption] = useState(null);
@@ -747,7 +762,11 @@ const Viewer = (props) => {
   };
 
   const hideUnfocusedChangeHandler = (event) => {
-    setHideUnfocused(event.target.checked.toString());
+    setHideUnfocused(event.target.checked);
+  };
+
+  const genePaddingChangeHandler = (event) => {
+    setGenePadding(event.target.checked);
   };
 
   const changeVariantYScale = (value) => () => {
@@ -1076,11 +1095,16 @@ const Viewer = (props) => {
             </Grid>
             <Grid item className={classes.settings}>
               <Box m={0} className={classes.settingsContent}>
+                <Box className={classes.settingsTitle}>
+                  <Typography variant="subtitle2" component="h6">
+                    Enhancer Regions:
+                  </Typography>
+                </Box>
                 <Box m={1}>
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={hideUnfocused === 'true'}
+                        checked={hideUnfocused}
                         onChange={hideUnfocusedChangeHandler}
                         name="hideUnfocused"
                       />
@@ -1242,13 +1266,37 @@ const Viewer = (props) => {
                     </RadioGroup>
                   </FormControl>
                 </Box>
+                <Divider />
+                <Box className={classes.settingsTitle}>
+                  <Typography variant="subtitle2" component="h6">
+                    Enhancer-Gene Connections:
+                  </Typography>
+                </Box>
+                <Box m={1}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={genePadding}
+                        onChange={genePaddingChangeHandler}
+                        name="true"
+                      />
+                    }
+                    label="Gene padding"
+                  />
+                </Box>
+                <Divider />
+                <Box className={classes.settingsTitle}>
+                  <Typography variant="subtitle2" component="h6">
+                    DNA Accessibility:
+                  </Typography>
+                </Box>
                 <Box m={1}>
                   <FormControl component="fieldset">
                     <FormLabel
                       component="legend"
                       className={classes.iconRadioLegend}
                     >
-                      DNA accessibility labels
+                      Labels
                     </FormLabel>
                     <RadioGroup
                       aria-label="dnaAccessLabels"
@@ -1517,6 +1565,7 @@ const Viewer = (props) => {
                       <EnhancerGenePlot
                         position={focusVariantPosition}
                         relPosition={focusVariantRelPosition}
+                        genePadding={genePadding}
                       />
                     ) : (
                       <Grid
