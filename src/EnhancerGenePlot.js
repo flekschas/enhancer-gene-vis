@@ -330,6 +330,7 @@ const plotEnhancerGeneConnections = (
         .join('text')
         .attr('class', 'box-text')
         .attr('fill', (d) => textColor[d.row % textColor.length])
+        .attr('style', 'font-size: 12px; font-weight: bold;')
         .attr('dominant-baseline', 'middle')
         .attr('text-anchor', 'middle')
         .attr('x', cellWidth / 2)
@@ -400,6 +401,7 @@ const plotEnhancerGeneConnections = (
     .data((d) => [d])
     .join('text')
     .attr('class', 'gene-label gene-upstream-label')
+    .attr('style', 'font-size: 9px;')
     .attr('transform', 'rotate(-90)')
     .attr(
       'transform-origin',
@@ -510,6 +512,7 @@ const plotEnhancerGeneConnections = (
     .data((d) => [d])
     .join('text')
     .attr('class', 'gene-label gene-downstream-label')
+    .attr('style', 'font-size: 9px;')
     .attr('transform', 'rotate(-90)')
     .attr(
       'transform-origin',

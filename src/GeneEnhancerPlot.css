@@ -6,12 +6,3 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-.box-text {
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.gene-label {
-  font-size: 9px;
-}
