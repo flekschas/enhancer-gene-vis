@@ -10,6 +10,7 @@ import { HiGlassComponent } from 'higlass';
 import {
   debounce,
   deepClone,
+  isParentOf,
   isString,
   nthIndexOf,
   pipe,
@@ -210,6 +211,9 @@ const useStyles = makeStyles((theme) => ({
   higlassTitleBarText: {
     fontSize: '0.8rem',
   },
+  higlassTitleBarContainer: {
+    width: 'auto',
+  },
   higlassTitleBarTitle: {
     padding: '0 2px',
     fontWeight: 'bold',
@@ -240,6 +244,39 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 'bold',
     '&::after': {
       content: ':',
+    },
+  },
+  panZoomTip: {
+    fontSize: '0.8rem',
+    color: theme.palette.grey['600'],
+    opacity: 1,
+    animation: '0.75s ease 2s 1 running forwards fadeout',
+    '-webkit-touch-callout': 'none',
+    '-webkit-user-select': 'none',
+    '-khtml-user-select': 'none',
+    '-moz-user-select': 'none',
+    '-ms-user-select': 'none',
+    userSelect: 'none',
+    '&.show': {
+      opacity: 1,
+      animation: '',
+    },
+  },
+  panZoomTipActive: {
+    fontWeight: 'bold',
+    fontSize: '0.8rem',
+    color: '#cc0078',
+    opacity: 1,
+    animation: '0.75s ease 2s 1 running forwards fadeout',
+    '-webkit-touch-callout': 'none',
+    '-webkit-user-select': 'none',
+    '-khtml-user-select': 'none',
+    '-moz-user-select': 'none',
+    '-ms-user-select': 'none',
+    userSelect: 'none',
+    '&.show': {
+      opacity: 1,
+      animation: '',
     },
   },
   higlassEnhancerInfoBar: {
@@ -388,7 +425,7 @@ const updateViewConfigFocusStyle = (hideUnfocused) => (viewConfig) => {
   viewConfig.views[0].tracks.top[4].options.focusStyle = hideUnfocused
     ? 'filtering'
     : 'highlighting';
-  viewConfig.views[0].tracks.top[4].options.stratification.axisNoGroupColor = hideUnfocused;
+  viewConfig.views[0].tracks.top[4].options.stratification.axisNoGroupColor = !hideUnfocused;
 
   return viewConfig;
 };
@@ -422,7 +459,11 @@ const extractCoreFromHiGlassSvg = (svg) => {
     svg.indexOf('height="') + 8,
     svg.indexOf('px', svg.indexOf('height="') + 8)
   );
-  return [svg.substring(fifthLn + 1, lastLn), width, height];
+  return {
+    core: svg.substring(fifthLn + 1, lastLn),
+    width,
+    height,
+  };
 };
 
 const extractCoreFromStringifiedSvg = (svg) => {
@@ -435,11 +476,11 @@ const extractCoreFromStringifiedSvg = (svg) => {
     )
     .split(' ')
     .slice(2);
-  return [
-    svg.substring(firstSvgClosingBracket + 1, lastSvgOpeningBracket),
-    +width,
-    +height,
-  ];
+  return {
+    core: svg.substring(firstSvgClosingBracket + 1, lastSvgOpeningBracket),
+    width: +width,
+    height: +height,
+  };
 };
 
 const locationSearch = async (query) => {
@@ -529,6 +570,7 @@ const Viewer = (props) => {
   const prevFocusGeneOption = usePrevious(focusGeneOption);
   const prevFocusVariantOption = usePrevious(focusVariantOption);
   const higlassEnhancerApi = useRef(null);
+  const higlassEnhancerMouseDown = useRef(false);
   const higlassDnaAccessApi = useRef(null);
   const enhancerGeneSvgRef = useRef(null);
   const [
@@ -548,6 +590,11 @@ const Viewer = (props) => {
     placement: 'bottom',
     classes: {},
   });
+  const [higlassEnhancerMouseOver, setHiglassEnhancerMouseOver] = useState(
+    false
+  );
+  const [higlassEnhancerFocus, setHiglassEnhancerFocus] = useState(false);
+  const higlassEnhancerContainerRef = useRef(null);
 
   // Derived State
   const focusGeneVariantOptions = useMemo(
@@ -736,6 +783,11 @@ const Viewer = (props) => {
     [xDomainEnd, props.chromInfo]
   );
 
+  const higlassEnhancerBlockClasses = useMemo(
+    () => (higlassEnhancerFocus ? 'higlass-block focus' : 'higlass-block'),
+    [higlassEnhancerFocus]
+  );
+
   const clearFocusGene = () => {
     setFocusGene('');
     setFocusGeneOption(null);
@@ -920,6 +972,27 @@ const Viewer = (props) => {
     []
   );
 
+  const windowMouseDownClearHandler = useCallback((e) => {
+    if (!isParentOf(e.target, higlassEnhancerContainerRef.current)) {
+      setHiglassEnhancerFocus(false);
+    }
+    higlassEnhancerMouseDown.current = false;
+  }, []);
+
+  useEffect(
+    () => {
+      window.addEventListener('mouseup', windowMouseDownClearHandler);
+      window.addEventListener('blur', windowMouseDownClearHandler);
+    },
+    // Execute only once on initialization
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  const higlassEnhancerMouseDownHandler = useCallback(() => {
+    higlassEnhancerMouseDown.current = true;
+  }, []);
+
   const higlassEnhancerInitHandler = useCallback(
     (higlassInstance) => {
       if (higlassInstance !== null) {
@@ -930,6 +1003,12 @@ const Viewer = (props) => {
           higlassLocationChangeHandlerDb,
           'context'
         );
+        higlassEnhancerApi.current
+          .getComponent()
+          .element.addEventListener(
+            'mousedown',
+            higlassEnhancerMouseDownHandler
+          );
       }
     },
     // Execute only once on initialization
@@ -1017,22 +1096,39 @@ const Viewer = (props) => {
     });
   }, []);
 
+  const higlassEnhancerFocusHandler = useCallback(() => {
+    setHiglassEnhancerFocus(true);
+  }, []);
+
+  const higlassEnhancerBlurHandler = useCallback(() => {
+    if (!higlassEnhancerMouseDown.current) {
+      setHiglassEnhancerFocus(false);
+    }
+  }, [higlassEnhancerMouseDown]);
+
+  const higlassEnhancerContainerMouseEnterHandler = useCallback(() => {
+    setHiglassEnhancerMouseOver(true);
+  }, []);
+
+  const higlassEnhancerContainerMouseLeaveHandler = useCallback(() => {
+    setHiglassEnhancerMouseOver(false);
+  }, []);
+
   const mergeSvgs = (enhancerSvg, dnaAccessSvg, enhancerGeneSvg) => {
-    const [
-      enhancerSvgCore,
-      enhancerWidth,
-      enhancerHeight,
-    ] = extractCoreFromHiGlassSvg(enhancerSvg);
-    const [
-      dnaAccessSvgCore,
-      dnaAccessWidth,
-      dnaAccessHeight,
-    ] = extractCoreFromHiGlassSvg(dnaAccessSvg);
-    const [
-      enhancerGeneSvgCore,
-      enhancerGeneWidth,
-      enhancerGeneHeight,
-    ] = extractCoreFromStringifiedSvg(enhancerGeneSvg);
+    const {
+      core: enhancerSvgCore,
+      width: enhancerWidth,
+      height: enhancerHeight,
+    } = extractCoreFromHiGlassSvg(enhancerSvg);
+    const {
+      core: dnaAccessSvgCore,
+      width: dnaAccessWidth,
+      height: dnaAccessHeight,
+    } = extractCoreFromHiGlassSvg(dnaAccessSvg);
+    const {
+      core: enhancerGeneSvgCore,
+      height: enhancerGeneHeight,
+    } = extractCoreFromStringifiedSvg(enhancerGeneSvg);
 
     const actualEnhancerHeight = viewConfigEnhancer.views[0].tracks.top.reduce(
       (height, track) => height + track.height,
@@ -1570,7 +1666,13 @@ const Viewer = (props) => {
               alignItems="center"
               wrap="nowrap"
             >
-              <Grid item container wrap="nowrap" alignItems="center">
+              <Grid
+                item
+                container
+                wrap="nowrap"
+                alignItems="center"
+                className={classes.higlassTitleBarContainer}
+              >
                 <Typography
                   component="h3"
                   className={`${classes.higlassTitleBarText} ${classes.higlassTitleBarTitle}`}
@@ -1615,6 +1717,33 @@ const Viewer = (props) => {
                     pink/red.
                   </Typography>
                 </Popover>
+              </Grid>
+              <Grid item>
+                {higlassEnhancerFocus ? (
+                  <Typography
+                    // Just a hack to trigger a dom rerendering which in turn
+                    // triggers the fadeout animation
+                    component="div"
+                    className={`${classes.panZoomTipActive} ${
+                      higlassEnhancerMouseOver ? 'show' : ''
+                    }`}
+                    noWrap
+                  >
+                    Click outside the plot to deactivate pan & zoom!
+                  </Typography>
+                ) : (
+                  <Typography
+                    // Just a hack to trigger a dom rerendering which in turn
+                    // triggers the fadeout animation
+                    component="span"
+                    className={`${classes.panZoomTip} ${
+                      higlassEnhancerMouseOver ? 'show' : ''
+                    }`}
+                    noWrap
+                  >
+                    Click below to activate pan & zoom!
+                  </Typography>
+                )}
               </Grid>
               <Grid item>
                 <IconButton
@@ -1700,6 +1829,9 @@ const Viewer = (props) => {
                   <Grid
                     item
                     className={classes.grow}
+                    onMouseEnter={higlassEnhancerContainerMouseEnterHandler}
+                    onMouseLeave={higlassEnhancerContainerMouseLeaveHandler}
+                    ref={higlassEnhancerContainerRef}
                     style={{ height: `${viewConfigEnhancerHeight}px` }}
                   >
                     <HiGlassComponent
@@ -1709,6 +1841,13 @@ const Viewer = (props) => {
                         sizeMode: 'bounded',
                         globalMousePosition: true,
                       }}
+                    />
+                    <div
+                      className={higlassEnhancerBlockClasses}
+                      onMouseDown={higlassEnhancerMouseDownHandler}
+                      onFocus={higlassEnhancerFocusHandler}
+                      onBlur={higlassEnhancerBlurHandler}
+                      tabIndex="0"
                     />
                   </Grid>
                   <Grid item className={classes.higlassEnhancerInfoBar}>
