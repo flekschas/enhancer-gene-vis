@@ -316,10 +316,10 @@ const useStyles = makeStyles((theme) => ({
     width: 1,
     height: 1,
     background: 'black',
+    fontWeight: 'normal',
     pointerEvents: 'none',
-    '& em': {
-      color: 'inherit',
-      fontWeight: 'inherit',
+    '& strong': {
+      fontWeight: 'bold',
     },
   },
   higlassDnaAccessibilityInfoBar: {

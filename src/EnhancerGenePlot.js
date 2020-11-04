@@ -286,13 +286,22 @@ const plotEnhancerGeneConnections = (
     return Math.ceil(Math.sqrt((maxSize * bandwidth) / rowHeight));
   };
 
-  const plotArray = (selection, numCols, { tooltipTitleGetter } = {}) => {
+  const plotArray = (
+    selection,
+    numCols,
+    {
+      instanceCache = {},
+      onMouseEnter = identity,
+      onMouseLeave = identity,
+      tooltipTitleGetter = null,
+    } = {}
+  ) => {
     const cellSize = bandwidth / numCols;
 
     const indexToX = (index) => (index % numCols) * cellSize;
     const indexToY = (index) => Math.floor(index / numCols) * cellSize;
 
-    selection
+    instanceCache.current = selection
       .attr(
         'fill',
         (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
@@ -319,21 +328,38 @@ const plotEnhancerGeneConnections = (
               categories[d.sampleCategory].index % tooltipClasses.length
             ],
         });
+        onMouseEnter(d);
       })
-      .on('mouseleave', () => {
+      .on('mouseleave', (d) => {
         closeTooltip();
+        onMouseLeave(d);
       });
   };
 
   const arrayTooltipTitleGetter = (d) => (
     <React.Fragment>
-      The enhancer overlapping <em>{position}</em>
+      The enhancer overlapping <strong>{position}</strong>
       {variant ? ` (${variant})` : ''} is predicted to regulate{' '}
-      <em>{d.gene}</em> with a score of
-      <br />
-      <strong className="value">{d.value.toFixed(3)}</strong>.
+      <strong>{d.gene}</strong> in sample <strong>{d.sample}</strong> with a
+      score of <strong className="value">{d.value.toFixed(3)}</strong>.
     </React.Fragment>
   );
+
+  const geneArrayInstances = {
+    upstream: { current: null },
+    downstream: { current: null },
+  };
+
+  const geneArrayInstanceMouseEnterHandler = (dHovering) => {
+    const opacity = (d) => (d.sample === dHovering.sample ? 1 : 0.2);
+    geneArrayInstances.upstream.current.attr('opacity', opacity);
+    geneArrayInstances.downstream.current.attr('opacity', opacity);
+  };
+
+  const geneArrayInstanceMouseLeaveHandler = () => {
+    geneArrayInstances.upstream.current.attr('opacity', 1);
+    geneArrayInstances.downstream.current.attr('opacity', 1);
+  };
 
   const plotBox = (
     selection,
@@ -500,6 +526,9 @@ const plotEnhancerGeneConnections = (
     case 'array':
       plotArray(genesUpstreamGCellG, getArrayNumCols(genesUpstream), {
         tooltipTitleGetter: arrayTooltipTitleGetter,
+        instanceCache: geneArrayInstances.upstream,
+        onMouseEnter: geneArrayInstanceMouseEnterHandler,
+        onMouseLeave: geneArrayInstanceMouseLeaveHandler,
       });
       break;
 
@@ -610,6 +639,9 @@ const plotEnhancerGeneConnections = (
     case 'array':
       plotArray(genesDownstreamGCellG, getArrayNumCols(genesDownstream), {
         tooltipTitleGetter: arrayTooltipTitleGetter,
+        instanceCache: geneArrayInstances.downstream,
+        onMouseEnter: geneArrayInstanceMouseEnterHandler,
+        onMouseLeave: geneArrayInstanceMouseLeaveHandler,
       });
       break;
 
