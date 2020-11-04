@@ -186,6 +186,20 @@ const plotEnhancerGeneConnections = (
     .range([0, rowHeight])
     .clamp(true);
 
+  const circleYScalePre = scaleLinear()
+    .domain([0, 1])
+    .range([1, 10])
+    .clamp(true);
+
+  const circleYScalePost = scaleLog()
+    .domain([1, 10])
+    .range([
+      rowHeight - circleRadius - beeswarmPadding,
+      circleRadius + beeswarmPadding,
+    ]);
+
+  const circleYScale = (v) => circleYScalePost(circleYScalePre(v));
+
   // ---------------------------------------------------------------------------
   // Gene setup
   const geneContainerWidth = width / 2 - rowHeight;
@@ -267,7 +281,7 @@ const plotEnhancerGeneConnections = (
         (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
       )
       .selectAll('circle')
-      .data((d) => dodge(d, circleRadius, circlePadding))
+      .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
       .join('circle')
       .attr('cx', (d) =>
         isRightAligned
