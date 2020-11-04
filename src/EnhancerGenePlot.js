@@ -175,6 +175,11 @@ const plotEnhancerGeneConnections = (
     .range([2, rowHeight])
     .clamp(true);
 
+  const percentScale = scaleLinear()
+    .domain([0, 1])
+    .range([0, rowHeight])
+    .clamp(true);
+
   const circleYScalePre = scaleLinear()
     .domain([0, 1])
     .range([1, 10])
@@ -283,6 +288,7 @@ const plotEnhancerGeneConnections = (
 
   const plotBox = (
     selection,
+    valueScale,
     valueGetter,
     {
       cellWidth = rowHeight,
@@ -300,10 +306,10 @@ const plotEnhancerGeneConnections = (
       .join('rect')
       .attr('class', 'bg')
       .attr('fill', (d) => fillColor[d.row % fillColor.length])
-      .attr('x', (d) => (cellWidth - categorySizeScale(valueGetter(d))) / 2)
-      .attr('y', (d) => (rowHeight - categorySizeScale(valueGetter(d))) / 2)
-      .attr('width', (d) => categorySizeScale(valueGetter(d)))
-      .attr('height', (d) => categorySizeScale(valueGetter(d)))
+      .attr('x', (d) => (cellWidth - valueScale(valueGetter(d))) / 2)
+      .attr('y', (d) => (rowHeight - valueScale(valueGetter(d))) / 2)
+      .attr('width', (d) => valueScale(valueGetter(d)))
+      .attr('height', (d) => valueScale(valueGetter(d)))
       .attr('opacity', (d) => +(valueGetter(d) > 0));
 
     if (showTooltip) {
@@ -361,7 +367,7 @@ const plotEnhancerGeneConnections = (
     .attr('class', 'enhancer-gene-aggregate')
     .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`);
 
-  plotBox(enhancerGCellG, (d) => d.numEnhancers);
+  plotBox(enhancerGCellG, categorySizeScale, (d) => d.numEnhancers);
 
   // Draw border
   svg
@@ -431,7 +437,16 @@ const plotEnhancerGeneConnections = (
 
   switch (geneCellEncoding) {
     case 'number':
-      plotBox(genesUpstreamGCellG, (d) => d.length, {
+    case 'percent': {
+      const valueScale =
+        geneCellEncoding === 'percent' ? percentScale : categorySizeScale;
+
+      const valueGetter =
+        geneCellEncoding === 'percent'
+          ? (d) => d.length / d.size
+          : (d) => d.length;
+
+      plotBox(genesUpstreamGCellG, valueScale, valueGetter, {
         showText: false,
         cellWidth: genesUpstreamScale.bandwidth(),
         fillColor: DEFAULT_COLOR_MAP,
@@ -439,18 +454,14 @@ const plotEnhancerGeneConnections = (
         tooltipTitleGetter: (d) => (
           <React.Fragment>
             <strong className="value">{d.length}</strong> out of {d.size}{' '}
-            {Object.values(categories)[d.row].name} samples have predicted
-            enhancer activity.
+            <em>{Object.values(categories)[d.row].name}</em> samples have
+            predicted enhancer activity.
           </React.Fragment>
         ),
       });
-      break;
 
-    case 'percent':
-      plotBox(genesUpstreamGCellG, (d) => d.length / d.size, {
-        showZero: false,
-      });
       break;
+    }
 
     case 'distribution':
     default:
@@ -536,7 +547,16 @@ const plotEnhancerGeneConnections = (
 
   switch (geneCellEncoding) {
     case 'number':
-      plotBox(genesDownstreamGCellG, (d) => d.length, {
+    case 'percent': {
+      const valueScale =
+        geneCellEncoding === 'percent' ? percentScale : categorySizeScale;
+
+      const valueGetter =
+        geneCellEncoding === 'percent'
+          ? (d) => d.length / d.size
+          : (d) => d.length;
+
+      plotBox(genesDownstreamGCellG, valueScale, valueGetter, {
         showText: false,
         cellWidth: genesDownstreamScale.bandwidth(),
         fillColor: DEFAULT_COLOR_MAP,
@@ -544,18 +564,14 @@ const plotEnhancerGeneConnections = (
         tooltipTitleGetter: (d) => (
           <React.Fragment>
             <strong className="value">{d.length}</strong> out of {d.size}{' '}
-            {Object.values(categories)[d.row].name} samples have predicted
-            enhancer activity.
+            <em>{Object.values(categories)[d.row].name}</em> samples have
+            predicted enhancer activity.
           </React.Fragment>
         ),
       });
-      break;
 
-    case 'percent':
-      plotBox(genesDownstreamGCellG, (d) => d.length / d.size, {
-        showZero: false,
-      });
       break;
+    }
 
     case 'distribution':
     default:
@@ -890,7 +906,12 @@ EnhancerGenePlot.defaultProps = {
 };
 
 EnhancerGenePlot.propTypes = {
-  geneCellEncoding: PropTypes.oneOf(['number', 'percent', 'distribution']),
+  geneCellEncoding: PropTypes.oneOf([
+    'number',
+    'percent',
+    'distribution',
+    'array',
+  ]),
   position: PropTypes.number,
   relPosition: PropTypes.number,
   genePadding: PropTypes.bool,

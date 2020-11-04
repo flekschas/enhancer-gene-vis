@@ -121,8 +121,11 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   iconRadio: {
-    padding: theme.spacing(0.25, 0),
+    padding: theme.spacing(0.5, 0),
     marginLeft: -theme.spacing(1) / 2,
+    '& .MuiFormControlLabel-label': {
+      lineHeight: 1.2,
+    },
   },
   iconRadioActive: {
     color: 'black',
@@ -1504,30 +1507,28 @@ const Viewer = (props) => {
                           </IconButton>
                         }
                       />
-                      {
-                        // <FormControlLabel
-                        //   label="Percentage of samples with predictions"
-                        //   value="percent"
-                        //   className={classes.iconRadio}
-                        //   control={
-                        //     <IconButton
-                        //       size="small"
-                        //       onClick={changeGeneCellEncoding('percent')}
-                        //     >
-                        //       {geneCellEncoding === 'percent' ? (
-                        //         <RadioButtonCheckedIcon
-                        //           className={classes.iconRadioActive}
-                        //           fontSize="inherit"
-                        //         />
-                        //       ) : (
-                        //         <RadioButtonUncheckedIcon fontSize="inherit" />
-                        //       )}
-                        //     </IconButton>
-                        //   }
-                        // />
-                      }
                       <FormControlLabel
-                        label="Distribution"
+                        label="Percentage of samples with predictions"
+                        value="percent"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeGeneCellEncoding('percent')}
+                          >
+                            {geneCellEncoding === 'percent' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
+                      />
+                      <FormControlLabel
+                        label="Distribution by prediction score"
                         value="distribution"
                         className={classes.iconRadio}
                         control={
@@ -1536,6 +1537,26 @@ const Viewer = (props) => {
                             onClick={changeGeneCellEncoding('distribution')}
                           >
                             {geneCellEncoding === 'distribution' ? (
+                              <RadioButtonCheckedIcon
+                                className={classes.iconRadioActive}
+                                fontSize="inherit"
+                              />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="inherit" />
+                            )}
+                          </IconButton>
+                        }
+                      />
+                      <FormControlLabel
+                        label="Sample array"
+                        value="array"
+                        className={classes.iconRadio}
+                        control={
+                          <IconButton
+                            size="small"
+                            onClick={changeGeneCellEncoding('array')}
+                          >
+                            {geneCellEncoding === 'array' ? (
                               <RadioButtonCheckedIcon
                                 className={classes.iconRadioActive}
                                 fontSize="inherit"
