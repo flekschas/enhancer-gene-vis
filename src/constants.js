@@ -292,21 +292,21 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
           {
             type: 'combined',
             uid: 'genes-tss-viewport',
-            height: 52,
+            height: 48,
             contents: [
               {
                 type: 'horizontal-gene-annotations',
                 uid: 'genes',
-                height: 52,
+                height: 48,
                 server: 'https://resgen.io/api/v1',
                 tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
                 options: {
                   fontSize: 9,
                   plusStrandColor: 'black',
                   minusStrandColor: 'black',
-                  geneAnnotationHeight: 12,
+                  geneAnnotationHeight: 10,
                   geneLabelPosition: 'outside',
-                  geneStrandSpacing: 2,
+                  geneStrandSpacing: 0.5,
                   showMousePosition: true,
                   showGlobalMousePosition: true,
                   mousePositionColor: 'black',
@@ -315,7 +315,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
               {
                 type: 'tss',
                 uid: 'tss',
-                height: 52,
+                height: 48,
                 // server: 'http://localhost:9876/api/v1',
                 // tilesetUid: 'RefSeqCurated170308bedCollapsedGeneBoundsTSS500bp',
                 server: 'https://resgen.io/api/v1',
@@ -333,7 +333,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                 uid: 'viewport-details-genes',
                 type: 'viewport-projection-horizontal',
                 fromViewUid: 'details',
-                height: 52,
+                height: 48,
                 options: {
                   projectionFillColor: '#cc0078',
                   projectionStrokeColor: '#cc0078',
@@ -351,7 +351,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             // tilesetUid: 'IBDCombinedset1-2variantonly-pval',
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'VF5-RDXWTxidGMJU7FeaxA',
-            height: 36,
+            height: 32,
             options: {
               axisPositionHorizontal: 'right',
               markColor: 'black',
@@ -396,7 +396,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
             // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
             tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
-            height: 96,
+            height: 72,
             uid: 'stacked-bars',
             options: {
               binSize: 4,
@@ -579,14 +579,14 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             type: 'horizontal-gene-annotations',
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
-            height: 52,
+            height: 48,
             options: {
               fontSize: 9,
               plusStrandColor: 'black',
               minusStrandColor: 'black',
-              geneAnnotationHeight: 12,
+              geneAnnotationHeight: 10,
               geneLabelPosition: 'outside',
-              geneStrandSpacing: 2,
+              geneStrandSpacing: 0.5,
               showMousePosition: true,
               showGlobalMousePosition: true,
               mousePositionColor: 'black',
@@ -599,7 +599,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             // tilesetUid: 'IBDCombinedset1-2variantonly-pval',
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'VF5-RDXWTxidGMJU7FeaxA',
-            height: 36,
+            height: 32,
             options: {
               axisPositionHorizontal: 'right',
               markColor: 'black',
