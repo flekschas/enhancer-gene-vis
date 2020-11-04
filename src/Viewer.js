@@ -1408,26 +1408,28 @@ const Viewer = (props) => {
                           </IconButton>
                         }
                       />
-                      <FormControlLabel
-                        label="Percentage of samples with predictions"
-                        value="percent"
-                        className={classes.iconRadio}
-                        control={
-                          <IconButton
-                            size="small"
-                            onClick={changeGeneCellEncoding('percent')}
-                          >
-                            {geneCellEncoding === 'percent' ? (
-                              <RadioButtonCheckedIcon
-                                className={classes.iconRadioActive}
-                                fontSize="inherit"
-                              />
-                            ) : (
-                              <RadioButtonUncheckedIcon fontSize="inherit" />
-                            )}
-                          </IconButton>
-                        }
-                      />
+                      {
+                        // <FormControlLabel
+                        //   label="Percentage of samples with predictions"
+                        //   value="percent"
+                        //   className={classes.iconRadio}
+                        //   control={
+                        //     <IconButton
+                        //       size="small"
+                        //       onClick={changeGeneCellEncoding('percent')}
+                        //     >
+                        //       {geneCellEncoding === 'percent' ? (
+                        //         <RadioButtonCheckedIcon
+                        //           className={classes.iconRadioActive}
+                        //           fontSize="inherit"
+                        //         />
+                        //       ) : (
+                        //         <RadioButtonUncheckedIcon fontSize="inherit" />
+                        //       )}
+                        //     </IconButton>
+                        //   }
+                        // />
+                      }
                       <FormControlLabel
                         label="Distribution"
                         value="distribution"
