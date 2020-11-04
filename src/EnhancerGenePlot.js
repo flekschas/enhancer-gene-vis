@@ -69,16 +69,17 @@ const fetchTile = async (tileId) => {
 const categories = {};
 const samples = {};
 
-DEFAULT_STRATIFICATION.groups.forEach((group) => {
+DEFAULT_STRATIFICATION.groups.forEach((group, i) => {
   categories[group.label] = {
     name: group.label,
     size: group.categories.length,
+    index: i,
   };
 
-  group.categories.forEach((category, i) => {
+  group.categories.forEach((category, j) => {
     samples[category] = {
       category: categories[group.label],
-      index: i,
+      index: j,
     };
   });
 });
@@ -149,6 +150,8 @@ const plotEnhancerGeneConnections = (
     openTooltip = identity,
     closeTooltip = identity,
     tooltipClasses = [],
+    position = '',
+    variant = null,
   } = {}
 ) => {
   if (!width || !data) return;
@@ -182,20 +185,6 @@ const plotEnhancerGeneConnections = (
     .domain([0, 1])
     .range([0, rowHeight])
     .clamp(true);
-
-  const circleYScalePre = scaleLinear()
-    .domain([0, 1])
-    .range([1, 10])
-    .clamp(true);
-
-  const circleYScalePost = scaleLog()
-    .domain([1, 10])
-    .range([
-      rowHeight - circleRadius - beeswarmPadding,
-      circleRadius + beeswarmPadding,
-    ]);
-
-  const circleYScale = (v) => circleYScalePost(circleYScalePre(v));
 
   // ---------------------------------------------------------------------------
   // Gene setup
@@ -297,7 +286,7 @@ const plotEnhancerGeneConnections = (
     return Math.ceil(Math.sqrt((maxSize * bandwidth) / rowHeight));
   };
 
-  const plotArray = (selection, numCols) => {
+  const plotArray = (selection, numCols, { tooltipTitleGetter } = {}) => {
     const cellSize = bandwidth / numCols;
 
     const indexToX = (index) => (index % numCols) * cellSize;
@@ -309,13 +298,42 @@ const plotEnhancerGeneConnections = (
         (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
       )
       .selectAll('rect')
-      .data((d) => d)
+      .data(
+        (d) => d,
+        (d) => `${d.gene}|${d.sample}`
+      )
       .join('rect')
       .attr('x', (d) => indexToX(samples[d.sample].index))
       .attr('y', (d) => indexToY(samples[d.sample].index))
       .attr('width', cellSize)
-      .attr('height', cellSize);
+      .attr('height', cellSize)
+      .on('mouseenter', (event, d) => {
+        const bBox = event.target.getBoundingClientRect();
+        const title =
+          (tooltipTitleGetter && tooltipTitleGetter(d)) || d.value.toFixed(3);
+        openTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
+          arrow: true,
+          placement: 'top',
+          classes:
+            tooltipClasses[
+              categories[d.sampleCategory].index % tooltipClasses.length
+            ],
+        });
+      })
+      .on('mouseleave', () => {
+        closeTooltip();
+      });
   };
+
+  const arrayTooltipTitleGetter = (d) => (
+    <React.Fragment>
+      The enhancer overlapping <em>{position}</em>
+      {variant ? ` (${variant})` : ''} is predicted to regulate{' '}
+      <em>{d.gene}</em> with a score of
+      <br />
+      <strong className="value">{d.value.toFixed(3)}</strong>.
+    </React.Fragment>
+  );
 
   const plotBox = (
     selection,
@@ -376,6 +394,14 @@ const plotEnhancerGeneConnections = (
         .text((d) => valueGetter(d));
     }
   };
+
+  const boxTooltipTitleGetter = (d) => (
+    <React.Fragment>
+      <strong className="value">{d.length}</strong> out of {d.size}{' '}
+      <em>{Object.values(categories)[d.row].name}</em> samples have predicted
+      enhancer activity.
+    </React.Fragment>
+  );
 
   // ---------------------------------------------------------------------------
   // Category summary
@@ -472,7 +498,9 @@ const plotEnhancerGeneConnections = (
       break;
 
     case 'array':
-      plotArray(genesUpstreamGCellG, getArrayNumCols(genesUpstream));
+      plotArray(genesUpstreamGCellG, getArrayNumCols(genesUpstream), {
+        tooltipTitleGetter: arrayTooltipTitleGetter,
+      });
       break;
 
     case 'number':
@@ -491,13 +519,7 @@ const plotEnhancerGeneConnections = (
         cellWidth: genesUpstreamScale.bandwidth(),
         fillColor: DEFAULT_COLOR_MAP,
         showTooltip: true,
-        tooltipTitleGetter: (d) => (
-          <React.Fragment>
-            <strong className="value">{d.length}</strong> out of {d.size}{' '}
-            <em>{Object.values(categories)[d.row].name}</em> samples have
-            predicted enhancer activity.
-          </React.Fragment>
-        ),
+        tooltipTitleGetter: boxTooltipTitleGetter,
       });
 
       break;
@@ -586,7 +608,9 @@ const plotEnhancerGeneConnections = (
       break;
 
     case 'array':
-      plotArray(genesDownstreamGCellG, getArrayNumCols(genesDownstream));
+      plotArray(genesDownstreamGCellG, getArrayNumCols(genesDownstream), {
+        tooltipTitleGetter: arrayTooltipTitleGetter,
+      });
       break;
 
     case 'number':
@@ -605,13 +629,7 @@ const plotEnhancerGeneConnections = (
         cellWidth: genesDownstreamScale.bandwidth(),
         fillColor: DEFAULT_COLOR_MAP,
         showTooltip: true,
-        tooltipTitleGetter: (d) => (
-          <React.Fragment>
-            <strong className="value">{d.length}</strong> out of {d.size}{' '}
-            <em>{Object.values(categories)[d.row].name}</em> samples have
-            predicted enhancer activity.
-          </React.Fragment>
-        ),
+        tooltipTitleGetter: boxTooltipTitleGetter,
       });
 
       break;
@@ -705,11 +723,13 @@ const EnhancerGenePlot = ({
   geneCellEncoding,
   position,
   relPosition,
+  fullPosition,
   genePadding,
   openTooltip,
   closeTooltip,
   styles,
   svgRef,
+  variant,
 } = {}) => {
   const [plotEl, setPlotEl] = useState(null);
   const [tile, setTile] = useState(null);
@@ -900,6 +920,8 @@ const EnhancerGenePlot = ({
         closeTooltip,
         classes,
         tooltipClasses,
+        position: fullPosition,
+        variant,
       });
     },
     // `prevGeneCellEncoding` is ommitted on purpose to avoid circular updates.
@@ -937,6 +959,8 @@ EnhancerGenePlot.defaultProps = {
   geneCellEncoding: 'distribution',
   position: null,
   relPosition: null,
+  fullPosition: null,
+  variant: null,
   genePadding: false,
   openTooltip: identity,
   closeTooltip: identity,
@@ -953,6 +977,8 @@ EnhancerGenePlot.propTypes = {
   ]),
   position: PropTypes.number,
   relPosition: PropTypes.number,
+  fullPosition: PropTypes.string,
+  variant: PropTypes.string,
   genePadding: PropTypes.bool,
   openTooltip: PropTypes.func,
   closeTooltip: PropTypes.func,

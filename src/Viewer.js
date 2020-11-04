@@ -317,6 +317,10 @@ const useStyles = makeStyles((theme) => ({
     height: 1,
     background: 'black',
     pointerEvents: 'none',
+    '& em': {
+      color: 'inherit',
+      fontWeight: 'inherit',
+    },
   },
   higlassDnaAccessibilityInfoBar: {
     color: theme.palette.grey['600'],
@@ -656,6 +660,14 @@ const Viewer = (props) => {
 
   const focusVariantRelPosition = useMemo(
     () => (focusVariantOption ? +focusVariantOption.txStart : null),
+    [focusVariantOption]
+  );
+
+  const focusVariantFullPosition = useMemo(
+    () =>
+      focusVariantOption
+        ? `${focusVariantOption.chr}:${focusVariantOption.txStart}`
+        : null,
     [focusVariantOption]
   );
 
@@ -1895,6 +1907,8 @@ const Viewer = (props) => {
                         geneCellEncoding={geneCellEncoding}
                         position={focusVariantPosition}
                         relPosition={focusVariantRelPosition}
+                        fullPosition={focusVariantFullPosition}
+                        variant={focusVariant}
                         genePadding={genePadding}
                         openTooltip={openEnhancerGeneTooltip}
                         closeTooltip={closeEnhancerGeneTooltip}
