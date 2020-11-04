@@ -17,39 +17,39 @@ export const SVG_SKELETON = `<?xml version="1.0" encoding="UTF-8" standalone="no
 </svg>`;
 
 export const DEFAULT_COLOR_MAP = [
-  // '#c17da5',
-  '#c76526',
-  '#dca237',
-  '#eee462',
-  '#469b76',
-  '#3170ad',
-  '#6fb2e4',
-  '#000000',
-  '#999999',
+  // '#c17da5', // pink
+  '#c76526', // red
+  '#6fb2e4', // light blue
+  '#eee462', // yellow
+  '#469b76', // green
+  '#3170ad', // dark blue
+  '#dca237', // orange
+  '#000000', // black
+  '#999999', // gray
 ];
 
 export const DEFAULT_COLOR_MAP_DARK = [
-  // '#a1688a',
-  '#a65420',
-  '#b7872e',
-  '#9f9841',
-  '#3a8162',
-  '#295d90',
-  '#4a7798',
-  '#000000',
-  '#666666',
+  // '#a1688a', // pink
+  '#a65420', // red
+  '#4a7798', // light blue
+  '#999026', // yellow
+  '#3a8162', // green
+  '#295d90', // dark blue
+  '#b7872e', // orange
+  '#000000', // black
+  '#666666', // gray
 ];
 
 export const DEFAULT_COLOR_MAP_LIGHT = [
-  // '#f5e9f0',
-  '#f6e5db',
-  '#f9f0de',
-  '#fcfbe5',
-  '#e0eee8',
-  '#dde7f1',
-  '#e7f2fb',
-  '#d5d5d5',
-  '#ffffff',
+  // '#f5e9f0', // pink
+  '#f6e5db', // red
+  '#e7f2fb', // light blue
+  '#f2eda9', // yellow
+  '#e0eee8', // green
+  '#dde7f1', // dark blue
+  '#f5e4c4', // orange
+  '#d5d5d5', // black
+  '#ffffff', // gray
 ];
 
 export const GENE_SEARCH_URL =

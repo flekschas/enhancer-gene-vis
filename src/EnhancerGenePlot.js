@@ -75,8 +75,11 @@ DEFAULT_STRATIFICATION.groups.forEach((group) => {
     size: group.categories.length,
   };
 
-  group.categories.forEach((category) => {
-    samples[category] = categories[group.label];
+  group.categories.forEach((category, i) => {
+    samples[category] = {
+      category: categories[group.label],
+      index: i,
+    };
   });
 });
 
@@ -275,7 +278,7 @@ const plotEnhancerGeneConnections = (
         (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
       )
       .selectAll('circle')
-      .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
+      .data((d) => dodge(d, circleRadius, circlePadding))
       .join('circle')
       .attr('cx', (d) =>
         isRightAligned
@@ -284,6 +287,34 @@ const plotEnhancerGeneConnections = (
       )
       .attr('cy', (d) => d.y)
       .attr('r', circleRadius);
+  };
+
+  const getArrayNumCols = (genes) => {
+    const maxSize = Object.values(genes[0].samplesByCategory).reduce(
+      (max, cat) => Math.max(max, cat.size),
+      0
+    );
+    return Math.ceil(Math.sqrt((maxSize * bandwidth) / rowHeight));
+  };
+
+  const plotArray = (selection, numCols) => {
+    const cellSize = bandwidth / numCols;
+
+    const indexToX = (index) => (index % numCols) * cellSize;
+    const indexToY = (index) => Math.floor(index / numCols) * cellSize;
+
+    selection
+      .attr(
+        'fill',
+        (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
+      )
+      .selectAll('rect')
+      .data((d) => d)
+      .join('rect')
+      .attr('x', (d) => indexToX(samples[d.sample].index))
+      .attr('y', (d) => indexToY(samples[d.sample].index))
+      .attr('width', cellSize)
+      .attr('height', cellSize);
   };
 
   const plotBox = (
@@ -436,8 +467,17 @@ const plotEnhancerGeneConnections = (
   }
 
   switch (geneCellEncoding) {
+    case 'distribution':
+      plotBeeswarm(genesUpstreamGCellG, { isRightAligned: true });
+      break;
+
+    case 'array':
+      plotArray(genesUpstreamGCellG, getArrayNumCols(genesUpstream));
+      break;
+
     case 'number':
-    case 'percent': {
+    case 'percent':
+    default: {
       const valueScale =
         geneCellEncoding === 'percent' ? percentScale : categorySizeScale;
 
@@ -462,11 +502,6 @@ const plotEnhancerGeneConnections = (
 
       break;
     }
-
-    case 'distribution':
-    default:
-      plotBeeswarm(genesUpstreamGCellG, { isRightAligned: true });
-      break;
   }
 
   // Draw border
@@ -546,8 +581,17 @@ const plotEnhancerGeneConnections = (
   }
 
   switch (geneCellEncoding) {
+    case 'distribution':
+      plotBeeswarm(genesDownstreamGCellG);
+      break;
+
+    case 'array':
+      plotArray(genesDownstreamGCellG, getArrayNumCols(genesDownstream));
+      break;
+
     case 'number':
-    case 'percent': {
+    case 'percent':
+    default: {
       const valueScale =
         geneCellEncoding === 'percent' ? percentScale : categorySizeScale;
 
@@ -572,11 +616,6 @@ const plotEnhancerGeneConnections = (
 
       break;
     }
-
-    case 'distribution':
-    default:
-      plotBeeswarm(genesDownstreamGCellG);
-      break;
   }
 
   // Draw border
@@ -758,14 +797,14 @@ const EnhancerGenePlot = ({
         }
 
         const sample = entry.fields[10];
-        genes[geneName].samplesByCategory[samples[sample].name].push({
+        genes[geneName].samplesByCategory[samples[sample].category.name].push({
           gene: geneName,
           sample,
-          sampleCategory: samples[sample].name,
+          sampleCategory: samples[sample].category.name,
           value: entry.importance,
         });
         maxScore = Math.max(maxScore, entry.importance);
-        categoryAggregation[samples[sample].name].numEnhancers++;
+        categoryAggregation[samples[sample].category.name].numEnhancers++;
       });
 
       const genesDownstreamByDistArr = [];
