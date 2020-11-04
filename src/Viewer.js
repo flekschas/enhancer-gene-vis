@@ -53,7 +53,7 @@ import Welcome from './Welcome';
 import useDebounce from './use-debounce';
 import useQueryString from './use-query-string';
 import usePrevious from './use-previous';
-import { download, toAbsPosition, toFixed } from './utils';
+import { download, stringifySvg, toAbsPosition, toFixed } from './utils';
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
@@ -411,7 +411,7 @@ const updateViewConfigDnaAccessLabels = (labels) => (viewConfig) => {
   return viewConfig;
 };
 
-const extractSvgCore = (svg) => {
+const extractCoreFromHiGlassSvg = (svg) => {
   const fifthLn = nthIndexOf(svg, '\n', 4);
   const lastLn = svg.lastIndexOf('\n');
   const width = +svg.substring(
@@ -423,6 +423,23 @@ const extractSvgCore = (svg) => {
     svg.indexOf('px', svg.indexOf('height="') + 8)
   );
   return [svg.substring(fifthLn + 1, lastLn), width, height];
+};
+
+const extractCoreFromStringifiedSvg = (svg) => {
+  const firstSvgClosingBracket = svg.indexOf('>');
+  const lastSvgOpeningBracket = svg.lastIndexOf('</svg>');
+  const [width, height] = svg
+    .substring(
+      svg.indexOf('viewbox="') + 9,
+      svg.indexOf('"', svg.indexOf('viewbox="') + 9)
+    )
+    .split(' ')
+    .slice(2);
+  return [
+    svg.substring(firstSvgClosingBracket + 1, lastSvgOpeningBracket),
+    +width,
+    +height,
+  ];
 };
 
 const locationSearch = async (query) => {
@@ -513,6 +530,7 @@ const Viewer = (props) => {
   const prevFocusVariantOption = usePrevious(focusVariantOption);
   const higlassEnhancerApi = useRef(null);
   const higlassDnaAccessApi = useRef(null);
+  const enhancerGeneSvgRef = useRef(null);
   const [
     higlassEnhancerHelpAnchorEl,
     setHiglassEnhancerHelpAnchorEl,
@@ -999,13 +1017,22 @@ const Viewer = (props) => {
     });
   }, []);
 
-  const mergeSvgs = (enhancerSvg, dnaAccessSvg) => {
-    const [enhancerCoreSvg, enhancerWidth, enhancerHeight] = extractSvgCore(
-      enhancerSvg
-    );
-    const [dnaAccessCoreSvg, dnaAccessWidth, dnaAccessHeight] = extractSvgCore(
-      dnaAccessSvg
-    );
+  const mergeSvgs = (enhancerSvg, dnaAccessSvg, enhancerGeneSvg) => {
+    const [
+      enhancerSvgCore,
+      enhancerWidth,
+      enhancerHeight,
+    ] = extractCoreFromHiGlassSvg(enhancerSvg);
+    const [
+      dnaAccessSvgCore,
+      dnaAccessWidth,
+      dnaAccessHeight,
+    ] = extractCoreFromHiGlassSvg(dnaAccessSvg);
+    const [
+      enhancerGeneSvgCore,
+      enhancerGeneWidth,
+      enhancerGeneHeight,
+    ] = extractCoreFromStringifiedSvg(enhancerGeneSvg);
 
     const actualEnhancerHeight = viewConfigEnhancer.views[0].tracks.top.reduce(
       (height, track) => height + track.height,
@@ -1025,15 +1052,20 @@ const Viewer = (props) => {
     mergedSvg = mergedSvg.replace(
       '_HEIGHT_',
       Math.max(
-        enhancerHeight,
+        enhancerHeight + enhancerGeneHeight + padding,
         dnaAccessHeight,
-        actualEnhancerHeight,
+        actualEnhancerHeight + enhancerGeneHeight + padding,
         actualDnaAccessHeight
       )
     );
-    mergedSvg = mergedSvg.replace('_ENHANCER_', enhancerCoreSvg);
+    mergedSvg = mergedSvg.replace('_ENHANCER_', enhancerSvgCore);
+    mergedSvg = mergedSvg.replace(
+      '_ENHANCER_GENE_Y_',
+      enhancerHeight + padding
+    );
+    mergedSvg = mergedSvg.replace('_ENHANCER_GENE_', enhancerGeneSvgCore);
     mergedSvg = mergedSvg.replace('_DNA_ACCESS_X_', enhancerWidth + padding);
-    mergedSvg = mergedSvg.replace('_DNA_ACCESS_', dnaAccessCoreSvg);
+    mergedSvg = mergedSvg.replace('_DNA_ACCESS_', dnaAccessSvgCore);
 
     return mergedSvg;
   };
@@ -1041,7 +1073,8 @@ const Viewer = (props) => {
   const higlassExportAsSvg = () => {
     const mergedSvg = mergeSvgs(
       higlassEnhancerApi.current.exportAsSvg(),
-      higlassDnaAccessApi.current.exportAsSvg()
+      higlassDnaAccessApi.current.exportAsSvg(),
+      stringifySvg(enhancerGeneSvgRef.current)
     );
 
     download(
@@ -1703,6 +1736,7 @@ const Viewer = (props) => {
                         genePadding={genePadding}
                         openTooltip={openEnhancerGeneTooltip}
                         closeTooltip={closeEnhancerGeneTooltip}
+                        svgRef={enhancerGeneSvgRef}
                       />
                     ) : (
                       <Grid

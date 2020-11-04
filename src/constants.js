@@ -5,10 +5,13 @@ export const SVG_SKELETON = `<?xml version="1.0" encoding="UTF-8" standalone="no
 <svg
     xmlns:xlink="http://www.w3.org/1999/xlink"
     xmlns="http://www.w3.org/2000/svg" version="1.1" width="_WIDTH_px" height="_HEIGHT_px">
-    <g id="enhancer-view">
+    <g id="enhancer-plot">
     _ENHANCER_
     </g>
-    <g id="dna-accessibility-view" transform="translate(_DNA_ACCESS_X_,0)">
+    <g id="enhancer-gene-plot" transform="translate(0, _ENHANCER_GENE_Y_)">
+    _ENHANCER_GENE_
+    </g>
+    <g id="dna-accessibility-plot" transform="translate(_DNA_ACCESS_X_, 0)">
     _DNA_ACCESS_
     </g>
 </svg>`;

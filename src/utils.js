@@ -154,3 +154,6 @@ export const scaleBand = () => {
 
   return scale;
 };
+
+export const stringifySvg = (svg) =>
+  new window.XMLSerializer().serializeToString(svg);

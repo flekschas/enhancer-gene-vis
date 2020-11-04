@@ -393,6 +393,8 @@ const plotEnhancerGeneConnections = (
     .attr('transform', (d) => `translate(${genesUpstreamScale(d.name)}, 0)`);
 
   // Draw labels
+  const geneLabelX = genesUpstreamScale.bandwidth() / 2;
+  const geneLabelY = paddingTop - geneLabelPadding;
   genesUpstreamG
     // the join is needed to avoid appending more and more text elements on
     // subsequent calls of this function, which would happen if we used
@@ -402,15 +404,9 @@ const plotEnhancerGeneConnections = (
     .join('text')
     .attr('class', 'gene-label gene-upstream-label')
     .attr('style', 'font-size: 9px;')
-    .attr('transform', 'rotate(-90)')
-    .attr(
-      'transform-origin',
-      `${genesUpstreamScale.bandwidth() / 2} ${paddingTop - geneLabelPadding}`
-    )
+    .attr('transform', `translate(${geneLabelX},${geneLabelY}) rotate(-90)`)
     .attr('fill', 'black')
     .attr('dominant-baseline', 'middle')
-    .attr('x', genesUpstreamScale.bandwidth() / 2)
-    .attr('y', paddingTop - geneLabelPadding)
     .text((d) => d.name);
 
   // Draw cell
@@ -513,15 +509,9 @@ const plotEnhancerGeneConnections = (
     .join('text')
     .attr('class', 'gene-label gene-downstream-label')
     .attr('style', 'font-size: 9px;')
-    .attr('transform', 'rotate(-90)')
-    .attr(
-      'transform-origin',
-      `${genesUpstreamScale.bandwidth() / 2} ${paddingTop - geneLabelPadding}`
-    )
+    .attr('transform', `translate(${geneLabelX},${geneLabelY}) rotate(-90)`)
     .attr('fill', 'black')
     .attr('dominant-baseline', 'middle')
-    .attr('x', genesDownstreamScale.bandwidth() / 2)
-    .attr('y', paddingTop - geneLabelPadding)
     .text((d) => d.name);
 
   // Draw cell
@@ -664,6 +654,7 @@ const EnhancerGenePlot = ({
   openTooltip,
   closeTooltip,
   styles,
+  svgRef,
 } = {}) => {
   const [plotEl, setPlotEl] = useState(null);
   const [tile, setTile] = useState(null);
@@ -692,6 +683,7 @@ const EnhancerGenePlot = ({
 
   const plotElRef = useCallback((node) => {
     setPlotEl(node);
+    svgRef.current = node;
   }, []);
 
   // Derived State
@@ -891,6 +883,7 @@ EnhancerGenePlot.defaultProps = {
   openTooltip: identity,
   closeTooltip: identity,
   styles: {},
+  svgRef: {},
 };
 
 EnhancerGenePlot.propTypes = {
@@ -901,6 +894,7 @@ EnhancerGenePlot.propTypes = {
   openTooltip: PropTypes.func,
   closeTooltip: PropTypes.func,
   styles: PropTypes.object,
+  svgRef: PropTypes.object,
 };
 
 export default EnhancerGenePlot;
