@@ -681,10 +681,13 @@ const EnhancerGenePlot = ({
     };
   }, [position, tilesetInfo]);
 
-  const plotElRef = useCallback((node) => {
-    setPlotEl(node);
-    svgRef.current = node;
-  }, []);
+  const plotElRef = useCallback(
+    (node) => {
+      setPlotEl(node);
+      svgRef.current = node;
+    },
+    [svgRef]
+  );
 
   // Derived State
   const isInit = useMemo(() => !!tilesetInfo, [tilesetInfo]);
