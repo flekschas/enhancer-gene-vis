@@ -148,6 +148,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       [this.bg.width, this.bg.height] = this.dimensions;
       this.bg.interactive = true;
       this.bg.interactiveChildren = false;
+      this.bg.alpha = 0;
 
       let mousedownTime = performance.now();
       this.bg.mousedown = () => {
@@ -770,7 +771,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
     }
 
     // Gets called on every draw call
-    drawTile(tile, storePolyStr) {
+    drawTile(tile) {
       tile.graphics.clear();
 
       if (!this.options.stratification.axisNoGroupColor) {
