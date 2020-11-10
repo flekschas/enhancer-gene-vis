@@ -10,6 +10,7 @@ import { HiGlassComponent } from 'higlass';
 import {
   debounce,
   deepClone,
+  isFunction,
   isParentOf,
   isString,
   nthIndexOf,
@@ -363,9 +364,13 @@ const getFocusVariantRegion = (viewConfig) =>
     ? [...viewConfig.views[0].tracks.top[2].options.focusRegion]
     : null;
 
-const updateViewConfigXDomain = (newXDomainStart, newXDomainEnd, force) => (
-  viewConfig
-) => {
+const updateViewConfigXDomain = (
+  newXDomainStart,
+  newXDomainEnd,
+  { force = false } = {}
+) => (viewConfig) => {
+  const _force = force === true || (isFunction(force) && force());
+
   const xDomain = [...viewConfig.views[0].initialXDomain];
   const focusGeneRegion = getFocusGeneRegion(viewConfig);
   const focusVariantRegion = getFocusVariantRegion(viewConfig);
@@ -377,12 +382,12 @@ const updateViewConfigXDomain = (newXDomainStart, newXDomainEnd, force) => (
     xDomain[1] = newXDomainEnd;
   }
 
-  if (focusGeneRegion && !force) {
+  if (focusGeneRegion && !_force) {
     xDomain[0] = focusGeneRegion[0] - 100000;
     xDomain[1] = focusGeneRegion[1] + 100000;
   }
 
-  if (focusVariantRegion && !force) {
+  if (focusVariantRegion && !_force) {
     xDomain[0] = Math.min(xDomain[0], focusVariantRegion[0] - 100000);
     xDomain[1] = Math.max(xDomain[1], focusVariantRegion[1] + 100000);
   }
@@ -602,6 +607,7 @@ const Viewer = (props) => {
   );
   const [higlassEnhancerFocus, setHiglassEnhancerFocus] = useState(false);
   const higlassEnhancerContainerRef = useRef(null);
+  const higlassEnhancerClickSelection = useRef(null);
 
   // Derived State
   const focusGeneVariantOptions = useMemo(
@@ -684,6 +690,14 @@ const Viewer = (props) => {
   const xDomainStartAbsDb = useDebounce(xDomainStartAbs, 1000);
   const xDomainEndAbsDb = useDebounce(xDomainEndAbs, 1000);
 
+  const shouldSkipUpdatingXDomain = useCallback(() => {
+    if (higlassEnhancerClickSelection.current) {
+      higlassEnhancerClickSelection.current = false;
+      return true;
+    }
+    return false;
+  }, []);
+
   const viewConfigEnhancer = useMemo(
     () =>
       pipe(
@@ -696,7 +710,9 @@ const Viewer = (props) => {
         updateViewConfigFocusStyle(hideUnfocused),
         updateViewConfigMatrixColoring(matrixColoring),
         updateViewConfigVariantYScale(variantYScale),
-        updateViewConfigXDomain(xDomainStartAbs, xDomainEndAbs)
+        updateViewConfigXDomain(xDomainStartAbs, xDomainEndAbs, {
+          force: shouldSkipUpdatingXDomain,
+        })
       )(deepClone(DEFAULT_VIEW_CONFIG_ENHANCER)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -750,7 +766,7 @@ const Viewer = (props) => {
             xDomainStartAbsDb,
             xDomainEndAbsDb
           ),
-          true
+          { force: true }
         )
       )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -904,6 +920,7 @@ const Viewer = (props) => {
   const higlassClickHandler = (event) => {
     if (event.type === 'gene-annotation') {
       setFocusGene(event.payload.name);
+      higlassEnhancerClickSelection.current = true;
       setFocusGeneOption({
         chr: event.payload.fields[0],
         txStart: event.payload.fields[1],
@@ -913,6 +930,7 @@ const Viewer = (props) => {
       });
     } else if (event.type === 'snp') {
       setFocusVariant(event.payload.name);
+      higlassEnhancerClickSelection.current = true;
       setFocusVariantOption({
         chr: event.payload.fields[0],
         txStart: event.payload.fields[1],
