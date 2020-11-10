@@ -99,12 +99,17 @@ export const scaleBand = () => {
   let paddingInner = [];
   // If `true` the padding will begin before the first bar!
   let paddingInnerZeroBased = false;
+  let totalWidth = 0;
 
   const sum = (a, b) => a + b;
+  const getBandwidth = () => fixedBandwidth || bandwidth;
 
   const update = () => {
     rangeSize = range[1] - range[0];
-    bandwidth = (rangeSize - paddingInner.reduce(sum, 0)) / domain.length;
+
+    const totalPaddingInner = paddingInner.reduce(sum, 0);
+    bandwidth = (rangeSize - totalPaddingInner) / domain.length;
+    totalWidth = totalPaddingInner + domain.length * getBandwidth();
   };
 
   const scale = (v) => {
@@ -113,43 +118,65 @@ export const scaleBand = () => {
     if (idx === -1) return undefined;
 
     return (
-      idx * (fixedBandwidth || bandwidth) +
+      idx * getBandwidth() +
       paddingInner.slice(0, idx + paddingInnerZeroBased).reduce(sum, 0)
     );
   };
 
   scale.domain = (newDomain) => {
-    domain = [...newDomain];
-    update();
+    if (newDomain) {
+      domain = [...newDomain];
+      update();
+      return scale;
+    }
 
-    return scale;
+    return domain;
   };
 
   scale.range = (newRange) => {
-    range = [...newRange];
-    update();
+    if (newRange) {
+      range = [...newRange];
+      update();
+      return scale;
+    }
 
-    return scale;
+    return range;
   };
 
-  scale.bandwidth = () => fixedBandwidth || bandwidth;
+  scale.bandwidth = () => getBandwidth();
 
   scale.fixedBandwidth = (newFixedBandwidth) => {
-    fixedBandwidth = newFixedBandwidth;
+    if (newFixedBandwidth) {
+      fixedBandwidth = newFixedBandwidth;
+      update();
+      return scale;
+    }
+
+    return newFixedBandwidth;
   };
 
-  scale.paddingInner = (newPaddingInner) => {
-    paddingInner = newPaddingInner;
-    update();
+  scale.totalWidth = () => totalWidth;
 
-    return scale;
+  scale.rangeSize = () => rangeSize;
+
+  scale.paddingInner = (newPaddingInner) => {
+    if (newPaddingInner) {
+      paddingInner = newPaddingInner;
+      update();
+      return scale;
+    }
+
+    return paddingInner;
   };
 
   scale.paddingInnerZeroBased = (newPaddingInnerZeroBased) => {
-    paddingInnerZeroBased = newPaddingInnerZeroBased;
-    update();
+    if (newPaddingInnerZeroBased) {
+      paddingInnerZeroBased = newPaddingInnerZeroBased;
+      update();
+      return scale;
+    }
 
-    return scale;
+    return paddingInnerZeroBased;
   };
 
   return scale;

@@ -248,6 +248,11 @@ const plotEnhancerGeneConnections = (
   genesUpstreamScale.fixedBandwidth(bandwidth);
   genesDownstreamScale.fixedBandwidth(bandwidth);
 
+  const genesUpstreamLeftPad = Math.max(
+    0,
+    genesUpstreamScale.rangeSize() - genesUpstreamScale.totalWidth()
+  );
+
   const minVisibleAbsDist = Math.min(
     genesUpstream.reduce(
       (minDist, gene) => Math.min(minDist, gene.absDistance),
@@ -493,7 +498,11 @@ const plotEnhancerGeneConnections = (
     .data(genesUpstream, (d) => d.name)
     .join('g')
     .attr('class', 'gene-upstream')
-    .attr('transform', (d) => `translate(${genesUpstreamScale(d.name)}, 0)`);
+    .attr(
+      'transform',
+      (d) =>
+        `translate(${genesUpstreamLeftPad + genesUpstreamScale(d.name)}, 0)`
+    );
 
   // Draw labels
   const geneLabelX = genesUpstreamScale.bandwidth() / 2;
