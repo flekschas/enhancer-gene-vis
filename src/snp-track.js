@@ -305,7 +305,8 @@ const createSnpTrack = function createSnpTrack(HGC, ...args) {
     getMouseOverHtml(trackX, trackY) {
       this.hoveringSnp = undefined;
 
-      if (!this.tilesetInfo || !this.options.toolTip) return '';
+      if (!this.tilesetInfo || !this.options.toolTip || !this.valueScale)
+        return '';
 
       const zoomLevel = this.calculateZoomLevel();
       const tileWidth = tileProxy.calculateTileWidth(
