@@ -27,6 +27,10 @@ import usePrevious from './use-previous';
 import './GeneEnhancerPlot.css';
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    color: theme.palette.grey['300'],
+    minHeight: '6rem',
+  },
   plot: {
     position: 'relative',
     flexGrow: 1,
@@ -993,7 +997,13 @@ const EnhancerGenePlot = ({
   );
 
   return (
-    <Grid container style={styles}>
+    <Grid
+      className={classes.root}
+      container
+      justify="center"
+      alignItems="center"
+      style={styles}
+    >
       {isInit ? (
         <Grid item className={classes.plot}>
           <svg ref={plotElRef} className={classes.plotSvg}>
@@ -1004,7 +1014,7 @@ const EnhancerGenePlot = ({
           </svg>
         </Grid>
       ) : (
-        <CircularProgress />
+        <CircularProgress color="inherit" />
       )}
     </Grid>
   );
