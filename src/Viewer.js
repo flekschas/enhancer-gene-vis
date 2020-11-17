@@ -338,6 +338,14 @@ const useStyles = makeStyles((theme) => ({
     width: 1,
     background: theme.palette.grey['300'],
   },
+  titleBarMiddle: {
+    position: 'relative',
+    flexGrow: 1,
+    height: '100%',
+  },
+  titleBarMiddleContent: {
+    height: '100%',
+  },
   toolbarExtra: {
     paddingLeft: 0,
     paddingRight: 0,
@@ -1769,33 +1777,43 @@ const Viewer = (props) => {
                   </Typography>
                 </Popover>
               </Grid>
-              <Grid item>
-                {higlassEnhancerFocus ? (
-                  <Typography
-                    // Just a hack to trigger a dom rerendering which in turn
-                    // triggers the fadeout animation
-                    component="div"
-                    className={`${classes.panZoomTipActive} ${
-                      higlassEnhancerMouseOver ? 'show' : ''
-                    }`}
-                    noWrap
+              <Grid item className={classes.titleBarMiddle}>
+                <div className="full-wh">
+                  <Grid
+                    container
+                    justify="center"
+                    alignItems="center"
+                    wrap="nowrap"
+                    className={classes.titleBarMiddleContent}
                   >
-                    You can now pan & zoom the plot! Click outside the plot to
-                    deactivate pan & zoom!
-                  </Typography>
-                ) : (
-                  <Typography
-                    // Just a hack to trigger a dom rerendering which in turn
-                    // triggers the fadeout animation
-                    component="span"
-                    className={`${classes.panZoomTip} ${
-                      higlassEnhancerMouseOver ? 'show' : ''
-                    }`}
-                    noWrap
-                  >
-                    Click inside the plot below to activate pan & zoom!
-                  </Typography>
-                )}
+                    {higlassEnhancerFocus ? (
+                      <Typography
+                        // Just a hack to trigger a dom rerendering which in turn
+                        // triggers the fadeout animation
+                        component="div"
+                        className={`${classes.panZoomTipActive} ${
+                          higlassEnhancerMouseOver ? 'show' : ''
+                        }`}
+                        noWrap
+                      >
+                        You can now pan & zoom the plot! Click outside the plot
+                        to deactivate pan & zoom!
+                      </Typography>
+                    ) : (
+                      <Typography
+                        // Just a hack to trigger a dom rerendering which in turn
+                        // triggers the fadeout animation
+                        component="span"
+                        className={`${classes.panZoomTip} ${
+                          higlassEnhancerMouseOver ? 'show' : ''
+                        }`}
+                        noWrap
+                      >
+                        Click inside the plot below to activate pan & zoom!
+                      </Typography>
+                    )}
+                  </Grid>
+                </div>
               </Grid>
               <Grid item>
                 <IconButton
