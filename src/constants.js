@@ -437,11 +437,11 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
             // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
             tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
-            height: 430,
+            height: 413,
             uid: 'indicatorByCellTypes',
             options: {
               axisAlign: 'right',
-              legendAlign: 'right',
+              legendAlign: 'left',
               labelPosition: 'hidden',
               markColor: 'black',
               markColorHighlight: '#bf0071',

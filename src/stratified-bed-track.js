@@ -139,6 +139,11 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.pLegend = new PIXI.Graphics();
       this.pMasked.addChild(this.pLegend);
 
+      this.pLoading = new PIXI.Graphics();
+      this.pLoading.position.x = 0;
+      this.pLoading.position.y = 0;
+      this.pMasked.addChild(this.pLoading);
+
       this.legendMin = Infinity;
       this.legendMax = -Infinity;
 
@@ -149,6 +154,14 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.bg.interactive = true;
       this.bg.interactiveChildren = false;
       this.bg.alpha = 0;
+
+      this.loadIndicator = new PIXI.Text('Loading data...', {
+        fontSize: this.labelSize,
+        fill: 0x808080,
+      });
+      this.loadIndicator.x = 2;
+      this.loadIndicator.y = 2;
+      this.pLoading.addChild(this.loadIndicator);
 
       let mousedownTime = performance.now();
       this.bg.mousedown = () => {
@@ -662,7 +675,6 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       );
 
       this.pLegend.position.x = isRightAligned ? left + width : left;
-      this.pLegend.position.y = top + y + padding;
 
       const [minValue, maxValue] = this.options.importanceDomain || [1, 1000];
 
@@ -703,7 +715,9 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const maxTextWidth = this.legendMaxText.getBounds().width;
       const offset = isRightAligned
         ? -(maxTextWidth + legendRectWidth + padding)
-        : minTextWidth + padding;
+        : minTextWidth + 2 * padding;
+
+      const rectHeight = 18 + (isHighlighting * padding) / 2;
 
       this.pLegend.beginFill(0xffffff);
       this.pLegend.lineStyle(1, 0xcccccc);
@@ -713,7 +727,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
           -(legendRectWidth + minTextWidth + maxTextWidth + 3 * padding + 0.5),
           0,
           legendRectWidth + minTextWidth + maxTextWidth + 3 * padding,
-          18 + (isHighlighting * padding) / 2,
+          rectHeight,
           3
         );
       } else {
@@ -753,8 +767,10 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         this.legendMaxText.x = -padding / 2;
       } else {
         this.legendMinText.x = padding / 2;
-        this.legendMaxText.x = offset + legendRectWidth + 2 * padding;
+        this.legendMaxText.x = offset + legendRectWidth + padding;
       }
+
+      this.pLegend.position.y = top + y - padding - rectHeight;
     }
 
     updateIndicators() {
@@ -763,9 +779,24 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.renderIndicatorPoints();
     }
 
+    updateLoadIndicator() {
+      const [left, top] = this.position;
+      this.pLoading.position.x = left + 6;
+      this.pLoading.position.y = top + 6;
+
+      if (this.fetching.size) {
+        this.pLoading.addChild(this.loadIndicator);
+      } else {
+        this.pLoading.removeChild(this.loadIndicator);
+      }
+    }
+
     // Called whenever a new tile comes in
     updateExistingGraphics() {
-      if (!this.hasFetchedTiles()) return;
+      if (!this.hasFetchedTiles()) {
+        this.updateLoadIndicator();
+        return;
+      }
       this.updateScales();
       this.updateIndicators();
     }
@@ -773,6 +804,8 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
     // Gets called on every draw call
     drawTile(tile) {
       tile.graphics.clear();
+
+      this.updateLoadIndicator();
 
       if (!this.options.stratification.axisNoGroupColor) {
         let yStart = 0;
@@ -893,6 +926,11 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.refreshTiles();
       this.draw();
+    }
+
+    refreshTiles() {
+      super.refreshTiles();
+      this.updateLoadIndicator();
     }
 
     renderIndicatorCategoryAxisAsSvg() {
