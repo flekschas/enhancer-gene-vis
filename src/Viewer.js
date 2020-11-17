@@ -1780,7 +1780,8 @@ const Viewer = (props) => {
                     }`}
                     noWrap
                   >
-                    Click outside the plot to deactivate pan & zoom!
+                    You can now pan & zoom the plot! Click outside the plot to
+                    deactivate pan & zoom!
                   </Typography>
                 ) : (
                   <Typography
@@ -1792,7 +1793,7 @@ const Viewer = (props) => {
                     }`}
                     noWrap
                   >
-                    Click below to activate pan & zoom!
+                    Click inside the plot below to activate pan & zoom!
                   </Typography>
                 )}
               </Grid>
