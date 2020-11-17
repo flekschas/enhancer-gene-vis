@@ -792,6 +792,7 @@ const EnhancerGenePlot = ({
 } = {}) => {
   const [plotEl, setPlotEl] = useState(null);
   const [tile, setTile] = useState(null);
+  const [isLoadingTile, setIsLoadingTile] = useState(null);
   const [tilesetInfo, setTilesetInfo] = useState(null);
   const [width, setWidth] = useState(null);
   const prevWidth = usePrevious(width);
@@ -806,8 +807,12 @@ const EnhancerGenePlot = ({
     const tileXPos = Math.floor(position / tileWidth);
     const tileId = `${uuid}.${tilesetInfo.max_zoom}.${tileXPos}`;
 
+    setIsLoadingTile(true);
     fetchTile(tileId).then((_tile) => {
-      if (active) setTile(filterByPosition(_tile[tileId], position));
+      if (active) {
+        setIsLoadingTile(false);
+        setTile(filterByPosition(_tile[tileId], position));
+      }
     });
 
     return () => {
@@ -1004,7 +1009,7 @@ const EnhancerGenePlot = ({
       alignItems="center"
       style={styles}
     >
-      {isInit ? (
+      {isInit && !isLoadingTile ? (
         <Grid item className={classes.plot}>
           <svg ref={plotElRef} className={classes.plotSvg}>
             <g id="enhancers"></g>
