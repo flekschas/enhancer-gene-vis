@@ -695,8 +695,8 @@ const Viewer = (props) => {
     [xDomainEnd, props.chromInfo]
   );
 
-  const xDomainStartAbsDb = useDebounce(xDomainStartAbs, 1000);
-  const xDomainEndAbsDb = useDebounce(xDomainEndAbs, 1000);
+  const xDomainStartAbsDb = useDebounce(xDomainStartAbs, 500);
+  const xDomainEndAbsDb = useDebounce(xDomainEndAbs, 500);
 
   const shouldSkipUpdatingXDomain = useCallback(() => {
     if (higlassEnhancerClickSelection.current) {
@@ -746,7 +746,16 @@ const Viewer = (props) => {
   );
 
   const getDnaAccessibilityXDomain = () => {
+    const enhancerViewRange = xDomainEndAbs - xDomainStartAbs;
+    const enhancerViewCenter = xDomainStartAbs + enhancerViewRange / 2;
+
     if (focusVariantPosition) {
+      if (
+        enhancerViewRange < 5000 &&
+        Math.abs(enhancerViewCenter - focusVariantPosition) < 1000
+      ) {
+        return [xDomainStartAbs, xDomainEndAbs];
+      }
       return [focusVariantPosition - 2500, focusVariantPosition + 2500];
     }
 
@@ -754,6 +763,15 @@ const Viewer = (props) => {
       const midPos =
         focusGeneStartPosition +
         (focusGeneEndPosition - focusGeneStartPosition) / 2;
+
+      if (
+        enhancerViewRange < 5000 &&
+        enhancerViewCenter > focusGeneStartPosition &&
+        enhancerViewCenter < focusGeneEndPosition
+      ) {
+        return [xDomainStartAbs, xDomainEndAbs];
+      }
+
       return [midPos - 2500, midPos + 2500];
     }
 
