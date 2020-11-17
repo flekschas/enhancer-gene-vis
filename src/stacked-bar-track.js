@@ -153,6 +153,17 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       super(context, options);
 
       this.updateOptions();
+
+      this.pLoading = new PIXI.Graphics();
+      this.pLoading.position.x = 0;
+      this.pLoading.position.y = 0;
+      this.pMasked.addChild(this.pLoading);
+
+      this.loadIndicator = new PIXI.Text('Loading data...', {
+        fontSize: this.labelSize || 10,
+        fill: 0x808080,
+      });
+      this.pLoading.addChild(this.loadIndicator);
     }
 
     initTile(tile) {
@@ -426,8 +437,21 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       this.updateScales();
     }
 
+    updateLoadIndicator() {
+      const [left, top] = this.position;
+      this.pLoading.position.x = left + 6;
+      this.pLoading.position.y = top + 6;
+
+      if (this.fetching.size) {
+        this.pLoading.addChild(this.loadIndicator);
+      } else {
+        this.pLoading.removeChild(this.loadIndicator);
+      }
+    }
+
     refreshTiles(...brgs) {
       super.refreshTiles(...brgs);
+      this.updateLoadIndicator();
       if (this.tilesetInfo) {
         const oldNumBins = this.numBins;
         this.numBins = Math.round(this.tilesetInfo.tile_size / this.binSize);
@@ -575,6 +599,7 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
     // Called whenever a new tile comes in
     updateExistingGraphics() {
+      this.updateLoadIndicator();
       if (!this.hasFetchedTiles()) return;
       this.updateHistograms();
       this.updateScales();

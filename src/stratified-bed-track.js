@@ -139,11 +139,6 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.pLegend = new PIXI.Graphics();
       this.pMasked.addChild(this.pLegend);
 
-      this.pLoading = new PIXI.Graphics();
-      this.pLoading.position.x = 0;
-      this.pLoading.position.y = 0;
-      this.pMasked.addChild(this.pLoading);
-
       this.legendMin = Infinity;
       this.legendMax = -Infinity;
 
@@ -155,14 +150,6 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.bg.interactiveChildren = false;
       this.bg.alpha = 0;
 
-      this.loadIndicator = new PIXI.Text('Loading data...', {
-        fontSize: this.labelSize,
-        fill: 0x808080,
-      });
-      this.loadIndicator.x = 2;
-      this.loadIndicator.y = 2;
-      this.pLoading.addChild(this.loadIndicator);
-
       let mousedownTime = performance.now();
       this.bg.mousedown = () => {
         mousedownTime = performance.now();
@@ -173,6 +160,17 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       };
 
       this.updateOptions();
+
+      this.pLoading = new PIXI.Graphics();
+      this.pLoading.position.x = 0;
+      this.pLoading.position.y = 0;
+      this.pMasked.addChild(this.pLoading);
+
+      this.loadIndicator = new PIXI.Text('Loading data...', {
+        fontSize: this.labelSize || 10,
+        fill: 0x808080,
+      });
+      this.pLoading.addChild(this.loadIndicator);
     }
 
     initTile(tile) {
@@ -793,10 +791,8 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
     // Called whenever a new tile comes in
     updateExistingGraphics() {
-      if (!this.hasFetchedTiles()) {
-        this.updateLoadIndicator();
-        return;
-      }
+      this.updateLoadIndicator();
+      if (!this.hasFetchedTiles()) return;
       this.updateScales();
       this.updateIndicators();
     }
