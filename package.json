@@ -1,13 +1,13 @@
 {
-  "name": "enhancer-promoter-vis",
+  "name": "enhancer-gene-vis",
   "version": "0.1.0",
   "author": "Fritz Lekschas",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/flekschas/enhancer-promoter-vis.git"
+    "url": "git://github.com/flekschas/enhancer-gene-vis.git"
   },
-  "homepage": "https://flekschas.github.io/enhancer-promoter-vis",
+  "homepage": "https://flekschas.github.io/enhancer-gene-vis",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
