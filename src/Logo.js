@@ -15,8 +15,9 @@ const useStyles = makeStyles((theme) => ({
   },
   logoAbc: {
     fontSize: '2.75em',
-    letterSpacing: '-0.1rem',
-    paddingRight: '0.1em',
+    letterSpacing: '-0.075rem',
+    paddingRight: '0.125em',
+    fontWeight: 900,
   },
   logoEnhancer: {
     alignItems: 'flex-start',
