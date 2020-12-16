@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Welcome = (props) => {
+const Welcome = React.memo(function Welcome({ closeHandler }) {
   const [tutorial, setTutorial] = useState(false);
 
   const classes = useStyles();
@@ -123,7 +123,7 @@ const Welcome = (props) => {
         <Typography align="center">
           <Button
             className={classes.startExploring}
-            onClick={props.infoCloseHandler}
+            onClick={closeHandler}
             variant="contained"
             disableElevation
           >
@@ -185,7 +185,7 @@ const Welcome = (props) => {
         </Button>
         <Button
           className={classes.startExploring}
-          onClick={props.infoCloseHandler}
+          onClick={closeHandler}
           variant="contained"
           disableElevation
         >
@@ -194,10 +194,6 @@ const Welcome = (props) => {
       </Typography>
     </React.Fragment>
   );
-};
-
-Welcome.propTypes = {
-  infoCloseHandler: PropTypes.func.isRequired,
-};
+});
 
 export default Welcome;

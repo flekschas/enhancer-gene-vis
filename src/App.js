@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { RecoilRoot } from 'recoil';
 import { ChromosomeInfo } from 'higlass';
 import { pipe } from '@flekschas/utils';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 
 import AppInitializing from './AppInitializing';
 import AppError from './AppError';
-import Viewer from './Viewer';
+import ChromInfoProvider from './ChromInfoProvider';
+import AppMain from './AppMain';
 import withEither from './with-either';
 
 import './App.css';
@@ -40,16 +42,20 @@ const App = () => {
       });
   }, []);
 
-  const AppViewer = pipe(
+  const Main = pipe(
     withEither(() => chromInfo === null, AppInitializing),
     withEither(() => chromInfo === false, AppError)
-  )(Viewer);
+  )(AppMain);
 
   return (
     <div className="App">
-      <ThemeProvider theme={theme}>
-        <AppViewer chromInfo={chromInfo} />
-      </ThemeProvider>
+      <RecoilRoot>
+        <ThemeProvider theme={theme}>
+          <ChromInfoProvider chromInfo={chromInfo}>
+            <Main />
+          </ChromInfoProvider>
+        </ThemeProvider>
+      </RecoilRoot>
     </div>
   );
 };

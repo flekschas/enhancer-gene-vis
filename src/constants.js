@@ -1,3 +1,5 @@
+export const DRAWER_WIDTH = 240;
+
 export const EPS = 1e-6;
 
 export const SVG_SKELETON = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>

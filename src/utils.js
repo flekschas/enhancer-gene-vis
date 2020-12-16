@@ -184,3 +184,6 @@ export const scaleBand = () => {
 
 export const stringifySvg = (svg) =>
   new window.XMLSerializer().serializeToString(svg);
+
+export const booleanQueryStringDecoder = (v) =>
+  v === undefined ? undefined : v === 'true';

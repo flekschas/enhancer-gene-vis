@@ -1,6 +1,5 @@
 import { identity } from '@flekschas/utils';
 import { axisRight, scaleLinear, scaleLog, select } from 'd3';
-import PropTypes from 'prop-types';
 import React, {
   useCallback,
   useEffect,
@@ -8,11 +7,24 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { useRecoilValue, useRecoilState } from 'recoil';
 import TinyQueue from 'tinyqueue';
-
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
+
+import { useChromInfo } from './ChromInfoProvider';
+import { useShowTooltip } from './TooltipProvider';
+
+import {
+  enhancerGenesCellEncodingState,
+  enhancerGenesPaddingState,
+  enhancerGenesSvgState,
+  focusVariantPositionWithAssembly,
+  focusVariantRelPositionState,
+  focusVariantState,
+  focusVariantStrPositionState,
+} from './state';
 
 import {
   DEFAULT_COLOR_MAP,
@@ -24,7 +36,7 @@ import {
 import { scaleBand } from './utils';
 import usePrevious from './use-previous';
 
-import './GeneEnhancerPlot.css';
+import './EnhancerGenesPlot.css';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -151,8 +163,7 @@ const plotEnhancerGeneConnections = (
     geneCellEncoding = 'distribution',
     prevGeneCellEncoding,
     genePadding = false,
-    openTooltip = identity,
-    closeTooltip = identity,
+    showTooltip = identity,
     tooltipClasses = [],
     position = '',
     variant = null,
@@ -343,7 +354,7 @@ const plotEnhancerGeneConnections = (
         const bBox = event.target.getBoundingClientRect();
         const title =
           (tooltipTitleGetter && tooltipTitleGetter(d)) || d.value.toFixed(3);
-        openTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
+        showTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
           arrow: true,
           placement: 'top',
           classes:
@@ -354,7 +365,7 @@ const plotEnhancerGeneConnections = (
         onMouseEnter(d);
       })
       .on('mouseleave', (d) => {
-        closeTooltip();
+        showTooltip();
         onMouseLeave(d);
       });
   };
@@ -394,7 +405,7 @@ const plotEnhancerGeneConnections = (
       textColor = DEFAULT_COLOR_MAP_DARK,
       showText = true,
       showZero = true,
-      showTooltip = false,
+      showTooltip: showTooltipOnMouseEnter = false,
       tooltipTitleGetter = null,
     } = {}
   ) => {
@@ -410,18 +421,18 @@ const plotEnhancerGeneConnections = (
       .attr('height', (d) => valueScale(valueGetter(d)))
       .attr('opacity', (d) => +(valueGetter(d) > 0));
 
-    if (showTooltip) {
+    if (showTooltipOnMouseEnter) {
       bg.on('mouseenter', (event, d) => {
         const bBox = event.target.getBoundingClientRect();
         const title =
           (tooltipTitleGetter && tooltipTitleGetter(d)) || valueGetter(d);
-        openTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
+        showTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
           arrow: true,
           placement: 'top',
           classes: tooltipClasses[d.row % tooltipClasses.length],
         });
       }).on('mouseleave', () => {
-        closeTooltip();
+        showTooltip();
       });
     } else {
       bg.on('mouseenter', null).on('mouseleave', null);
@@ -778,19 +789,19 @@ const plotEnhancerGeneConnections = (
     );
 };
 
-const EnhancerGenePlot = ({
-  geneCellEncoding,
-  position,
-  relPosition,
-  fullPosition,
-  genePadding,
-  openTooltip,
-  closeTooltip,
-  styles,
-  svgRef,
-  variant,
-} = {}) => {
-  const [plotEl, setPlotEl] = useState(null);
+const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
+  const chromInfo = useChromInfo();
+  const showTooltip = useShowTooltip();
+
+  const geneCellEncoding = useRecoilValue(enhancerGenesCellEncodingState);
+  const position = useRecoilValue(focusVariantPositionWithAssembly(chromInfo));
+  const relPosition = useRecoilValue(focusVariantRelPositionState);
+  const strPosition = useRecoilValue(focusVariantStrPositionState);
+  const genePadding = useRecoilValue(enhancerGenesPaddingState);
+  const variant = useRecoilValue(focusVariantState);
+
+  const [plotEl, setPlotEl] = useRecoilState(enhancerGenesSvgState);
+
   const [tile, setTile] = useState(null);
   const [isLoadingTile, setIsLoadingTile] = useState(null);
   const [tilesetInfo, setTilesetInfo] = useState(null);
@@ -823,9 +834,8 @@ const EnhancerGenePlot = ({
   const plotElRef = useCallback(
     (node) => {
       setPlotEl(node);
-      svgRef.current = node;
     },
-    [svgRef]
+    [setPlotEl]
   );
 
   // Derived State
@@ -980,25 +990,16 @@ const EnhancerGenePlot = ({
         geneCellEncoding,
         prevGeneCellEncoding,
         genePadding,
-        openTooltip,
-        closeTooltip,
+        showTooltip,
         classes,
         tooltipClasses,
-        position: fullPosition,
+        position: strPosition,
         variant,
       });
     },
     // `prevGeneCellEncoding` is ommitted on purpose to avoid circular updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      plotEl,
-      width,
-      data,
-      geneCellEncoding,
-      genePadding,
-      openTooltip,
-      closeTooltip,
-    ]
+    [plotEl, width, data, geneCellEncoding, genePadding, showTooltip]
   );
 
   return (
@@ -1007,7 +1008,6 @@ const EnhancerGenePlot = ({
       container
       justify="center"
       alignItems="center"
-      style={styles}
     >
       {isInit && !isLoadingTile ? (
         <Grid item className={classes.plot}>
@@ -1023,37 +1023,6 @@ const EnhancerGenePlot = ({
       )}
     </Grid>
   );
-};
+});
 
-EnhancerGenePlot.defaultProps = {
-  geneCellEncoding: 'distribution',
-  position: null,
-  relPosition: null,
-  fullPosition: null,
-  variant: null,
-  genePadding: false,
-  openTooltip: identity,
-  closeTooltip: identity,
-  styles: {},
-  svgRef: {},
-};
-
-EnhancerGenePlot.propTypes = {
-  geneCellEncoding: PropTypes.oneOf([
-    'number',
-    'percent',
-    'distribution',
-    'array',
-  ]),
-  position: PropTypes.number,
-  relPosition: PropTypes.number,
-  fullPosition: PropTypes.string,
-  variant: PropTypes.string,
-  genePadding: PropTypes.bool,
-  openTooltip: PropTypes.func,
-  closeTooltip: PropTypes.func,
-  styles: PropTypes.object,
-  svgRef: PropTypes.object,
-};
-
-export default EnhancerGenePlot;
+export default EnhancerGenesPlot;

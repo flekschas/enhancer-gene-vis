@@ -1,0 +1,32 @@
+.higlass-block {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.higlass-block:hover {
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.33);
+}
+
+.higlass-block:focus,
+.higlass-block:focus-within,
+.higlass-block.focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(204, 0, 120, 0.66);
+  pointer-events: none;
+}
+
+@keyframes fadeout {
+  from {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(0, -1.5rem);
+  }
+}
