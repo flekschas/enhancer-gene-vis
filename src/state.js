@@ -23,6 +23,35 @@ const chrPosUrlDecoder = (chrPos) =>
   chrPos ? chrPos.replace('.', ':') : chrPos;
 
 // Atoms
+export const sampleFilterState = atom({
+  key: 'sampleFilterState',
+  default: '',
+});
+
+export const sampleWithName = memoize((name) =>
+  atom({
+    key: `sample-${name}`,
+    default: {
+      checked: true,
+      visible: true,
+    },
+  })
+);
+
+export const sampleGroupWithGroup = memoize(
+  (group) =>
+    atom({
+      key: `sampleGroup-${group.name}`,
+      default: {
+        checked: true,
+        visible: true,
+        n: group.options.length,
+        N: group.options.length,
+      },
+    }),
+  (group) => group.name
+);
+
 export const welcomeState = atom({
   key: 'welcome',
   default: getDefault('w', true, booleanQueryStringDecoder),
@@ -48,10 +77,10 @@ export const focusVariantState = atom({
   default: getDefault('v', 'rs1250566'),
 });
 
-export const focusRegionState = atom({
-  key: 'focusVariant',
-  default: getDefault('r', 'rs1250566'),
-});
+// export const focusRegionState = atom({
+//   key: 'focusVariant',
+//   default: getDefault('r', 'rs1250566'),
+// });
 
 export const variantYScaleState = atom({
   key: 'variantYScale',

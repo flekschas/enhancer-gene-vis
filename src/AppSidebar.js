@@ -25,6 +25,9 @@ import {
   enhancerGenesSvgState,
   higlassEnhancerRegionsState,
   higlassDnaAccessState,
+  sampleFilterState,
+  sampleWithName,
+  sampleGroupWithGroup,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
   useWelcome,
@@ -34,18 +37,14 @@ import { download, stringifySvg } from './utils';
 
 import {
   DEFAULT_COLOR_MAP_DARK,
-  DEFAULT_COLOR_MAP_LIGHT,
-  DEFAULT_STRATIFICATION,
+  DEFAULT_COLOR_MAP,
   DEFAULT_VIEW_CONFIG_ENHANCER,
   DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
   SVG_SKELETON,
   DRAWER_WIDTH,
+  GROUPED_SAMPLE_OPTIONS,
+  SAMPLE_TO_GROUP,
 } from './constants';
-
-const samples = DEFAULT_STRATIFICATION.groups.map((group) => ({
-  name: group.label,
-  options: group.categories,
-}));
 
 const useStyles = makeStyles((theme) => ({
   h1: {
@@ -412,9 +411,13 @@ const AppSidebar = React.memo(function AppSidebar() {
               </Box>
               <Box className={classes.globalSettingsFirstBox}>
                 <CheckboxList
-                  options={samples}
+                  filterState={sampleFilterState}
+                  optionWithName={sampleWithName}
+                  optionGroupWithGroup={sampleGroupWithGroup}
+                  groupedOptions={GROUPED_SAMPLE_OPTIONS}
+                  optionToGroup={SAMPLE_TO_GROUP}
+                  groupColors={DEFAULT_COLOR_MAP}
                   groupColorsDark={DEFAULT_COLOR_MAP_DARK}
-                  groupColorsLight={DEFAULT_COLOR_MAP_LIGHT}
                 />
               </Box>
             </Box>

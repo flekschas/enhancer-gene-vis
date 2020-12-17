@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import Checkbox from '@material-ui/core/Checkbox';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import IndeterminateCheckBoxIcon from '@material-ui/icons/IndeterminateCheckBox';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -19,91 +21,207 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
   },
   checkbox: {
-    marginTop: -4,
-    marginBottom: -4,
+    marginTop: -6,
+    marginBottom: -6,
   },
   checkboxLabel: {
-    fontSize: '0.9rem',
-    marginLeft: -4,
+    fontSize: '0.8rem',
+    marginLeft: -6,
   },
   nestedCheckbox: {
     marginLeft: 4,
   },
+  visible: {
+    transition: '.3s ease transform, .3s ease height',
+    transform: 'scale(1, 1)',
+    height: '1.625rem',
+  },
+  invisible: {
+    transition: '.3s ease transform, .3s ease height',
+    transform: 'scale(1, 0)',
+    height: '0rem',
+  },
 }));
 
-export default function CheckboxList({
-  options = [],
-  groupColorsDark = [],
-  groupColorsLight = [],
+const Option = React.memo(function Option({
+  filterState,
+  name,
+  stateWithName,
+  group,
+  stateWithGroup,
+  colorCheckbox,
+  colorText,
 }) {
-  const [optionGroupChecked, setOptionGroupChecked] = useState({});
-  const [optionsChecked, setOptionsChecked] = useState({});
-  const [optionsFiltered, setOptionsFiltered] = useState(options);
-  const [filter, setFilter] = useState('');
-  const debouncedFilter = useDebounce(filter, 250);
+  const filter = useRecoilValue(filterState);
+  const [state, setState] = useRecoilState(stateWithName(name));
+  const [groupState, setGroupState] = useRecoilState(stateWithGroup(group));
+  const nameLowerCase = useMemo(() => name.toLowerCase(), [name]);
+
+  const changeHandler = useCallback(
+    (event) => {
+      setState((currState) => ({
+        ...currState,
+        checked: event.target.checked,
+      }));
+      setGroupState((currGroupState) => {
+        const newGroupState = {
+          ...currGroupState,
+          n: currGroupState.n + (event.target.checked ? 1 : -1),
+        };
+        switch (newGroupState.n) {
+          case currGroupState.N:
+            newGroupState.checked = true;
+            break;
+          case 0:
+            newGroupState.checked = false;
+            break;
+          default:
+            newGroupState.checked = undefined;
+            break;
+        }
+        return newGroupState;
+      });
+    },
+    [setState, setGroupState]
+  );
+
+  useEffect(() => {
+    if (groupState.checked === true) {
+      setState((currState) => ({
+        ...currState,
+        checked: true,
+      }));
+    } else if (groupState.checked === false) {
+      setState((currState) => ({
+        ...currState,
+        checked: false,
+      }));
+    }
+  }, [groupState, setState]);
+
+  useEffect(() => {
+    setState((currState) => ({
+      ...currState,
+      visible: !filter.length || nameLowerCase.includes(filter),
+    }));
+  }, [filter, nameLowerCase, setState]);
 
   const classes = useStyles();
 
-  const isNested = useMemo(() => options.length > 0 && options[0].options, [
-    options,
-  ]);
+  return (
+    <div className={state.visible ? classes.visible : classes.invisible}>
+      <FormControlLabel
+        key={name}
+        className={`${classes.checkbox} ${classes.nestedCheckbox}`}
+        control={
+          <Checkbox
+            style={{
+              color: colorCheckbox,
+            }}
+            icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
+            checkedIcon={<CheckBoxIcon fontSize="small" />}
+            checked={state.checked}
+            onChange={changeHandler}
+            name={name}
+          />
+        }
+        label={
+          <Typography
+            className={classes.checkboxLabel}
+            noWrap
+            style={{
+              color: colorText,
+            }}
+          >
+            {name}
+          </Typography>
+        }
+      />
+    </div>
+  );
+});
 
-  const nestedOptions = useMemo(() => {
-    if (isNested) {
-      return options.reduce((out, optionGroup) => {
-        out[optionGroup.name] = optionGroup.options;
-        return out;
-      }, {});
-    }
-    return null;
-  }, [isNested, options]);
+const OptionGroup = React.memo(function OptionGroup({
+  group,
+  stateWithGroup,
+  colorCheckbox,
+  colorText,
+}) {
+  const [state, setState] = useRecoilState(stateWithGroup(group));
+
+  const changeHandler = useCallback(
+    (event) => {
+      setState((currState) => ({
+        ...currState,
+        checked: event.target.checked,
+        n: event.target.checked ? currState.N : 0,
+      }));
+    },
+    [setState]
+  );
+
+  const classes = useStyles();
+
+  return (
+    <FormControlLabel
+      className={classes.checkbox}
+      control={
+        <Checkbox
+          style={{ color: colorCheckbox }}
+          icon={
+            state.checked === false ? (
+              <CheckBoxOutlineBlankIcon fontSize="small" />
+            ) : (
+              <IndeterminateCheckBoxIcon fontSize="small" />
+            )
+          }
+          checkedIcon={<CheckBoxIcon fontSize="small" />}
+          checked={state.checked === true}
+          onChange={changeHandler}
+          name={group.name}
+        />
+      }
+      label={
+        <Typography
+          className={classes.checkboxLabel}
+          noWrap
+          style={{ color: colorText }}
+        >
+          <strong>{group.name}</strong>{' '}
+          <span>
+            ({state.n}/{state.N})
+          </span>
+        </Typography>
+      }
+    />
+  );
+});
+
+const NestedCheckboxList = React.memo(function NestedCheckboxList({
+  filterState,
+  optionWithName,
+  optionGroupWithGroup,
+  groupedOptions = [],
+  optionToGroup = {},
+  groupColors = [],
+  groupColorsDark = [],
+}) {
+  const [globalFilter, setGlobalFilter] = useRecoilState(filterState);
+  const [filter, setFilter] = useState(globalFilter);
+  const filterDb = useDebounce(filter, 350);
+
+  const filterChangeHandler = useCallback(
+    (event) => {
+      setFilter(event.target.value.toLowerCase());
+    },
+    [setFilter]
+  );
 
   useEffect(() => {
-    if (debouncedFilter === '') {
-      setOptionsFiltered(options);
-      return;
-    }
-    const t0 = performance.now();
-    const f = debouncedFilter.toLowerCase();
-    const furz = options.map((optionGroup, i) => {
-      const o = { ...optionGroup };
-      o.options = options[i].options.filter(
-        (option) => option.toLowerCase().indexOf(f) >= 0
-      );
-      return o;
-    });
-    console.log(`filter took ${performance.now() - t0}`);
-    setOptionsFiltered(furz);
-  }, [options, debouncedFilter]);
+    setGlobalFilter(filterDb);
+  }, [filterDb, setGlobalFilter]);
 
-  const optionGroupChangeHandler = useCallback(
-    (event) => {
-      const newOptionsChecked = { ...optionsChecked };
-      nestedOptions[event.target.name].forEach((option) => {
-        newOptionsChecked[option] = event.target.checked;
-      });
-      setOptionGroupChecked({
-        ...optionGroupChecked,
-        [event.target.name]: event.target.checked,
-      });
-      setOptionsChecked(newOptionsChecked);
-    },
-    [nestedOptions, optionsChecked, optionGroupChecked]
-  );
-
-  const optionChangeHandler = useCallback(
-    (event) => {
-      setOptionsChecked({
-        ...optionsChecked,
-        [event.target.name]: event.target.checked,
-      });
-    },
-    [optionsChecked]
-  );
-
-  const filterChangeHandler = useCallback((event) => {
-    setFilter(event.target.value);
-  }, []);
+  const classes = useStyles();
 
   return (
     <div className={classes.root}>
@@ -126,82 +244,37 @@ export default function CheckboxList({
           value={filter}
         />
       </FormControl>
-      {isNested && (
-        <FormGroup>
-          {optionsFiltered.map((optionGroup, i) => (
-            <React.Fragment key={optionGroup.name}>
-              <FormControlLabel
-                className={classes.checkbox}
-                control={
-                  <Checkbox
-                    style={{
-                      color:
-                        (optionGroupChecked[optionGroup.name]
-                          ? groupColorsDark[i % groupColorsDark.length]
-                          : groupColorsLight[i % groupColorsLight.length]) ||
-                        'inherit',
-                    }}
-                    icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                    checkedIcon={<CheckBoxIcon fontSize="small" />}
-                    checked={!!optionGroupChecked[optionGroup.name]}
-                    onChange={optionGroupChangeHandler}
-                    name={optionGroup.name}
-                  />
-                }
-                label={
-                  <Typography
-                    className={classes.checkboxLabel}
-                    noWrap
-                    style={{
-                      color:
-                        groupColorsDark[i % groupColorsDark.length] ||
-                        'inherit',
-                    }}
-                  >
-                    <strong>{optionGroup.name}</strong>{' '}
-                    <span>({optionGroup.options.length})</span>
-                  </Typography>
+      <FormGroup>
+        {groupedOptions.map((group, i) => (
+          <React.Fragment key={group.name}>
+            <OptionGroup
+              key={group.name}
+              group={group}
+              stateWithGroup={optionGroupWithGroup}
+              colorCheckbox={groupColors[i % groupColors.length] || 'inherit'}
+              colorText={
+                groupColorsDark[i % groupColorsDark.length] || 'inherit'
+              }
+            />
+            {group.options.map((option) => (
+              <Option
+                filterState={filterState}
+                key={option}
+                name={option}
+                stateWithName={optionWithName}
+                group={group}
+                stateWithGroup={optionGroupWithGroup}
+                colorCheckbox={groupColors[i % groupColors.length] || 'inherit'}
+                colorText={
+                  groupColorsDark[i % groupColorsDark.length] || 'inherit'
                 }
               />
-              {optionGroup.options.map((option) => (
-                <FormControlLabel
-                  key={option}
-                  className={`${classes.checkbox} ${classes.nestedCheckbox}`}
-                  control={
-                    <Checkbox
-                      style={{
-                        color:
-                          (optionsChecked[option]
-                            ? groupColorsDark[i % groupColorsDark.length]
-                            : groupColorsLight[i % groupColorsLight.length]) ||
-                          'inherit',
-                      }}
-                      icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
-                      checkedIcon={<CheckBoxIcon fontSize="small" />}
-                      checked={!!optionsChecked[option]}
-                      onChange={optionChangeHandler}
-                      name={option}
-                    />
-                  }
-                  label={
-                    <Typography
-                      className={classes.checkboxLabel}
-                      noWrap
-                      style={{
-                        color:
-                          groupColorsDark[i % groupColorsDark.length] ||
-                          'inherit',
-                      }}
-                    >
-                      {option}
-                    </Typography>
-                  }
-                />
-              ))}
-            </React.Fragment>
-          ))}
-        </FormGroup>
-      )}
+            ))}
+          </React.Fragment>
+        ))}
+      </FormGroup>
     </div>
   );
-}
+});
+
+export default NestedCheckboxList;

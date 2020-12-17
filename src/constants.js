@@ -236,6 +236,25 @@ export const DEFAULT_STRATIFICATION = {
   ],
 };
 
+export const GROUPED_SAMPLE_OPTIONS = DEFAULT_STRATIFICATION.groups.map(
+  (group) => ({
+    name: group.label,
+    options: group.categories,
+  })
+);
+
+export const SAMPLE_TO_GROUP = GROUPED_SAMPLE_OPTIONS.reduce(
+  (sampleToGroup, group) => {
+    group.options.forEach((option) => {
+      sampleToGroup[option] = group.name;
+    });
+    return sampleToGroup;
+  },
+  {}
+);
+
+export const SAMPLES = GROUPED_SAMPLE_OPTIONS.flatMap((group) => group.options);
+
 export const DEFAULT_X_DOMAIN_START = 1761366260;
 export const DEFAULT_X_DOMAIN_END = 1761603836;
 
