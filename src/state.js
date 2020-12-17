@@ -123,7 +123,7 @@ export const enhancerGenesPaddingState = atom({
 
 export const enhancerGenesCellEncodingState = atom({
   key: 'enhancerGenesCellEncoding',
-  default: getDefault('egce', 'distribution'),
+  default: getDefault('egce', 'number'),
 });
 
 export const enhancerGenesSvgState = atom({
