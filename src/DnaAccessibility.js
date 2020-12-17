@@ -22,8 +22,12 @@ import {
   variantYScaleState,
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
+  sampleSelectionState,
 } from './state';
-import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from './constants';
+import {
+  DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,
+  DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
+} from './constants';
 import useDebounce from './use-debounce';
 
 import {
@@ -93,10 +97,19 @@ const getDnaAccessXDomain = (
 const updateViewConfigDnaAccessXDomain = (...args) =>
   updateViewConfigXDomain(...getDnaAccessXDomain(...args), { force: true });
 
+const updateViewConfigRowSelection = (selection) => (viewConfig) => {
+  viewConfig.views[0].tracks.top[3].options.rowSelections = DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
+    (rowId, i) => selection[i]
+  );
+  return viewConfig;
+};
+
 const DnaAccessibility = React.memo(function DnaAccessibility() {
   const chromInfo = useChromInfo();
 
   const setHiglassDnaAccess = useSetRecoilState(higlassDnaAccessState);
+
+  const sampleSelection = useRecoilValue(sampleSelectionState);
   const labelStyle = useRecoilValue(dnaAccessLabelStyleState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const focusGeneStart = useRecoilValue(focusGeneStartWithAssembly(chromInfo));
@@ -135,7 +148,8 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
           focusGeneEnd,
           xDomainStartAbsDb,
           xDomainEndAbsDb
-        )
+        ),
+        updateViewConfigRowSelection(sampleSelection)
       )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -149,6 +163,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
       variantYScale,
       labelStyle,
       chromInfo,
+      sampleSelection,
     ]
   );
 

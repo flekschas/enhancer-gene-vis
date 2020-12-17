@@ -9,7 +9,11 @@ import {
   toAbsPosition,
 } from './utils';
 
-import { DEFAULT_X_DOMAIN_START, DEFAULT_X_DOMAIN_END } from './constants';
+import {
+  DEFAULT_X_DOMAIN_START,
+  DEFAULT_X_DOMAIN_END,
+  SAMPLES,
+} from './constants';
 
 const getDefault = (key, initialValue, decoder) =>
   getQueryStringValue(key, decoder) === undefined
@@ -26,6 +30,11 @@ const chrPosUrlDecoder = (chrPos) =>
 export const sampleFilterState = atom({
   key: 'sampleFilterState',
   default: '',
+});
+
+export const sampleSelectionState = selector({
+  key: 'sampleSelection',
+  get: ({ get }) => SAMPLES.map((name) => get(sampleWithName(name)).checked),
 });
 
 export const sampleWithName = memoize((name) =>

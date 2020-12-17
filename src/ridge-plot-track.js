@@ -323,11 +323,16 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       this.rowSelections =
         this.options.rowSelections || this.rowSelections || [];
 
+      const oldShowRowLabels = this.showRowLabels;
+      this.showRowLabels = this.options.showRowLabels;
+
       if (
         oldMarkResolution !== this.markResolution ||
         oldRowSelections !== this.rowSelections
       ) {
         this.updateTiles();
+        this.updateRowLabels();
+        this.drawLabel();
       }
 
       if (
@@ -338,11 +343,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
         this.updateScales();
       }
 
-      const oldShowRowLabels = this.showRowLabels;
-      this.showRowLabels = this.options.showRowLabels;
-
       if (oldShowRowLabels !== this.showRowLabels) {
-        this.updateRowLabels(oldShowRowLabels);
+        this.updateRowLabels();
         this.drawLabel();
       }
 
@@ -371,7 +373,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       }
     }
 
-    updateRowLabels(oldShowRowLabels) {
+    updateRowLabels() {
       if (!this.tilesetInfo || !this.tilesetInfo.row_infos) return;
 
       const labels = this.rowSelections.length
@@ -915,6 +917,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       let text = '';
       let value = '<em>unknown</em>';
 
+      if (rowSelection === undefined) return text;
+
       if (fetchedTile) {
         if (!this.tilesetInfo.shape) {
           posInTileX =
@@ -974,8 +978,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
 
         if (rowSelection !== undefined) {
           rowInfo = this.tilesetInfo.row_infos[rowSelection];
-        } else if (rowIndex) {
-          rowInfo = this.tilesetInfo.row_infos[rowIndex];
         }
 
         const label =
