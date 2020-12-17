@@ -14,12 +14,25 @@ button {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+  font-size: 0.9em;
 }
 
 a,
 a:visited {
   color: inherit;
-  text-decoration-color: rgba(0, 0, 0, 0.5);
+  text-decoration-color: rgba(0, 0, 0, 0.33);
+}
+
+a:hover {
+  background-color: #d90080;
+  background-image: linear-gradient(45deg, #d90080 30%, #d9006c 90%);
+  background-size: 100%;
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -moz-text-fill-color: transparent;
+  text-decoration-color: #e655aa;
+  text-shadow: rgba(255, 76, 151, 0.2) 0 0 4px;
 }
 
 .flex-box,
