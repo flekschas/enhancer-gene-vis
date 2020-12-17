@@ -20,6 +20,21 @@ const useStyles = makeStyles((theme) => ({
   root: {
     position: 'relative',
   },
+  filterBar: {
+    position: 'sticky',
+    zIndex: 1,
+    top: '8px',
+    '&:before': {
+      content: '""',
+      position: 'absolute',
+      zIndex: 0,
+      top: '-9px',
+      right: '-8px',
+      left: '-8px',
+      bottom: 0,
+      background: 'white',
+    },
+  },
   checkbox: {
     marginTop: -6,
     marginBottom: -6,
@@ -201,6 +216,7 @@ const NestedCheckboxList = React.memo(function NestedCheckboxList({
   filterState,
   optionWithName,
   optionGroupWithGroup,
+  filterLabel = 'Filter',
   groupedOptions = [],
   optionToGroup = {},
   groupColors = [],
@@ -225,11 +241,17 @@ const NestedCheckboxList = React.memo(function NestedCheckboxList({
 
   return (
     <div className={classes.root}>
-      <FormControl variant="outlined" margin="dense" fullWidth>
+      <div className={classes.filterBarBg} />
+      <FormControl
+        className={classes.filterBar}
+        variant="outlined"
+        margin="dense"
+        fullWidth
+      >
         <InputLabel htmlFor="filter">
           <Grid container direction="row" alignItems="center">
             <FilterListIcon fontSize="small" />
-            <span style={{ marginLeft: 3 }}>Filter</span>
+            <span style={{ marginLeft: 3 }}>{filterLabel}</span>
           </Grid>
         </InputLabel>
         <OutlinedInput
@@ -237,7 +259,7 @@ const NestedCheckboxList = React.memo(function NestedCheckboxList({
           label={
             <Grid container direction="row" alignItems="center">
               <FilterListIcon fontSize="small" />
-              <span style={{ marginLeft: 3 }}>Filter</span>
+              <span style={{ marginLeft: 3 }}>{filterLabel}</span>
             </Grid>
           }
           onChange={filterChangeHandler}

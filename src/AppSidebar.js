@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRecoilValue } from 'recoil';
 import { isString, nthIndexOf } from '@flekschas/utils';
 
@@ -171,6 +171,8 @@ const AppSidebar = React.memo(function AppSidebar() {
   const higlassDnaAccess = useRecoilValue(higlassDnaAccessState);
   const enhancerGenesSvg = useRecoilValue(enhancerGenesSvgState);
 
+  const [userChangedDomain, setUserChangedDomain] = useState(0);
+
   const numericalXDomainStart = useMemo(
     () =>
       isString(xDomainStart) && xDomainStart.indexOf(':') >= 0
@@ -193,13 +195,25 @@ const AppSidebar = React.memo(function AppSidebar() {
     [xDomainEnd, chromInfo]
   );
 
-  const xDomainStartChangeHandler = (event) => {
-    setXDomainStart(event.target.value);
-  };
+  const xDomainStartChangeHandler = useCallback(
+    (event) => {
+      setXDomainStart(event.target.value);
+      setUserChangedDomain(2);
+    },
+    [setXDomainStart]
+  );
 
-  const xDomainEndChangeHandler = (event) => {
-    setXDomainEnd(event.target.value);
-  };
+  const xDomainEndChangeHandler = useCallback(
+    (event) => {
+      setXDomainEnd(event.target.value);
+      setUserChangedDomain(2);
+    },
+    [setXDomainEnd]
+  );
+
+  useEffect(() => {
+    setUserChangedDomain((curr) => Math.max(0, curr - 1));
+  }, [xDomainStart, xDomainEnd]);
 
   const higlassEnhancerZoomToXDomain = (event) => {
     if (!higlassEnhancerRegions) return;
@@ -341,18 +355,13 @@ const AppSidebar = React.memo(function AppSidebar() {
         </Grid>
         <Grid container item className={classes.grow} direction="column">
           <Grid item>
-            <Box className={classes.globalSettingsTitle}>
-              <Typography variant="subtitle2" component="h6">
-                Genomic Region:
-              </Typography>
-            </Box>
-            <Box className={classes.globalSettingsFirstBox}>
+            <Box m={1}>
               <Box m={0}>
                 <FormControl variant="outlined" margin="dense" fullWidth>
-                  <InputLabel htmlFor="x-domain-start">Start</InputLabel>
+                  <InputLabel htmlFor="x-domain-start">Region Start</InputLabel>
                   <OutlinedInput
                     id="x-domain-start"
-                    label="Start"
+                    label="Region Start"
                     onChange={xDomainStartChangeHandler}
                     value={xDomainStart}
                   />
@@ -360,58 +369,51 @@ const AppSidebar = React.memo(function AppSidebar() {
               </Box>
               <Box m={0}>
                 <FormControl variant="outlined" margin="dense" fullWidth>
-                  <InputLabel htmlFor="x-domain-end">End</InputLabel>
+                  <InputLabel htmlFor="x-domain-end">Region End</InputLabel>
                   <OutlinedInput
                     id="x-domain-end"
-                    label="End"
+                    label="Region End"
                     onChange={xDomainEndChangeHandler}
                     value={xDomainEnd}
                   />
                 </FormControl>
               </Box>
-              <Box m={0}>
-                <Button
-                  variant="contained"
-                  margin="dense"
-                  onClick={higlassEnhancerZoomToXDomain}
-                  fullWidth
-                  disableElevation
-                >
-                  Go
-                </Button>
-              </Box>
+              {userChangedDomain > 0 && (
+                <Box m={0}>
+                  <Button
+                    variant="contained"
+                    margin="dense"
+                    onClick={higlassEnhancerZoomToXDomain}
+                    fullWidth
+                    disableElevation
+                    size="small"
+                  >
+                    Go
+                  </Button>
+                </Box>
+              )}
             </Box>
             <Divider />
-            <Box className={classes.globalSettingsFirstBox}>
-              <Box className={classes.globalSettingsTitle}>
-                <Typography variant="subtitle2" component="h6">
-                  Variants:
-                </Typography>
-              </Box>
-              <Box m={0}>
-                <Button
-                  variant="contained"
-                  margin="dense"
-                  fullWidth
-                  disableElevation
-                  startIcon={<SettingsIcon />}
-                >
-                  Load or Adjust
-                </Button>
-              </Box>
+            <Box m={1}>
+              <Button
+                variant="contained"
+                margin="dense"
+                fullWidth
+                disableElevation
+                size="small"
+                startIcon={<SettingsIcon />}
+              >
+                Edit Variants
+              </Button>
             </Box>
             <Divider />
           </Grid>
           <Grid item className={classes.settings}>
             <Box m={0} className={classes.settingsContent}>
-              <Box className={classes.globalSettingsTitle}>
-                <Typography variant="subtitle2" component="h6">
-                  Samples:
-                </Typography>
-              </Box>
               <Box className={classes.globalSettingsFirstBox}>
                 <CheckboxList
                   filterState={sampleFilterState}
+                  filterLabel="Filter Samples"
                   optionWithName={sampleWithName}
                   optionGroupWithGroup={sampleGroupWithGroup}
                   groupedOptions={GROUPED_SAMPLE_OPTIONS}
@@ -431,6 +433,7 @@ const AppSidebar = React.memo(function AppSidebar() {
                 onClick={higlassExportAsSvg}
                 fullWidth
                 disableElevation
+                size="small"
               >
                 Export as SVG
               </Button>

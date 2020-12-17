@@ -38,3 +38,11 @@ a:visited {
   bottom: 0;
   left: 0;
 }
+
+.track-mouseover-menu {
+  padding: 0.25rem;
+}
+
+.track-mouseover-menu p {
+  margin: 0 !important;
+}

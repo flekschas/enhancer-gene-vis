@@ -6,11 +6,3 @@
   height: 100vh;
   overflow: hidden;
 }
-
-.track-mouseover-menu {
-  padding: 0.25rem;
-}
-
-.track-mouseover-menu p {
-  margin: 0 !important;
-}
