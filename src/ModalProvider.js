@@ -22,14 +22,6 @@ const useStyles = makeStyles((theme) => ({
     overflow: 'auto',
     padding: theme.spacing(2, 4),
     outline: 0,
-    '&>h2': {
-      display: 'flex',
-      justifyContent: 'center',
-      margin: theme.spacing(2, 0, 3),
-    },
-    '&>p': {
-      fontSize: '1.125em',
-    },
   },
 }));
 

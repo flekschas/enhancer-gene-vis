@@ -6,6 +6,16 @@ import { makeStyles } from '@material-ui/core/styles';
 import Logo from './Logo';
 
 const useStyles = makeStyles((theme) => ({
+  root: {
+    '&>p': {
+      fontSize: '1.125em',
+    },
+  },
+  title: {
+    display: 'flex',
+    justifyContent: 'center',
+    margin: theme.spacing(2, 0, 3),
+  },
   note: {
     color: theme.palette.grey['400'],
     marginTop: '1em',
@@ -37,7 +47,7 @@ const Welcome = React.memo(function Welcome({ closeHandler }) {
 
   if (tutorial)
     return (
-      <React.Fragment>
+      <div className={classes.root}>
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
           eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
@@ -135,17 +145,18 @@ const Welcome = React.memo(function Welcome({ closeHandler }) {
             Connections" in the upper left corner!
           </em>
         </Typography>
-      </React.Fragment>
+      </div>
     );
 
   return (
-    <React.Fragment>
+    <div className={classes.root}>
       <Typography
-        id="info-title"
+        id="title"
         align="center"
         variant="h5"
         component="h2"
         noWrap
+        className={classes.title}
       >
         <Logo
           styles={{
@@ -153,7 +164,7 @@ const Welcome = React.memo(function Welcome({ closeHandler }) {
           }}
         />
       </Typography>
-      <p id="info-description">
+      <p id="description">
         This web application visualizes genome-wide enhancer-gene interactions
         that were predicted with the <em>Activity-By-Contact</em> (ABC) model.
         You can interactively browse the entire human genome and filter
@@ -191,7 +202,7 @@ const Welcome = React.memo(function Welcome({ closeHandler }) {
           Start Exploring!
         </Button>
       </Typography>
-    </React.Fragment>
+    </div>
   );
 });
 
