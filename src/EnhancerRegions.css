@@ -7,7 +7,8 @@
   left: 0;
 }
 
-.higlass-block:hover {
+.higlass-block:hover,
+.panZoomTip:hover + .higlass-block {
   box-shadow: inset 0 0 0 2px #aaa;
 }
 

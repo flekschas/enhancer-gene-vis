@@ -70,7 +70,7 @@ const useStyles = makeStyles((theme) => ({
   },
   panZoomTip: {
     position: 'absolute',
-    zIndex: 1,
+    zIndex: 11,
     top: 0,
     left: 0,
     right: 0,
@@ -89,6 +89,9 @@ const useStyles = makeStyles((theme) => ({
     '-ms-user-select': 'none',
     userSelect: 'none',
     transition: '0.25s ease opacity, 0.25s ease transform',
+    '&:hover': {
+      opacity: 0,
+    },
   },
   panZoomTipNormal: {
     color: theme.palette.grey['600'],
@@ -154,20 +157,35 @@ const EnhancerRegion = React.memo((props) => {
   const focusGeneStart = useRecoilValue(focusGeneStartWithAssembly(chromInfo));
   const focusGeneEnd = useRecoilValue(focusGeneEndWithAssembly(chromInfo));
 
-  const higlassMouseDown = useRef(false);
-
   const [higlassMouseOver, setHiglassMouseOver] = useState(false);
   const [higlassFocus, setHiglassFocus] = useState(false);
   const higlassContainerRef = useRef(null);
   const higlassEnhancerClickSelection = useRef(null);
+  const higlassMouseDown = useRef(false);
+  const higlassNumMouseOver = useRef(0);
+  const higlassNumFocus = useRef(0);
+  const higlassNumFocusMouseOut = useRef(0);
 
-  const shouldSkipUpdatingXDomain = useCallback(() => {
+  const shouldSkipUpdatingXDomain = () => {
     if (higlassEnhancerClickSelection.current) {
       higlassEnhancerClickSelection.current = false;
       return true;
     }
     return false;
-  }, []);
+  };
+
+  useEffect(() => {
+    higlassNumMouseOver.current += higlassMouseOver;
+  }, [higlassMouseOver]);
+
+  useEffect(() => {
+    higlassNumFocus.current += higlassFocus;
+  }, [higlassFocus]);
+
+  useEffect(() => {
+    if (higlassFocus) higlassNumFocusMouseOut.current += !higlassMouseOver;
+    else higlassNumFocusMouseOut.current = 0;
+  }, [higlassFocus, higlassMouseOver]);
 
   const viewConfig = useMemo(
     () =>
@@ -296,23 +314,23 @@ const EnhancerRegion = React.memo((props) => {
     []
   );
 
-  const higlassFocusHandler = useCallback(() => {
+  const higlassFocusHandler = () => {
     setHiglassFocus(true);
-  }, []);
+  };
 
-  const higlassBlurHandler = useCallback(() => {
+  const higlassBlurHandler = () => {
     if (!higlassMouseDown.current) {
       setHiglassFocus(false);
     }
-  }, [higlassMouseDown]);
+  };
 
-  const higlassContainerMouseEnterHandler = useCallback(() => {
+  const higlassContainerMouseEnterHandler = () => {
     setHiglassMouseOver(true);
-  }, []);
+  };
 
-  const higlassContainerMouseLeaveHandler = useCallback(() => {
+  const higlassContainerMouseLeaveHandler = () => {
     setHiglassMouseOver(false);
-  }, []);
+  };
 
   // Run on every render
   const classes = useStyles();
@@ -334,50 +352,63 @@ const EnhancerRegion = React.memo((props) => {
         ref={higlassContainerRef}
         style={{ height: `${viewConfigHeight}px` }}
       >
-        {higlassFocus && !higlassMouseOver && (
+        {higlassFocus &&
+          !higlassMouseOver &&
+          higlassNumFocus.current < 2 &&
+          higlassNumFocusMouseOut.current < 1 && (
+            <Typography
+              // Just a hack to trigger a dom rerendering which in turn
+              // triggers the fadeout animation
+              component="div"
+              className={`panZoomTip ${classes.panZoomTip} ${classes.panZoomTipActive}`}
+              noWrap
+            >
+              Click outside to deactivate pan & zoom!
+            </Typography>
+          )}
+        {higlassFocus &&
+          higlassMouseOver &&
+          higlassNumFocus.current < 2 &&
+          higlassNumFocusMouseOut.current < 1 && (
+            <Typography
+              // Just a hack to trigger a dom rerendering which in turn
+              // triggers the fadeout animation
+              component="span"
+              className={`panZoomTip ${classes.panZoomTip} ${classes.panZoomTipActiveHover}`}
+              noWrap
+            >
+              You can now pan & zoom the plot!
+            </Typography>
+          )}
+        {!higlassFocus && higlassMouseOver && higlassNumMouseOver.current < 2 && (
           <Typography
             // Just a hack to trigger a dom rerendering which in turn
             // triggers the fadeout animation
             component="div"
-            className={`${classes.panZoomTip} ${classes.panZoomTipActive}`}
-            noWrap
-          >
-            Click outside to deactivate pan & zoom!
-          </Typography>
-        )}
-        {higlassFocus && higlassMouseOver && (
-          <Typography
-            // Just a hack to trigger a dom rerendering which in turn
-            // triggers the fadeout animation
-            component="span"
-            className={`${classes.panZoomTip} ${classes.panZoomTipActiveHover}`}
-            noWrap
-          >
-            You can now pan & zoom the plot!
-          </Typography>
-        )}
-        {!higlassFocus && higlassMouseOver && (
-          <Typography
-            // Just a hack to trigger a dom rerendering which in turn
-            // triggers the fadeout animation
-            component="div"
-            className={`${classes.panZoomTip} ${classes.panZoomTipNormalHover}`}
+            className={`panZoomTip ${classes.panZoomTip} ${classes.panZoomTipNormalHover}`}
             noWrap
           >
             Click to activate pan & zoom!
           </Typography>
         )}
-        {!higlassFocus && !higlassMouseOver && (
+        {!higlassFocus && !higlassMouseOver && higlassNumMouseOver.current < 2 && (
           <Typography
             // Just a hack to trigger a dom rerendering which in turn
             // triggers the fadeout animation
             component="span"
-            className={`${classes.panZoomTip} ${classes.panZoomTipNormal}`}
+            className={`panZoomTip ${classes.panZoomTip} ${classes.panZoomTipNormal}`}
             noWrap
           >
             This plot is interactive!
           </Typography>
         )}
+        <div
+          className={higlassBlockClasses}
+          onMouseDown={higlassMouseDownHandler}
+          onFocus={higlassFocusHandler}
+          onBlur={higlassBlurHandler}
+          tabIndex="0"
+        />
         <HiGlassComponent
           ref={higlassInitHandler}
           viewConfig={viewConfig}
@@ -385,13 +416,6 @@ const EnhancerRegion = React.memo((props) => {
             sizeMode: 'bounded',
             globalMousePosition: true,
           }}
-        />
-        <div
-          className={higlassBlockClasses}
-          onMouseDown={higlassMouseDownHandler}
-          onFocus={higlassFocusHandler}
-          onBlur={higlassBlurHandler}
-          tabIndex="0"
         />
       </div>
     </div>
