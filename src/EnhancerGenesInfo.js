@@ -32,7 +32,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
     <div>
       {focusVariant ? (
         <Typography className={classes.text}>
-          Enhancer region overlapping <em>{focusVariant}</em> and its predicted
+          Enhancer regions overlapping <em>{focusVariant}</em> and its predicted
           connections to upstream (left) and downstream (right) genes.
         </Typography>
       ) : (
