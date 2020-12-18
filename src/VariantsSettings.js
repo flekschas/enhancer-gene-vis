@@ -262,6 +262,11 @@ const VariantsSettings = React.memo(function VariantsSettings({
   );
   const [changed, setChanged] = useState(false);
   const variantTrackServers = useRef([]);
+  const currVariantTracks = useRef(variantTracks);
+
+  useEffect(() => {
+    currVariantTracks.current = variantTracks;
+  }, [variantTracks]);
 
   const changeTmpVariantTracks = useCallback(
     (i) => (newTrackConfig) => {
@@ -309,7 +314,22 @@ const VariantsSettings = React.memo(function VariantsSettings({
       []
     );
     setVariantTracks(newVariantTracks);
-    setFocusVariant(null);
+    if (
+      newVariantTracks.some(
+        (newTrackConfig, i) =>
+          newTrackConfig.server !== currVariantTracks.current[i].server
+      ) ||
+      newVariantTracks.some(
+        (newTrackConfig, i) =>
+          newTrackConfig.tilesetUid !== currVariantTracks.current[i].tilesetUid
+      ) ||
+      newVariantTracks.some(
+        (newTrackConfig, i) =>
+          newTrackConfig.file !== currVariantTracks.current[i].file
+      )
+    ) {
+      setFocusVariant(null);
+    }
     closeHandler();
   }, [
     chromInfo,
