@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { isString, nthIndexOf } from '@flekschas/utils';
 
 import Box from '@material-ui/core/Box';
@@ -11,12 +11,12 @@ import Grid from '@material-ui/core/Grid';
 import InputLabel from '@material-ui/core/InputLabel';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
 import ButtonBase from '@material-ui/core/ButtonBase';
-import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import SettingsIcon from '@material-ui/icons/Settings';
 
 import CheckboxList from './CheckboxList';
 import Logo from './Logo';
+import VariantsSettings from './VariantsSettings';
 import Welcome from './Welcome';
 import { useChromInfo } from './ChromInfoProvider';
 import { useShowModal } from './ModalProvider';
@@ -28,9 +28,10 @@ import {
   sampleFilterState,
   sampleWithName,
   sampleGroupWithGroup,
+  showVariantsSettingsState,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
-  useWelcome,
+  useShowWelcome,
 } from './state';
 
 import { download, stringifySvg } from './utils';
@@ -165,7 +166,10 @@ const AppSidebar = React.memo(function AppSidebar() {
     chromInfo
   );
   const [xDomainEnd, setXDomainEnd] = useXDomainEndWithAssembly(chromInfo);
-  const [welcome, setWelcome] = useWelcome();
+  const [showWelcome, setShowWelcome] = useShowWelcome();
+  const [showVariantsSettings, setShowVariantsSettings] = useRecoilState(
+    showVariantsSettingsState
+  );
 
   const higlassEnhancerRegions = useRecoilValue(higlassEnhancerRegionsState);
   const higlassDnaAccess = useRecoilValue(higlassDnaAccessState);
@@ -240,17 +244,33 @@ const AppSidebar = React.memo(function AppSidebar() {
   };
 
   const closeWelcome = useCallback(() => {
-    setWelcome(false);
-  }, [setWelcome]);
+    setShowWelcome(false);
+  }, [setShowWelcome]);
 
-  const showWelcome = useCallback(() => {
-    setWelcome(true);
-  }, [setWelcome]);
+  const openWelcome = useCallback(() => {
+    setShowWelcome(true);
+  }, [setShowWelcome]);
 
   useEffect(() => {
-    if (welcome) showModal(Welcome, closeWelcome);
+    if (showWelcome) showModal(Welcome, closeWelcome);
     else showModal();
-  }, [welcome, showModal, closeWelcome]);
+  }, [showWelcome, showModal, closeWelcome]);
+
+  const closeVariantsSettings = useCallback(() => {
+    setShowVariantsSettings(false);
+  }, [setShowVariantsSettings]);
+
+  const openVariantsSettings = useCallback(() => {
+    setShowVariantsSettings(true);
+  }, [setShowVariantsSettings]);
+
+  useEffect(() => {
+    if (showVariantsSettings) {
+      showModal(VariantsSettings, closeVariantsSettings);
+    } else if (!showWelcome) {
+      showModal();
+    }
+  }, [showWelcome, showVariantsSettings, showModal, closeVariantsSettings]);
 
   const mergeSvgs = (enhancerSvg, dnaAccessSvg, enhancerGeneSvg) => {
     const {
@@ -345,7 +365,7 @@ const AppSidebar = React.memo(function AppSidebar() {
           <ButtonBase
             className={classes.toolbar}
             style={{ width: '100%' }}
-            onClick={showWelcome}
+            onClick={openWelcome}
           >
             <h1 className={classes.h1}>
               <Logo />
@@ -402,6 +422,7 @@ const AppSidebar = React.memo(function AppSidebar() {
                 disableElevation
                 size="small"
                 startIcon={<SettingsIcon />}
+                onClick={openVariantsSettings}
               >
                 Edit Variants
               </Button>

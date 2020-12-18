@@ -1,4 +1,6 @@
-import { isFunction } from '@flekschas/utils';
+import { deepClone, isFunction } from '@flekschas/utils';
+
+import { DEFAULT_VARIANT_TRACK_DEF } from './constants';
 
 const getFocusGeneRegion = (viewConfig) => {
   return viewConfig.views[0].overlays[1] &&
@@ -8,25 +10,81 @@ const getFocusGeneRegion = (viewConfig) => {
     : null;
 };
 
-const getFocusVariantRegion = (viewConfig) =>
-  viewConfig.views[0].tracks.top[2].options.focusRegion
-    ? [...viewConfig.views[0].tracks.top[2].options.focusRegion]
-    : null;
+const getFocusVariantRegion = (viewConfig) => {
+  const track = viewConfig.views[0].tracks.top[2];
+  let focusRegion = null;
+
+  if (track.type === 'combined') {
+    if (!track.contents[0]) return focusRegion;
+    focusRegion = track.contents[0].options.focusRegion;
+  } else {
+    focusRegion = track.options.focusRegion;
+  }
+
+  return focusRegion ? [...focusRegion] : focusRegion;
+};
+
+export const updateViewConfigVariantTracks = (variantTrackConfigs) => (
+  viewConfig
+) => {
+  const track = viewConfig.views[0].tracks.top[2];
+
+  if (track.type === 'combined') {
+    track.contents = variantTrackConfigs.reduce((tracks, trackConfig) => {
+      const variantTrack = deepClone(DEFAULT_VARIANT_TRACK_DEF);
+      if (trackConfig.server && trackConfig.tilesetUid) {
+        variantTrack.server = trackConfig.server;
+        variantTrack.tilesetUid = trackConfig.tilesetUid;
+        variantTrack.uid = `variants-${trackConfig.tilesetUid}`;
+        variantTrack.options.name = trackConfig.label || 'Variants';
+        tracks.push(variantTrack);
+      } else if (trackConfig.file) {
+        variantTrack.data = { type: 'localBed', id: trackConfig.file.name };
+        variantTrack.uid = `variants-${trackConfig.file.name}`;
+        variantTrack.options.name = trackConfig.label || 'Variants';
+        tracks.push(variantTrack);
+      }
+      return tracks;
+    }, []);
+
+    track.height = (track.contents.length > 0) * 32;
+  }
+
+  return viewConfig;
+};
 
 export const updateViewConfigFocusVariant = (position, trackIdxs = []) => (
   viewConfig
 ) => {
+  const delFocusRegion = (track, focusRegion) => {
+    if (track.type === 'combined') {
+      track.contents.forEach((childTrack) => {
+        delete childTrack.options.focusRegion;
+      });
+    } else {
+      delete track.options.focusRegion;
+    }
+  };
+
+  const setFocusRegion = (track, focusRegion) => {
+    if (track.type === 'combined') {
+      track.contents.forEach((childTrack) => {
+        childTrack.options.focusRegion = focusRegion;
+      });
+    } else {
+      track.options.focusRegion = focusRegion;
+    }
+  };
+
   if (Number.isNaN(+position) || position === null) {
     trackIdxs.forEach((trackIdx) => {
-      delete viewConfig.views[0].tracks.top[trackIdx].options.focusRegion;
+      delFocusRegion(viewConfig.views[0].tracks.top[trackIdx]);
     });
     viewConfig.views[0].overlays[0].options.extent = [];
   } else {
     const focusRegion = [position - 0.5, position + 0.5];
     trackIdxs.forEach((trackIdx) => {
-      viewConfig.views[0].tracks.top[
-        trackIdx
-      ].options.focusRegion = focusRegion;
+      setFocusRegion(viewConfig.views[0].tracks.top[trackIdx], focusRegion);
     });
 
     viewConfig.views[0].overlays[0].options.extent = [focusRegion];
@@ -36,8 +94,15 @@ export const updateViewConfigFocusVariant = (position, trackIdxs = []) => (
 };
 
 export const updateViewConfigVariantYScale = (yScale) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[2].options.valueColumn =
-    yScale === 'pValue' ? 7 : 8;
+  const track = viewConfig.views[0].tracks.top[2];
+
+  if (track.type === 'combined') {
+    track.contents.forEach((childTrack) => {
+      childTrack.options.valueColumn = yScale === 'pValue' ? 7 : 8;
+    });
+  } else {
+    track.options.valueColumn = yScale === 'pValue' ? 7 : 8;
+  }
 
   return viewConfig;
 };

@@ -8,15 +8,19 @@
 }
 
 .higlass-block:hover {
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.33);
+  box-shadow: inset 0 0 0 2px #aaa;
 }
 
 .higlass-block:focus,
 .higlass-block:focus-within,
 .higlass-block.focus {
   outline: none;
-  box-shadow: inset 0 0 0 2px rgba(204, 0, 120, 0.66);
+  box-shadow: inset 0 0 0 2px #dd55a5;
   pointer-events: none;
+}
+
+.higlass-container:hover .higlass-block.focus {
+  box-shadow: inset 0 0 0 2px #cc0078;
 }
 
 @keyframes fadeout {

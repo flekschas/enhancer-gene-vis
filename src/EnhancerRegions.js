@@ -35,6 +35,7 @@ import {
   variantYScaleState,
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
+  variantTracksState,
 } from './state';
 
 import {
@@ -42,6 +43,7 @@ import {
   updateViewConfigFocusVariant,
   updateViewConfigVariantYScale,
   updateViewConfigXDomain,
+  updateViewConfigVariantTracks,
 } from './view-config';
 
 import { DEFAULT_VIEW_CONFIG_ENHANCER } from './constants';
@@ -91,7 +93,18 @@ const useStyles = makeStyles((theme) => ({
   panZoomTipNormal: {
     color: theme.palette.grey['600'],
   },
+  panZoomTipNormalHover: {
+    fontWeight: 'bold',
+    color: 'black',
+    background: '#aaa',
+    animation: '0.75s ease 5s 1 running forwards fadeout',
+  },
   panZoomTipActive: {
+    color: 'white',
+    background: '#dd55a5',
+    animation: '0.75s ease 5s 1 running forwards fadeout',
+  },
+  panZoomTipActiveHover: {
     fontWeight: 'bold',
     color: 'white',
     background: '#cc0078',
@@ -127,6 +140,7 @@ const EnhancerRegion = React.memo((props) => {
   const setFocusVariantOption = useSetRecoilState(focusVariantOptionState);
   const setHiglass = useSetRecoilState(higlassEnhancerRegionsState);
 
+  const variantTracks = useRecoilValue(variantTracksState);
   const hideUnfocused = useRecoilValue(enhancerRegionsHideUnfocusedState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const colorEncoding = useRecoilValue(enhancerRegionsColorEncodingState);
@@ -158,6 +172,7 @@ const EnhancerRegion = React.memo((props) => {
   const viewConfig = useMemo(
     () =>
       pipe(
+        updateViewConfigVariantTracks(variantTracks),
         updateViewConfigFocusGene(
           focusGeneOption ? focusGeneOption.geneName : null,
           focusGeneStart,
@@ -175,6 +190,7 @@ const EnhancerRegion = React.memo((props) => {
     [
       // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
       // updating the view-config on every pan or zoom event.
+      variantTracks,
       focusGeneOption,
       focusGeneStart,
       focusGeneEnd,
@@ -312,7 +328,7 @@ const EnhancerRegion = React.memo((props) => {
         Settings={EnhancerRegionsSettings}
       />
       <div
-        className={classes.higlassContainer}
+        className={`higlass-container ${classes.higlassContainer}`}
         onMouseEnter={higlassContainerMouseEnterHandler}
         onMouseLeave={higlassContainerMouseLeaveHandler}
         ref={higlassContainerRef}
@@ -334,7 +350,7 @@ const EnhancerRegion = React.memo((props) => {
             // Just a hack to trigger a dom rerendering which in turn
             // triggers the fadeout animation
             component="span"
-            className={`${classes.panZoomTip} ${classes.panZoomTipActive}`}
+            className={`${classes.panZoomTip} ${classes.panZoomTipActiveHover}`}
             noWrap
           >
             You can now pan & zoom the plot!
@@ -345,7 +361,7 @@ const EnhancerRegion = React.memo((props) => {
             // Just a hack to trigger a dom rerendering which in turn
             // triggers the fadeout animation
             component="div"
-            className={`${classes.panZoomTip} ${classes.panZoomTipNormal}`}
+            className={`${classes.panZoomTip} ${classes.panZoomTipNormalHover}`}
             noWrap
           >
             Click to activate pan & zoom!

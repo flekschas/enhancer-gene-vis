@@ -16,6 +16,7 @@
     "deploy": "npm run build; touch build/.nojekyll; gh-pages -d build -t --git git"
   },
   "dependencies": {
+    "@flatten-js/interval-tree": "^1.0.13",
     "@flekschas/utils": "^0.25.0",
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",

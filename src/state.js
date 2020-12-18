@@ -1,5 +1,6 @@
 import { atom, selector } from 'recoil';
 import { memoize } from 'lodash-es';
+import { deepClone } from '@flekschas/utils';
 
 import { useRecoilQueryString } from './use-query-string';
 
@@ -12,6 +13,7 @@ import {
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
+  DEFAULT_VARIANT_TRACKS,
   SAMPLES,
 } from './constants';
 
@@ -61,8 +63,18 @@ export const sampleGroupWithGroup = memoize(
   (group) => group.name
 );
 
-export const welcomeState = atom({
-  key: 'welcome',
+export const variantTracksState = atom({
+  key: 'variantTracks',
+  default: deepClone(DEFAULT_VARIANT_TRACKS),
+});
+
+export const showVariantsSettingsState = atom({
+  key: 'showVariantsSettings',
+  default: false,
+});
+
+export const showWelcomeState = atom({
+  key: 'showWelcome',
   default: getDefault('w', true, booleanQueryStringDecoder),
 });
 
@@ -81,15 +93,25 @@ export const focusGeneState = atom({
   default: getDefault('g', ''),
 });
 
+export const focusGeneOptionState = atom({
+  key: 'focusGeneOption',
+  default: null,
+});
+
 export const focusVariantState = atom({
   key: 'focusVariant',
   default: getDefault('v', 'rs1250566'),
 });
 
-// export const focusRegionState = atom({
-//   key: 'focusVariant',
-//   default: getDefault('r', 'rs1250566'),
-// });
+export const focusVariantOptionState = atom({
+  key: 'focusVariantOption',
+  default: null,
+});
+
+export const focusRegionOptionState = atom({
+  key: 'focusRegionOption',
+  default: null,
+});
 
 export const variantYScaleState = atom({
   key: 'variantYScale',
@@ -130,17 +152,6 @@ export const enhancerGenesSvgState = atom({
   key: 'enhancerGenesSvg',
   default: null,
 });
-
-export const focusGeneOptionState = atom({
-  key: 'focusGeneOption',
-  default: null,
-});
-
-export const focusVariantOptionState = atom({
-  key: 'focusVariantOption',
-  default: null,
-});
-
 export const higlassEnhancerRegionsState = atom({
   key: 'higlassEnhancerRegions',
   default: null,
@@ -271,8 +282,8 @@ export const focusVariantStrPositionState = selector({
 });
 
 // Predefined hooks
-export const useWelcome = () =>
-  useRecoilQueryString('w', welcomeState, {
+export const useShowWelcome = () =>
+  useRecoilQueryString('w', showWelcomeState, {
     decoder: booleanQueryStringDecoder,
   });
 

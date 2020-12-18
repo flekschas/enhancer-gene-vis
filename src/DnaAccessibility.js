@@ -13,16 +13,17 @@ import DnaAccessibilitySettings from './DnaAccessibilitySettings';
 import TitleBar from './TitleBar';
 
 import {
-  higlassDnaAccessState,
   dnaAccessLabelStyleState,
-  focusGeneStartWithAssembly,
   focusGeneEndWithAssembly,
+  focusGeneStartWithAssembly,
   focusVariantPositionWithAssembly,
+  higlassDnaAccessState,
+  sampleSelectionState,
   useDnaAccessShowInfos,
+  variantTracksState,
   variantYScaleState,
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
-  sampleSelectionState,
 } from './state';
 import {
   DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,
@@ -34,6 +35,7 @@ import {
   updateViewConfigFocusVariant,
   updateViewConfigVariantYScale,
   updateViewConfigXDomain,
+  updateViewConfigVariantTracks,
 } from './view-config';
 
 import 'higlass/dist/hglib.css';
@@ -112,6 +114,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
   const sampleSelection = useRecoilValue(sampleSelectionState);
   const labelStyle = useRecoilValue(dnaAccessLabelStyleState);
   const variantYScale = useRecoilValue(variantYScaleState);
+  const variantTracks = useRecoilValue(variantTracksState);
   const focusGeneStart = useRecoilValue(focusGeneStartWithAssembly(chromInfo));
   const focusGeneEnd = useRecoilValue(focusGeneEndWithAssembly(chromInfo));
   const focusVariantPosition = useRecoilValue(
@@ -139,6 +142,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
   const viewConfig = useMemo(
     () =>
       pipe(
+        updateViewConfigVariantTracks(variantTracks),
         updateViewConfigFocusVariant(focusVariantPosition, [2]),
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigDnaAccessLabels(labelStyle),
@@ -155,6 +159,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
     [
       // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
       // updating the view-config on every pan or zoom event.
+      variantTracks,
       focusVariantPosition,
       focusGeneStart,
       focusGeneEnd,

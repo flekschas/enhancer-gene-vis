@@ -13,7 +13,17 @@ import createSnpTrack from './snp-track';
 import createStackedBarTrack from './stacked-bar-track';
 import createTssTrack from './tss-track';
 
+import createLocalBedDataFetcher from './local-bed-data-fetcher';
+
 import './index.css';
+
+register(
+  {
+    dataFetcher: createLocalBedDataFetcher,
+    config: createLocalBedDataFetcher.config,
+  },
+  { pluginType: 'dataFetcher' }
+);
 
 register({
   track: createRidgePlotTrack,

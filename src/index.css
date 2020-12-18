@@ -35,6 +35,10 @@ a:hover {
   text-shadow: rgba(255, 76, 151, 0.2) 0 0 4px;
 }
 
+.r {
+  position: relative;
+}
+
 .flex-box,
 .fb {
   display: flex;
