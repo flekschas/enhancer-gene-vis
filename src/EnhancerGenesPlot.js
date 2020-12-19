@@ -24,6 +24,8 @@ import {
   focusVariantRelPositionState,
   focusVariantState,
   focusVariantStrPositionState,
+  sampleSelectionState,
+  sampleGroupSelectionSizesState,
 } from './state';
 
 import {
@@ -32,6 +34,7 @@ import {
   DEFAULT_COLOR_MAP_LIGHT,
   DEFAULT_STRATIFICATION,
   DEFAULT_VIEW_CONFIG_ENHANCER,
+  SAMPLE_IDX,
 } from './constants';
 import { scaleBand } from './utils';
 import usePrevious from './use-previous';
@@ -793,6 +796,10 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   const chromInfo = useChromInfo();
   const showTooltip = useShowTooltip();
 
+  const sampleSelection = useRecoilValue(sampleSelectionState);
+  const sampleGroupSelectionSizes = useRecoilValue(
+    sampleGroupSelectionSizesState
+  );
   const geneCellEncoding = useRecoilValue(enhancerGenesCellEncodingState);
   const position = useRecoilValue(focusVariantPositionWithAssembly(chromInfo));
   const relPosition = useRecoilValue(focusVariantRelPositionState);
@@ -863,6 +870,11 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
       const genesDownstreamByDist = new TinyQueue([], distComparator);
 
       tile.forEach((entry) => {
+        const sample = entry.fields[10];
+
+        // Exclude samples that have been deselected
+        if (!sampleSelection[SAMPLE_IDX[sample]]) return;
+
         const geneName = entry.fields[6];
 
         if (!genes[geneName]) {
@@ -880,7 +892,8 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
 
           Object.values(categories).forEach(({ name, size }) => {
             genes[geneName].samplesByCategory[name] = [];
-            genes[geneName].samplesByCategory[name].size = size;
+            genes[geneName].samplesByCategory[name].size =
+              sampleGroupSelectionSizes[name];
           });
 
           minAbsDistance = Math.min(minAbsDistance, absDistance);
@@ -890,7 +903,6 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
           else genesUpstreamByDist.push(genes[geneName]);
         }
 
-        const sample = entry.fields[10];
         genes[geneName].samplesByCategory[samples[sample].category.name].push({
           gene: geneName,
           sample,
@@ -934,7 +946,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
     // `relPosition` is excluded on purpose because `tile` is already updated
     // when `relPosition` updates
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tile]
+    [tile, sampleGroupSelectionSizes, sampleSelection]
   );
 
   // Initialization

@@ -14,6 +14,7 @@ import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
   DEFAULT_VARIANT_TRACKS,
+  GROUPED_SAMPLE_OPTIONS,
   SAMPLES,
 } from './constants';
 
@@ -62,6 +63,15 @@ export const sampleGroupWithGroup = memoize(
     }),
   (group) => group.name
 );
+
+export const sampleGroupSelectionSizesState = selector({
+  key: 'sampleGroupSelectionSizes',
+  get: ({ get }) =>
+    GROUPED_SAMPLE_OPTIONS.reduce((sizes, group) => {
+      sizes[group.name] = get(sampleGroupWithGroup(group)).n;
+      return sizes;
+    }, {}),
+});
 
 export const variantTracksState = atom({
   key: 'variantTracks',

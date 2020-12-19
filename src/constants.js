@@ -255,6 +255,11 @@ export const SAMPLE_TO_GROUP = GROUPED_SAMPLE_OPTIONS.reduce(
 
 export const SAMPLES = GROUPED_SAMPLE_OPTIONS.flatMap((group) => group.options);
 
+export const SAMPLE_IDX = SAMPLES.reduce((idxs, sample, idx) => {
+  idxs[sample] = idx;
+  return idxs;
+}, {});
+
 export const DEFAULT_X_DOMAIN_START = 1761366260;
 export const DEFAULT_X_DOMAIN_END = 1761603836;
 
