@@ -11,7 +11,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import FileInput from './FileInput';
 import { useChromInfo } from './ChromInfoProvider';
 import createLocalBedDataServer from './local-bed-data-server';
-import usePrevious from './use-previous';
 
 import { variantTracksState, useFocusVariant } from './state';
 
