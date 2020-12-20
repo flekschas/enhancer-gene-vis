@@ -40,6 +40,11 @@ export const sampleSelectionState = selector({
   get: ({ get }) => SAMPLES.map((name) => get(sampleWithName(name)).checked),
 });
 
+export const selectedSamplesState = selector({
+  key: 'selectedSamples',
+  get: ({ get }) => SAMPLES.filter((name) => get(sampleWithName(name)).checked),
+});
+
 export const sampleWithName = memoize((name) =>
   atom({
     key: `sample-${name}`,

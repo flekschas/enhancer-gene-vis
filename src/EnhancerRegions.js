@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
 import { HiGlassComponent } from 'higlass';
-import { debounce, deepClone, isParentOf, pipe } from '@flekschas/utils';
+import { debounce, deepClone, isParentOf, pipe, sum } from '@flekschas/utils';
 
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
@@ -27,15 +27,17 @@ import {
   focusVariantOptionState,
   focusVariantPositionWithAssembly,
   higlassEnhancerRegionsState,
+  sampleGroupSelectionSizesState,
+  selectedSamplesState,
   useEnhancerRegionsShowInfos,
   useFocusGene,
   useFocusVariant,
   useXDomainEndWithAssembly,
   useXDomainStartWithAssembly,
+  variantTracksState,
   variantYScaleState,
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
-  variantTracksState,
 } from './state';
 
 import {
@@ -129,6 +131,19 @@ const updateViewConfigColorEncoding = (coloring) => (viewConfig) => {
   return viewConfig;
 };
 
+const updateViewConfigFilter = (selectedSamples) => (viewConfig) => {
+  const matrixTrack = viewConfig.views[0].tracks.top[4];
+  matrixTrack.options.inclusion = selectedSamples;
+  matrixTrack.options.inclusionField = 10;
+  return viewConfig;
+};
+
+const updateViewConfigMatrixHeight = (numSamples) => (viewConfig) => {
+  const matrixTrack = viewConfig.views[0].tracks.top[4];
+  matrixTrack.height = numSamples * matrixTrack.options.markHeight + 14;
+  return viewConfig;
+};
+
 const EnhancerRegion = React.memo((props) => {
   const chromInfo = useChromInfo();
 
@@ -156,6 +171,10 @@ const EnhancerRegion = React.memo((props) => {
   const xDomainEndAbs = useRecoilValue(xDomainEndAbsWithAssembly(chromInfo));
   const focusGeneStart = useRecoilValue(focusGeneStartWithAssembly(chromInfo));
   const focusGeneEnd = useRecoilValue(focusGeneEndWithAssembly(chromInfo));
+  const sampleGroupSelectionSizes = useRecoilValue(
+    sampleGroupSelectionSizesState
+  );
+  const selectedSamples = useRecoilValue(selectedSamplesState);
 
   const [higlassMouseOver, setHiglassMouseOver] = useState(false);
   const [higlassFocus, setHiglassFocus] = useState(false);
@@ -173,6 +192,11 @@ const EnhancerRegion = React.memo((props) => {
     }
     return false;
   };
+
+  const numSamples = useMemo(
+    () => sum(Object.values(sampleGroupSelectionSizes)),
+    [sampleGroupSelectionSizes]
+  );
 
   useEffect(() => {
     higlassNumMouseOver.current += higlassMouseOver;
@@ -202,7 +226,9 @@ const EnhancerRegion = React.memo((props) => {
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigXDomain(xDomainStartAbs, xDomainEndAbs, {
           force: shouldSkipUpdatingXDomain,
-        })
+        }),
+        updateViewConfigFilter(selectedSamples),
+        updateViewConfigMatrixHeight(numSamples)
       )(deepClone(DEFAULT_VIEW_CONFIG_ENHANCER)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -216,6 +242,8 @@ const EnhancerRegion = React.memo((props) => {
       hideUnfocused,
       colorEncoding,
       variantYScale,
+      selectedSamples,
+      numSamples,
     ]
   );
 

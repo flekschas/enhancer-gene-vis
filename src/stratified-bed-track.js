@@ -1,4 +1,5 @@
 import createIntervalTree from 'interval-tree-1d';
+import { identity } from '@flekschas/utils';
 
 import {
   DEFAULT_COLOR_MAP,
@@ -205,10 +206,16 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.categoryToY = new Map();
       this.yToCategory = new Map();
       this.groupToColor = new Map();
-      this.numGroups = this.options.stratification.groups.length;
+
       this.groupSizes = this.options.stratification.groups.map(
-        (group) => group.categories.length
+        (group) =>
+          group.categories.filter((category) => this.isIncluded(category))
+            .length
       );
+      this.filteredGroups = this.options.stratification.groups.filter(
+        (group, i) => this.groupSizes[i] > 0
+      );
+      this.numGroups = this.filteredGroups.length;
       this.numCategories = this.groupSizes.reduce(
         (numCategories, groupSize) => numCategories + groupSize,
         0
@@ -228,13 +235,15 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
               DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP.length]
           ),
         ]);
-        group.categories.forEach((category, j) => {
-          const cat = category.toLowerCase();
-          this.categoryToGroup.set(cat, i);
-          this.categoryToY.set(cat, k + j);
-          this.yToCategory.set(k + j, cat);
-        });
-        k += group.categories.length;
+        group.categories
+          .filter((category) => this.isIncluded(category))
+          .forEach((category, j) => {
+            const cat = category.toLowerCase();
+            this.categoryToGroup.set(cat, i);
+            this.categoryToY.set(cat, k + j);
+            this.yToCategory.set(k + j, cat);
+          });
+        k += this.groupSizes[i];
       });
 
       this.groupLabelsPixiText = this.groupLabels.map(
@@ -303,6 +312,22 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.markOpacityFocus = Number.isNaN(+this.options.markOpacityFocus)
         ? this.markOpacity
         : Math.min(1, Math.max(0, +this.options.markOpacityFocus));
+
+      this.inclusion = this.options.inclusion
+        ? this.options.inclusion.reduce((s, include) => {
+            s.add(include);
+            return s;
+          }, new Set())
+        : null;
+
+      this.getInclusionField = this.options.inclusionField
+        ? (item) => item.fields[this.options.inclusionField]
+        : null;
+
+      this.isIncluded =
+        this.options.inclusionField && this.inclusion
+          ? (inclusionField) => this.inclusion.has(inclusionField)
+          : () => true;
 
       this.getImportance = this.options.importanceField
         ? (item) => +item.fields[this.options.importanceField]
@@ -445,17 +470,22 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       };
     }
 
-    itemToIndicatorReducer(filterFn, addFn) {
+    itemToIndicatorReducer(focusFilterFn, addFn) {
       if (this.focusStyle === 'highlighting') {
-        return (filteredItems, item) => {
-          filterFn(item);
-          addFn(filteredItems, item);
+        return (filteredItems, item, i) => {
+          focusFilterFn(item);
+          if (this.isIncluded(this.getInclusionField(item)))
+            addFn(filteredItems, item);
           return filteredItems;
         };
       }
 
       return (filteredItems, item) => {
-        if (filterFn(item)) addFn(filteredItems, item);
+        if (
+          focusFilterFn(item) &&
+          this.isIncluded(this.getInclusionField(item))
+        )
+          addFn(filteredItems, item);
         return filteredItems;
       };
     }
@@ -499,8 +529,8 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         };
       }
 
-      const filterFn = this.isItemInFocus();
-      const dataToPoint = this.itemToIndicatorReducer(filterFn, addFn);
+      const focusFilterFn = this.isItemInFocus();
+      const dataToPoint = this.itemToIndicatorReducer(focusFilterFn, addFn);
 
       return Object.values(this.fetchedTiles).flatMap((tile) =>
         Object.values(tile.tileData.reduce(dataToPoint, reducerVar))
@@ -589,12 +619,27 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.pAxis.lineStyle(1, 0x000000, 1.0, 0.0);
 
       this.groupLabelsPixiText.forEach((labelPixiText, i) => {
+        if (numAxisLabels < i + 1) {
+          this.pAxis.addChild(labelPixiText);
+        }
+
+        // Don't ask me why but somehow after `labelPixiText` was added to
+        // `this.pAxis` the object is not the same as `this.pAxis.children[i]`
+        // anymore and subsequent changes were ineffective
+        const text = this.pAxis.children[i];
+
+        if (this.groupSizes[i] === 0) {
+          text.alpha = 0;
+          return;
+        }
+
         const height = this.categoryHeightScale(this.groupSizes[i]);
         yEnd += height;
-        labelPixiText.x = xLabelOffset;
-        labelPixiText.y = yStart + height / 2;
-        labelPixiText.anchor.x = this.axisAlign === 'right' ? 1 : 0;
-        labelPixiText.anchor.y = 0.5;
+        text.x = xLabelOffset;
+        text.y = yStart + height / 2;
+        text.anchor.x = this.axisAlign === 'right' ? 1 : 0;
+        text.anchor.y = 0.5;
+        text.alpha = 1;
 
         if (this.options.focusStyle === 'highlighting') {
           this.pAxis.beginFill(0xffffff, 0.66);
@@ -605,24 +650,20 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         this.pAxis.lineStyle(0);
         if (this.axisAlign === 'right') {
           this.pAxis.drawRect(
-            labelPixiText.x - labelPixiText.width,
-            labelPixiText.y - labelPixiText.height / 2,
-            labelPixiText.width,
-            labelPixiText.height
+            text.x - text.width,
+            text.y - text.height / 2,
+            text.width,
+            text.height
           );
         } else {
           this.pAxis.drawRect(
-            labelPixiText.x,
-            labelPixiText.y - labelPixiText.height / 2,
-            labelPixiText.width,
-            labelPixiText.height
+            text.x,
+            text.y - text.height / 2,
+            text.width,
+            text.height
           );
         }
         this.pAxis.endFill();
-
-        if (numAxisLabels < i + 1) {
-          this.pAxis.addChild(labelPixiText);
-        }
 
         this.pAxis.lineStyle(1, 0x000000, 1.0, 0.0);
         this.pAxis.moveTo(0, yStart);
