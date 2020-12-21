@@ -202,44 +202,47 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       }
 
       const categoryBinHash = new Map();
+      const maxBinId = this.numBins - 1;
 
-      tile.tileData.forEach((item) => {
-        const group = this.categoryToGroup.get(
-          item.fields[this.categoryField].toLowerCase()
-        );
-        const maxBinId = this.numBins - 1;
-        const binStart = Math.max(
-          0,
-          Math.min(maxBinId, Math.round((item.xStart - tileX) / binSize))
-        );
-        const binEnd = Math.max(
-          0,
-          Math.min(maxBinId, Math.round((item.xEnd - tileX) / binSize))
-        );
-        const numBins = Math.abs(binEnd - binStart);
-        const score = this.getImportance(item);
-        const category = this.getCategory(item);
-        const base = group * this.numBins;
+      tile.tileData
+        .filter((item) => this.isIncluded(this.getInclusionField(item)))
+        .forEach((item) => {
+          const group = this.categoryToGroup.get(
+            item.fields[this.categoryField].toLowerCase()
+          );
+          const binStart = Math.max(
+            0,
+            Math.min(maxBinId, Math.round((item.xStart - tileX) / binSize))
+          );
+          const binEnd = Math.max(
+            0,
+            Math.min(maxBinId, Math.round((item.xEnd - tileX) / binSize))
+          );
+          const numBins = Math.abs(binEnd - binStart);
+          const score = this.getImportance(item);
+          const category = this.getCategory(item);
+          const base = group * this.numBins;
 
-        for (let i = 0; i <= numBins; i++) {
-          const bin = binStart + i;
-          const histIdx = base + bin;
+          for (let i = 0; i <= numBins; i++) {
+            const bin = binStart + i;
+            const histIdx = base + bin;
 
-          const binHash = categoryBinHash.get(category) || {};
+            const binHash = categoryBinHash.get(category) || {};
 
-          // Make sure we count multiple enhancer predictions of the same biosample and bin only once (i.e., summing up)
-          if (!binHash[bin]) {
-            binHash[bin] = binHash[bin] || score > 0;
-            tile.histogram2dNumPred[histIdx] += binHash[bin];
-            categoryBinHash.set(category, binHash);
+            // Make sure we count multiple enhancer predictions of the same
+            // biosample and bin only once (i.e., summing up)
+            if (!binHash[bin]) {
+              binHash[bin] = binHash[bin] || score > 0;
+              tile.histogram2dNumPred[histIdx] += binHash[bin];
+              categoryBinHash.set(category, binHash);
+            }
+
+            tile.histogram2d[histIdx] += score;
+            tile.histogram1d[bin] += score;
+
+            max = Math.max(max, tile.histogram1d[bin]);
           }
-
-          tile.histogram2d[histIdx] += score;
-          tile.histogram1d[bin] += score;
-
-          max = Math.max(max, tile.histogram1d[bin]);
-        }
-      });
+        });
 
       tile.histogramMax = max;
     }
@@ -292,6 +295,7 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         this.categoryToGroup = undefined;
         this.groupToColor = undefined;
         this.numGroups = 0;
+        this.numFilteredGroups = 0;
         this.numCategories = 0;
         this.groupLabels = [];
         return;
@@ -303,10 +307,17 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       this.categoryToGroup = new Map();
       this.categoryToY = new Map();
       this.groupToColor = new Map();
-      this.numGroups = this.options.stratification.groups.length;
+
       this.groupSizes = this.options.stratification.groups.map(
-        (group) => group.categories.length
+        (group) =>
+          group.categories.filter((category) => this.isIncluded(category))
+            .length
       );
+      this.filteredGroups = this.options.stratification.groups.filter(
+        (group, i) => this.groupSizes[i] > 0
+      );
+      this.numGroups = this.options.stratification.groups.length;
+      this.numFilteredGroups = this.filteredGroups.length;
       this.numCategories = this.groupSizes.reduce(
         (numCategories, groupSize) => numCategories + groupSize,
         0
@@ -326,11 +337,13 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
               DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP_LIGHT.length]
           ),
         ]);
-        group.categories.forEach((category, j) => {
-          this.categoryToGroup.set(category.toLowerCase(), i);
-          this.categoryToY.set(category.toLowerCase(), k + j);
-        });
-        k += group.categories.length;
+        group.categories
+          .filter((category) => this.isIncluded(category))
+          .forEach((category, j) => {
+            this.categoryToGroup.set(category.toLowerCase(), i);
+            this.categoryToY.set(category.toLowerCase(), k + j);
+          });
+        k += this.groupSizes[i];
       });
 
       this.groupLabelsPixiText = this.groupLabels.map(
@@ -410,6 +423,22 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
       const importanceDomain = this.options.importanceDomain || [1000, 1];
 
+      this.inclusion = this.options.inclusion
+        ? this.options.inclusion.reduce((s, include) => {
+            s.add(include);
+            return s;
+          }, new Set())
+        : null;
+
+      this.getInclusionField = this.options.inclusionField
+        ? (item) => item.fields[this.options.inclusionField]
+        : null;
+
+      this.isIncluded =
+        this.options.inclusionField && this.inclusion
+          ? (inclusionField) => this.inclusion.has(inclusionField)
+          : () => true;
+
       const opacityLinearScale = scaleLinear()
         .domain(importanceDomain)
         .range([1, 10]);
@@ -422,10 +451,6 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
       this.focusGene = this.options.focusGene
         ? this.options.focusGene.toLowerCase()
-        : undefined;
-
-      this.getGene = this.options.geneField
-        ? (item) => item.fields[this.options.geneField].toLowerCase()
         : undefined;
 
       this.minImportance = this.options.minImportance || 0;
@@ -771,7 +796,6 @@ createStackedBarTrack.config = {
   name: 'Advanced Stacked Bars Track',
   thumbnail: new DOMParser().parseFromString(icon, 'text/xml').documentElement,
   availableOptions: [
-    'arcStyle',
     'flip1D',
     'labelPosition',
     'labelColor',
@@ -783,7 +807,6 @@ createStackedBarTrack.config = {
     'trackBorderColor',
   ],
   defaultOptions: {
-    arcStyle: 'ellipse',
     flip1D: 'no',
     labelColor: 'black',
     labelPosition: 'hidden',
@@ -791,21 +814,6 @@ createStackedBarTrack.config = {
     strokeWidth: 1,
     trackBorderWidth: 0,
     trackBorderColor: 'black',
-  },
-  optionsInfo: {
-    arcStyle: {
-      name: 'Arc Style',
-      inlineOptions: {
-        circle: {
-          name: 'Circle',
-          value: 'circle',
-        },
-        ellipse: {
-          name: 'Ellipse',
-          value: 'ellipse',
-        },
-      },
-    },
   },
 };
 

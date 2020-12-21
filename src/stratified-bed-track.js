@@ -1,5 +1,4 @@
 import createIntervalTree from 'interval-tree-1d';
-import { identity } from '@flekschas/utils';
 
 import {
   DEFAULT_COLOR_MAP,

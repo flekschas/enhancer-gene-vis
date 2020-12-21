@@ -132,9 +132,10 @@ const updateViewConfigColorEncoding = (coloring) => (viewConfig) => {
 };
 
 const updateViewConfigFilter = (selectedSamples) => (viewConfig) => {
-  const matrixTrack = viewConfig.views[0].tracks.top[4];
-  matrixTrack.options.inclusion = selectedSamples;
-  matrixTrack.options.inclusionField = 10;
+  viewConfig.views[0].tracks.top[3].options.inclusion = selectedSamples;
+  viewConfig.views[0].tracks.top[3].options.inclusionField = 10;
+  viewConfig.views[0].tracks.top[4].options.inclusion = selectedSamples;
+  viewConfig.views[0].tracks.top[4].options.inclusionField = 10;
   return viewConfig;
 };
 
