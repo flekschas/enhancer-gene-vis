@@ -204,6 +204,8 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       const categoryBinHash = new Map();
       const maxBinId = this.numBins - 1;
 
+      let vv = 1;
+
       tile.tileData
         .filter((item) => this.isIncluded(this.getInclusionField(item)))
         .forEach((item) => {
@@ -212,11 +214,17 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
           );
           const binStart = Math.max(
             0,
-            Math.min(maxBinId, Math.round((item.xStart - tileX) / binSize))
+            Math.min(
+              maxBinId,
+              Math.round((this.getStart(item) - tileX) / binSize)
+            )
           );
           const binEnd = Math.max(
             0,
-            Math.min(maxBinId, Math.round((item.xEnd - tileX) / binSize))
+            Math.min(
+              maxBinId,
+              Math.round((this.getEnd(item) - tileX) / binSize)
+            )
           );
           const numBins = Math.abs(binEnd - binStart);
           const score = this.getImportance(item);
@@ -417,6 +425,18 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         ? Math.round(this.tilesetInfo.tile_size / this.binSize)
         : DEFAULT_TILE_SIZE / this.binSize;
 
+      this.getOffset = this.options.offsetField
+        ? (item) => this.chromOffsets[item.fields[this.options.offsetField]]
+        : () => 0;
+
+      this.getStart = this.options.startField
+        ? (item) => this.getOffset(item) + +item.fields[this.options.startField]
+        : (item) => item.xStart;
+
+      this.getEnd = this.options.endField
+        ? (item) => this.getOffset(item) + +item.fields[this.options.endField]
+        : (item) => item.xEnd;
+
       this.getImportance = this.options.importanceField
         ? (item) => +item.fields[this.options.importanceField]
         : () => 1;
@@ -474,8 +494,25 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       }
     }
 
+    computeChromOffets() {
+      if (!this.tilesetInfo) return;
+      const chroms = this.tilesetInfo.chrom_names.split('\t');
+      const chromSizes = this.tilesetInfo.chrom_sizes
+        .split('\t')
+        .map((size) => +size);
+      // eslint-disable-next-line prefer-destructuring
+      this.chromOffsets = chroms.reduce(
+        ([offsets, cumSum], chrom, i) => {
+          offsets[chrom] = cumSum;
+          return [offsets, cumSum + chromSizes[i]];
+        },
+        [{}, 0]
+      )[0];
+    }
+
     refreshTiles(...brgs) {
       super.refreshTiles(...brgs);
+      this.computeChromOffets();
       this.updateLoadIndicator();
       if (this.tilesetInfo) {
         const oldNumBins = this.numBins;
