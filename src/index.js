@@ -1,6 +1,7 @@
 import register from 'higlass-register';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import 'higlass-arcs';
 
 import App from './App';
 import * as serviceWorker from './serviceWorker';
@@ -8,7 +9,6 @@ import * as serviceWorker from './serviceWorker';
 import createAnnotationOverlayMetaTrack from './annotation-overlay-meta-track';
 import createRidgePlotTrack from './ridge-plot-track';
 import createStratifiedBedTrack from './stratified-bed-track';
-import createScalableArcs1dTrack from './scalable-arcs-track';
 import createSnpTrack from './snp-track';
 import createStackedBarTrack from './stacked-bar-track';
 import createTssTrack from './tss-track';
@@ -28,11 +28,6 @@ register(
 register({
   track: createRidgePlotTrack,
   config: createRidgePlotTrack.config,
-});
-
-register({
-  track: createScalableArcs1dTrack,
-  config: createScalableArcs1dTrack.config,
 });
 
 register({

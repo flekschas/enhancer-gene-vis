@@ -204,53 +204,46 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       const categoryBinHash = new Map();
       const maxBinId = this.numBins - 1;
 
-      let vv = 1;
+      tile.tileData.filter(this.itemFilter).forEach((item) => {
+        const group = this.categoryToGroup.get(
+          item.fields[this.categoryField].toLowerCase()
+        );
+        const binStart = Math.max(
+          0,
+          Math.min(
+            maxBinId,
+            Math.round((this.getStart(item) - tileX) / binSize)
+          )
+        );
+        const binEnd = Math.max(
+          0,
+          Math.min(maxBinId, Math.round((this.getEnd(item) - tileX) / binSize))
+        );
+        const numBins = Math.abs(binEnd - binStart);
+        const score = this.getImportance(item);
+        const category = this.getCategory(item);
+        const base = group * this.numBins;
 
-      tile.tileData
-        .filter((item) => this.isIncluded(this.getInclusionField(item)))
-        .forEach((item) => {
-          const group = this.categoryToGroup.get(
-            item.fields[this.categoryField].toLowerCase()
-          );
-          const binStart = Math.max(
-            0,
-            Math.min(
-              maxBinId,
-              Math.round((this.getStart(item) - tileX) / binSize)
-            )
-          );
-          const binEnd = Math.max(
-            0,
-            Math.min(
-              maxBinId,
-              Math.round((this.getEnd(item) - tileX) / binSize)
-            )
-          );
-          const numBins = Math.abs(binEnd - binStart);
-          const score = this.getImportance(item);
-          const category = this.getCategory(item);
-          const base = group * this.numBins;
+        for (let i = 0; i <= numBins; i++) {
+          const bin = binStart + i;
+          const histIdx = base + bin;
 
-          for (let i = 0; i <= numBins; i++) {
-            const bin = binStart + i;
-            const histIdx = base + bin;
+          const binHash = categoryBinHash.get(category) || {};
 
-            const binHash = categoryBinHash.get(category) || {};
-
-            // Make sure we count multiple enhancer predictions of the same
-            // biosample and bin only once (i.e., summing up)
-            if (!binHash[bin]) {
-              binHash[bin] = binHash[bin] || score > 0;
-              tile.histogram2dNumPred[histIdx] += binHash[bin];
-              categoryBinHash.set(category, binHash);
-            }
-
-            tile.histogram2d[histIdx] += score;
-            tile.histogram1d[bin] += score;
-
-            max = Math.max(max, tile.histogram1d[bin]);
+          // Make sure we count multiple enhancer predictions of the same
+          // biosample and bin only once (i.e., summing up)
+          if (!binHash[bin]) {
+            binHash[bin] = binHash[bin] || score > 0;
+            tile.histogram2dNumPred[histIdx] += binHash[bin];
+            categoryBinHash.set(category, binHash);
           }
-        });
+
+          tile.histogram2d[histIdx] += score;
+          tile.histogram1d[bin] += score;
+
+          max = Math.max(max, tile.histogram1d[bin]);
+        }
+      });
 
       tile.histogramMax = max;
     }
@@ -318,7 +311,7 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
       this.groupSizes = this.options.stratification.groups.map(
         (group) =>
-          group.categories.filter((category) => this.isIncluded(category))
+          group.categories.filter((category) => this.valueFilter(category))
             .length
       );
       this.filteredGroups = this.options.stratification.groups.filter(
@@ -346,7 +339,7 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
           ),
         ]);
         group.categories
-          .filter((category) => this.isIncluded(category))
+          .filter((category) => this.valueFilter(category))
           .forEach((category, j) => {
             this.categoryToGroup.set(category.toLowerCase(), i);
             this.categoryToY.set(category.toLowerCase(), k + j);
@@ -443,20 +436,23 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
       const importanceDomain = this.options.importanceDomain || [1000, 1];
 
-      this.inclusion = this.options.inclusion
-        ? this.options.inclusion.reduce((s, include) => {
-            s.add(include);
-            return s;
-          }, new Set())
-        : null;
+      this.filterSet =
+        this.options.filter && this.options.filter.set
+          ? this.options.filter.set.reduce((s, include) => {
+              s.add(include);
+              return s;
+            }, new Set())
+          : null;
 
-      this.getInclusionField = this.options.inclusionField
-        ? (item) => item.fields[this.options.inclusionField]
-        : null;
+      this.filterField = this.options.filter && this.options.filter.field;
 
-      this.isIncluded =
-        this.options.inclusionField && this.inclusion
-          ? (inclusionField) => this.inclusion.has(inclusionField)
+      this.valueFilter = this.filterSet
+        ? (value) => this.filterSet.has(value)
+        : () => true;
+
+      this.itemFilter =
+        this.valueFilter && this.filterField
+          ? (item) => this.valueFilter(item.fields[this.filterField])
           : () => true;
 
       const opacityLinearScale = scaleLinear()

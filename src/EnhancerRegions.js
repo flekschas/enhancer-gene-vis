@@ -132,10 +132,18 @@ const updateViewConfigColorEncoding = (coloring) => (viewConfig) => {
 };
 
 const updateViewConfigFilter = (selectedSamples) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[3].options.inclusion = selectedSamples;
-  viewConfig.views[0].tracks.top[3].options.inclusionField = 10;
-  viewConfig.views[0].tracks.top[4].options.inclusion = selectedSamples;
-  viewConfig.views[0].tracks.top[4].options.inclusionField = 10;
+  viewConfig.views[0].tracks.top[3].contents[0].options.filter = {
+    set: selectedSamples,
+    field: 10,
+  };
+  viewConfig.views[0].tracks.top[3].contents[1].options.filter = {
+    set: selectedSamples,
+    field: 10,
+  };
+  viewConfig.views[0].tracks.top[4].options.filter = {
+    set: selectedSamples,
+    field: 10,
+  };
   return viewConfig;
 };
 

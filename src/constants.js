@@ -490,43 +490,68 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             ],
           },
           {
-            type: 'stacked-bar',
-            // server: 'http://localhost:9876/api/v1',
-            // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
-            server: 'https://resgen.io/api/v1',
-            // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
-            // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
-            // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
-            tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
+            type: 'combined',
+            uid: 'arcs-stacked-bars',
             height: 72,
-            uid: 'stacked-bars',
-            options: {
-              binSize: 4,
-              axisAlign: 'right',
-              axisPositionHorizontal: 'right',
-              labelPosition: 'hidden',
-              markColor: 'black',
-              markColorFocus: '#cc0078',
-              markSize: 4,
-              markOpacity: 0.33,
-              arcStyle: 'indicator',
-              indicatorStyle: 'category-rect',
-              labelColor: 'black',
-              trackBorderWidth: 0,
-              trackBorderColor: 'black',
-              geneField: 6,
-              importanceField: 7,
-              importanceDomain: [0, 1],
-              focusRegion: [
-                1680373143 + 81046453 - 25,
-                1680373143 + 81046453 + 25,
-              ],
-              name: 'By Celltype',
-              stratification: DEFAULT_STRATIFICATION,
-              showMousePosition: true,
-              showGlobalMousePosition: true,
-              mousePositionColor: 'black',
-            },
+            contents: [
+              {
+                type: '1d-arcs',
+                uid: 'arcs',
+                server: 'https://resgen.io/api/v1',
+                tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw',
+                height: 72,
+                options: {
+                  labelPosition: 'hidden',
+                  strokeColor: '#808080',
+                  strokeWidth: 1,
+                  strokeOpacity: 0.05,
+                  arcStyle: 'circle',
+                  startField: 1,
+                  endField: 4,
+                  filter: {
+                    set: SAMPLES,
+                    field: 10,
+                  },
+                },
+              },
+              {
+                type: 'stacked-bar',
+                // server: 'http://localhost:9876/api/v1',
+                // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
+                server: 'https://resgen.io/api/v1',
+                // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
+                // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
+                // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
+                tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
+                height: 72,
+                uid: 'stacked-bars',
+                options: {
+                  binSize: 4,
+                  axisAlign: 'right',
+                  axisPositionHorizontal: 'right',
+                  labelPosition: 'topLeft',
+                  markColor: 'black',
+                  markColorFocus: '#cc0078',
+                  markSize: 4,
+                  markOpacity: 0.33,
+                  labelColor: 'black',
+                  offsetField: 3,
+                  startField: 4,
+                  endField: 5,
+                  importanceField: 7,
+                  importanceDomain: [0, 1],
+                  focusRegion: [
+                    1680373143 + 81046453 - 25,
+                    1680373143 + 81046453 + 25,
+                  ],
+                  name: 'Enhancer regions',
+                  stratification: DEFAULT_STRATIFICATION,
+                  showMousePosition: true,
+                  showGlobalMousePosition: true,
+                  mousePositionColor: 'black',
+                },
+              },
+            ],
           },
           {
             type: 'stratified-bed',
@@ -578,7 +603,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             'chroms-viewport',
             'genes-tss-viewport',
             'variants',
-            'stacked-bars',
+            'arcs-stacked-bars',
             'indicatorByCellTypes',
           ],
           options: {
@@ -612,7 +637,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             'chroms',
             'genes-tss-viewport',
             'variants',
-            'stacked-bars',
+            'arcs-stacked-bars',
             'indicatorByCellTypes',
           ],
           options: {

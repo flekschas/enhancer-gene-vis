@@ -208,7 +208,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.groupSizes = this.options.stratification.groups.map(
         (group) =>
-          group.categories.filter((category) => this.isIncluded(category))
+          group.categories.filter((category) => this.valueFilter(category))
             .length
       );
       this.filteredGroups = this.options.stratification.groups.filter(
@@ -235,7 +235,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
           ),
         ]);
         group.categories
-          .filter((category) => this.isIncluded(category))
+          .filter((category) => this.valueFilter(category))
           .forEach((category, j) => {
             const cat = category.toLowerCase();
             this.categoryToGroup.set(cat, i);
@@ -312,20 +312,23 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         ? this.markOpacity
         : Math.min(1, Math.max(0, +this.options.markOpacityFocus));
 
-      this.inclusion = this.options.inclusion
-        ? this.options.inclusion.reduce((s, include) => {
-            s.add(include);
-            return s;
-          }, new Set())
-        : null;
+      this.filterSet =
+        this.options.filter && this.options.filter.set
+          ? this.options.filter.set.reduce((s, include) => {
+              s.add(include);
+              return s;
+            }, new Set())
+          : null;
 
-      this.getInclusionField = this.options.inclusionField
-        ? (item) => item.fields[this.options.inclusionField]
-        : null;
+      this.filterField = this.options.filter && this.options.filter.field;
 
-      this.isIncluded =
-        this.options.inclusionField && this.inclusion
-          ? (inclusionField) => this.inclusion.has(inclusionField)
+      this.valueFilter = this.filterSet
+        ? (value) => this.filterSet.has(value)
+        : () => true;
+
+      this.itemFilter =
+        this.valueFilter && this.filterField
+          ? (item) => this.valueFilter(item.fields[this.filterField])
           : () => true;
 
       this.getImportance = this.options.importanceField
@@ -473,17 +476,13 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       if (this.focusStyle === 'highlighting') {
         return (filteredItems, item, i) => {
           focusFilterFn(item);
-          if (this.isIncluded(this.getInclusionField(item)))
-            addFn(filteredItems, item);
+          if (this.itemFilter(item)) addFn(filteredItems, item);
           return filteredItems;
         };
       }
 
       return (filteredItems, item) => {
-        if (
-          focusFilterFn(item) &&
-          this.isIncluded(this.getInclusionField(item))
-        )
+        if (focusFilterFn(item) && this.itemFilter(item))
           addFn(filteredItems, item);
         return filteredItems;
       };

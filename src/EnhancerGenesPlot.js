@@ -78,7 +78,7 @@ const useTooltipStyles = DEFAULT_COLOR_MAP_LIGHT.map((color, i) =>
 const {
   server,
   tilesetUid: uuid,
-} = DEFAULT_VIEW_CONFIG_ENHANCER.views[0].tracks.top[3];
+} = DEFAULT_VIEW_CONFIG_ENHANCER.views[0].tracks.top[3].contents[1];
 
 const fetchTile = async (tileId) => {
   const response = await fetch(`${server}/tiles/?d=${tileId}`);
