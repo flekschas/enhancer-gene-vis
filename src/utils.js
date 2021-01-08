@@ -187,3 +187,14 @@ export const stringifySvg = (svg) =>
 
 export const booleanQueryStringDecoder = (v) =>
   v === undefined ? undefined : v === 'true';
+
+export const customBooleanQueryStringDecoder = (excluded = []) => {
+  const s = excluded.reduce((_s, v) => {
+    _s.add(v);
+    return _s;
+  }, new Set());
+  return (v) => {
+    if (v === undefined || s.has(v)) return v;
+    return v === 'true';
+  };
+};

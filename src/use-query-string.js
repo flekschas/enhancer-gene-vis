@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { useRecoilState } from 'recoil';
+import { useCallback, useMemo, useState } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
 
 import { getQueryStringValue, setQueryStringValue } from './utils';
 
@@ -29,7 +29,7 @@ export default function useQueryStringWithReactState(
   return [value, onSetValue];
 }
 
-export function useRecoilQueryString(key, atom, { encoder, decoder } = {}) {
+export function useRecoilQueryString(key, atom, encoder) {
   const [value, setValue] = useRecoilState(atom);
 
   const onSetValue = useCallback(
@@ -40,8 +40,13 @@ export function useRecoilQueryString(key, atom, { encoder, decoder } = {}) {
     [key, encoder, setValue]
   );
 
-  // Set initial value
-  setQueryStringValue(key, value, encoder);
-
   return [value, onSetValue];
+}
+
+export function useRecoilQueryStringSyncher(key, atom, encoder) {
+  const value = useRecoilValue(atom);
+
+  useMemo(() => {
+    setQueryStringValue(key, value, encoder);
+  }, [key, encoder, value]);
 }

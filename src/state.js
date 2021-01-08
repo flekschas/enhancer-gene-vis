@@ -1,11 +1,15 @@
 import { atom, selector } from 'recoil';
 import { memoize } from 'lodash-es';
-import { deepClone } from '@flekschas/utils';
+import { deepClone, identity } from '@flekschas/utils';
 
-import { useRecoilQueryString } from './use-query-string';
+import {
+  useRecoilQueryString,
+  useRecoilQueryStringSyncher,
+} from './use-query-string';
 
 import {
   booleanQueryStringDecoder,
+  customBooleanQueryStringDecoder,
   getQueryStringValue,
   toAbsPosition,
 } from './utils';
@@ -14,20 +18,76 @@ import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
   DEFAULT_VARIANT_TRACKS,
+  DEFAULT_VARIANT_TRACK_SERVER_ABBR,
+  DEFAULT_VARIANT_TRACK_PVAL_COL,
+  DEFAULT_VARIANT_TRACK_PPROB_COL,
+  VARIANT_TRACK_ABBR_TO_SERVER,
+  VARIANT_TRACK_SERVER_TO_ABBR,
   GROUPED_SAMPLE_OPTIONS,
   SAMPLES,
 } from './constants';
 
-const getDefault = (key, initialValue, decoder) =>
-  getQueryStringValue(key, decoder) === undefined
-    ? initialValue
-    : getQueryStringValue(key, decoder);
+const getDefault = (key, initialValue, decoder) => {
+  const qVal = getQueryStringValue(key, decoder);
+  return qVal === undefined ? initialValue : qVal;
+};
 
 const chrPosUrlEncoder = (chrPos) =>
   chrPos ? chrPos.replace(':', '.') : chrPos;
 
 const chrPosUrlDecoder = (chrPos) =>
   chrPos ? chrPos.replace('.', ':') : chrPos;
+
+const showWelcomeDecoder = customBooleanQueryStringDecoder(['intro']);
+
+const variantTracksDecoder = (v) => {
+  if (!v) return undefined;
+
+  // tilesetId:rg:7:8
+  const [
+    tilesetUid,
+    serverAbbr = DEFAULT_VARIANT_TRACK_SERVER_ABBR,
+    columnPvalue = DEFAULT_VARIANT_TRACK_PVAL_COL,
+    columnPosteriorProbability = DEFAULT_VARIANT_TRACK_PPROB_COL,
+  ] = v.split(':');
+
+  const server = VARIANT_TRACK_ABBR_TO_SERVER[serverAbbr];
+
+  if (tilesetUid === undefined) return tilesetUid;
+
+  return [
+    {
+      server,
+      tilesetUid,
+      columnPvalue,
+      columnPosteriorProbability,
+      markColor: 'black',
+    },
+  ];
+};
+
+const variantTracksEncoder = (v) => {
+  if (!v || !Array.isArray(v) || v.length > 1) return '';
+
+  const { tilesetUid } = v[0];
+  const serverAbbr =
+    VARIANT_TRACK_SERVER_TO_ABBR[v[0].server] ===
+    DEFAULT_VARIANT_TRACK_SERVER_ABBR
+      ? null
+      : VARIANT_TRACK_SERVER_TO_ABBR[v[0].server];
+  const pValCol =
+    v[0].columnPvalue === DEFAULT_VARIANT_TRACK_PVAL_COL
+      ? null
+      : v[0].columnPvalue;
+  const pProbCol =
+    v[0].columnPosteriorProbability === DEFAULT_VARIANT_TRACK_PPROB_COL
+      ? null
+      : v[0].columnPosteriorProbability;
+
+  if (!tilesetUid || serverAbbr === undefined) return '';
+
+  return [tilesetUid, serverAbbr, pValCol, pProbCol].filter(identity).join(':');
+};
 
 // Atoms
 export const sampleFilterState = atom({
@@ -80,7 +140,11 @@ export const sampleGroupSelectionSizesState = selector({
 
 export const variantTracksState = atom({
   key: 'variantTracks',
-  default: deepClone(DEFAULT_VARIANT_TRACKS),
+  default: getDefault(
+    'vt',
+    deepClone(DEFAULT_VARIANT_TRACKS),
+    variantTracksDecoder
+  ),
 });
 
 export const showVariantsSettingsState = atom({
@@ -90,7 +154,7 @@ export const showVariantsSettingsState = atom({
 
 export const showWelcomeState = atom({
   key: 'showWelcome',
-  default: getDefault('w', true, booleanQueryStringDecoder),
+  default: getDefault('w', true, showWelcomeDecoder),
 });
 
 export const dnaAccessLabelStyleState = atom({
@@ -297,59 +361,91 @@ export const focusVariantStrPositionState = selector({
 });
 
 // Predefined hooks
-export const useShowWelcome = () =>
-  useRecoilQueryString('w', showWelcomeState, {
-    decoder: booleanQueryStringDecoder,
-  });
+export const useVariantTracks = () =>
+  useRecoilQueryString('vt', variantTracksState, variantTracksEncoder);
+export const useVariantTracksSyncher = () =>
+  useRecoilQueryStringSyncher('vt', variantTracksState, variantTracksEncoder);
+
+export const useShowWelcome = () => useRecoilQueryString('w', showWelcomeState);
+export const useShowWelcomeSyncher = () =>
+  useRecoilQueryStringSyncher('w', showWelcomeState);
 
 export const useFocusGene = () => useRecoilQueryString('g', focusGeneState);
+export const useFocusGeneSyncher = () =>
+  useRecoilQueryStringSyncher('g', focusGeneState);
 
 export const useFocusVariant = () =>
   useRecoilQueryString('v', focusVariantState);
+export const useFocusVariantSyncher = () =>
+  useRecoilQueryStringSyncher('v', focusVariantState);
 
 export const useDnaAccessLabelStyle = () =>
   useRecoilQueryString('dal', dnaAccessLabelStyleState);
+export const useDnaAccessLabelStyleSyncher = () =>
+  useRecoilQueryStringSyncher('dal', dnaAccessLabelStyleState);
 
 export const useDnaAccessShowInfos = () =>
-  useRecoilQueryString('dai', dnaAccessLabelShowInfoState, {
-    decoder: booleanQueryStringDecoder,
-  });
+  useRecoilQueryString('dai', dnaAccessLabelShowInfoState);
+export const useDnaAccessShowInfosSyncher = () =>
+  useRecoilQueryStringSyncher('dai', dnaAccessLabelShowInfoState);
 
 export const useXDomainStartWithAssembly = (chromInfo) =>
-  useRecoilQueryString('s', xDomainStartWithAssembly(chromInfo), {
-    encoder: chrPosUrlEncoder,
-  });
+  useRecoilQueryString(
+    's',
+    xDomainStartWithAssembly(chromInfo),
+    chrPosUrlEncoder
+  );
+export const useXDomainStartWithAssemblySyncher = (chromInfo) =>
+  useRecoilQueryStringSyncher(
+    's',
+    xDomainStartWithAssembly(chromInfo),
+    chrPosUrlEncoder
+  );
 
 export const useXDomainEndWithAssembly = (chromInfo) =>
-  useRecoilQueryString('e', xDomainEndWithAssembly(chromInfo), {
-    encoder: chrPosUrlEncoder,
-  });
+  useRecoilQueryString(
+    'e',
+    xDomainEndWithAssembly(chromInfo),
+    chrPosUrlEncoder
+  );
+export const useXDomainEndWithAssemblySyncher = (chromInfo) =>
+  useRecoilQueryStringSyncher(
+    'e',
+    xDomainEndWithAssembly(chromInfo),
+    chrPosUrlEncoder
+  );
 
 export const useEnhancerRegionsShowInfos = () =>
-  useRecoilQueryString('eri', enhancerRegionsShowInfoState, {
-    decoder: booleanQueryStringDecoder,
-  });
+  useRecoilQueryString('eri', enhancerRegionsShowInfoState);
+export const useEnhancerRegionsShowInfosSyncher = () =>
+  useRecoilQueryStringSyncher('eri', enhancerRegionsShowInfoState);
 
 export const useEnhancerRegionsHideUnfocused = () =>
-  useRecoilQueryString('eri', enhancerRegionsHideUnfocusedState, {
-    decoder: booleanQueryStringDecoder,
-  });
+  useRecoilQueryString('eri', enhancerRegionsHideUnfocusedState);
+export const useEnhancerRegionsHideUnfocusedSyncher = () =>
+  useRecoilQueryStringSyncher('eri', enhancerRegionsHideUnfocusedState);
 
 export const useEnhancerRegionsColorEncoding = () =>
   useRecoilQueryString('eri', enhancerRegionsColorEncodingState);
+export const useEnhancerRegionsColorEncodingSyncher = () =>
+  useRecoilQueryStringSyncher('eri', enhancerRegionsColorEncodingState);
 
 export const useEnhancerGenesShowInfos = () =>
-  useRecoilQueryString('egi', enhancerGenesShowInfoState, {
-    decoder: booleanQueryStringDecoder,
-  });
+  useRecoilQueryString('egi', enhancerGenesShowInfoState);
+export const useEnhancerGenesShowInfosSyncher = () =>
+  useRecoilQueryStringSyncher('egi', enhancerGenesShowInfoState);
 
 export const useEnhancerGenesPadding = () =>
-  useRecoilQueryString('egp', enhancerGenesPaddingState, {
-    decoder: booleanQueryStringDecoder,
-  });
+  useRecoilQueryString('egp', enhancerGenesPaddingState);
+export const useEnhancerGenesPaddingSyncher = () =>
+  useRecoilQueryStringSyncher('egp', enhancerGenesPaddingState);
 
 export const useEnhancerGenesCellEncoding = () =>
   useRecoilQueryString('egce', enhancerGenesCellEncodingState);
+export const useEnhancerGenesCellEncodingSyncher = () =>
+  useRecoilQueryStringSyncher('egce', enhancerGenesCellEncodingState);
 
 export const useVariantYScale = () =>
   useRecoilQueryString('vs', variantYScaleState);
+export const useVariantYScaleSyncher = () =>
+  useRecoilQueryStringSyncher('vs', variantYScaleState);

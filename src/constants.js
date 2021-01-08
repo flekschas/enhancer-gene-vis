@@ -263,6 +263,27 @@ export const SAMPLE_IDX = SAMPLES.reduce((idxs, sample, idx) => {
 export const DEFAULT_X_DOMAIN_START = 1761366260;
 export const DEFAULT_X_DOMAIN_END = 1761603836;
 
+export const DEFAULT_VARIANT_TRACK_SERVER = 'https://resgen.io/api/v1';
+
+export const VARIANT_TRACK_ABBR_TO_SERVER = {
+  rg: 'https://resgen.io/api/v1',
+  hg: 'https://higlass.io/api/v1',
+};
+
+export const VARIANT_TRACK_SERVER_TO_ABBR = Object.entries(
+  VARIANT_TRACK_ABBR_TO_SERVER
+).reduce((map, [abbr, server]) => {
+  map[server] = abbr;
+  return map;
+}, {});
+
+export const DEFAULT_VARIANT_TRACK_SERVER_ABBR =
+  VARIANT_TRACK_SERVER_TO_ABBR[DEFAULT_VARIANT_TRACK_SERVER];
+
+export const DEFAULT_VARIANT_TRACK_PVAL_COL = 7;
+
+export const DEFAULT_VARIANT_TRACK_PPROB_COL = 8;
+
 export const DEFAULT_VARIANT_TRACKS = [
   {
     server: 'https://resgen.io/api/v1',

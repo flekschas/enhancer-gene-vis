@@ -12,11 +12,28 @@ import DnaAccessibility from './DnaAccessibility';
 import ModalProvider from './ModalProvider';
 import TooltipProvider from './TooltipProvider';
 
+import { useChromInfo } from './ChromInfoProvider';
+
 import {
   focusGeneOptionState,
   focusVariantOptionState,
   useFocusGene,
   useFocusVariant,
+  useVariantTracksSyncher,
+  useShowWelcomeSyncher,
+  useFocusGeneSyncher,
+  useFocusVariantSyncher,
+  useDnaAccessLabelStyleSyncher,
+  useDnaAccessShowInfosSyncher,
+  useXDomainStartWithAssemblySyncher,
+  useXDomainEndWithAssemblySyncher,
+  useEnhancerRegionsShowInfosSyncher,
+  useEnhancerRegionsHideUnfocusedSyncher,
+  useEnhancerRegionsColorEncodingSyncher,
+  useEnhancerGenesShowInfosSyncher,
+  useEnhancerGenesPaddingSyncher,
+  useEnhancerGenesCellEncodingSyncher,
+  useVariantYScaleSyncher,
 } from './state';
 
 import { GENE_SEARCH_URL, VARIANT_SEARCH_URL } from './constants';
@@ -76,6 +93,25 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const AppMain = React.memo(function AppMain() {
+  const chromInfo = useChromInfo();
+
+  // Initialize query strings
+  useVariantTracksSyncher();
+  useShowWelcomeSyncher();
+  useFocusGeneSyncher();
+  useFocusVariantSyncher();
+  useDnaAccessLabelStyleSyncher();
+  useDnaAccessShowInfosSyncher();
+  useEnhancerRegionsShowInfosSyncher();
+  useEnhancerRegionsHideUnfocusedSyncher();
+  useEnhancerRegionsColorEncodingSyncher();
+  useEnhancerGenesShowInfosSyncher();
+  useEnhancerGenesPaddingSyncher();
+  useEnhancerGenesCellEncodingSyncher();
+  useVariantYScaleSyncher();
+  useXDomainStartWithAssemblySyncher(chromInfo);
+  useXDomainEndWithAssemblySyncher(chromInfo);
+
   const [focusGene, setFocusGene] = useFocusGene();
   const [focusVariant, setFocusVariant] = useFocusVariant();
 

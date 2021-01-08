@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useRecoilState } from 'recoil';
 import { deepClone } from '@flekschas/utils';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
@@ -12,7 +11,7 @@ import FileInput from './FileInput';
 import { useChromInfo } from './ChromInfoProvider';
 import createLocalBedDataServer from './local-bed-data-server';
 
-import { variantTracksState, useFocusVariant } from './state';
+import { useFocusVariant, useVariantTracks } from './state';
 
 import { LOCAL_BED_TILESET_INFO_HG19 } from './constants';
 
@@ -255,7 +254,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
   const chromInfo = useChromInfo();
 
   const setFocusVariant = useFocusVariant()[1];
-  const [variantTracks, setVariantTracks] = useRecoilState(variantTracksState);
+  const [variantTracks, setVariantTracks] = useVariantTracks();
   const [tmpVariantTracks, setTmpVariantTracks] = useState(() =>
     deepClone(variantTracks)
   );
