@@ -28,11 +28,17 @@ const useStyles = makeStyles((theme) => ({
 export default function ModalProvider({ children }) {
   const [Component, setComponent] = useState(null);
   const [customCloseHandler, setCustomCloseHandler] = useState(null);
+  const [customProps, setCustomProps] = useState(null);
 
   const showModal = useCallback(
-    (newComponent = null, newCustomCloseHandler = null) => {
+    (
+      newComponent = null,
+      newCustomCloseHandler = null,
+      newCustomProps = {}
+    ) => {
       setComponent(newComponent);
       setCustomCloseHandler(() => newCustomCloseHandler);
+      setCustomProps(newCustomProps);
     },
     []
   );
@@ -64,7 +70,10 @@ export default function ModalProvider({ children }) {
         <Fade in={open}>
           <div className={classes.paper}>
             {open && (
-              <Component closeHandler={customCloseHandler || closeHandler} />
+              <Component
+                {...customProps}
+                closeHandler={customCloseHandler || closeHandler}
+              />
             )}
           </div>
         </Fade>
