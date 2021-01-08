@@ -185,7 +185,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
               }
             />
             <FormControlLabel
-              label="Prediction score of the closest connection"
+              label="Closest prediction score"
               value="closestImportance"
               className={classes.iconRadio}
               control={
