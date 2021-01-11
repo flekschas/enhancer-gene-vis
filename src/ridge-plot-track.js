@@ -913,6 +913,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       const rowSelection = this.rowSelections[rowIndex];
       const tileId = this.tileToLocalId([zoomLevel, Math.floor(tilePos)]);
       const fetchedTile = this.fetchedTiles[tileId];
+      const colIndex =
+        Math.floor(posInTileX) / Math.floor(TILE_SIZE / this.markResolution);
 
       let text = '';
       let value = '<em>unknown</em>';
@@ -962,7 +964,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
           text += '<br/>';
           text += `${index.length}-item ${this.options.selectRowsAggregationMode}`;
         } else {
-          value = format('.3f')(fetchedTile.tileData.dense[index]);
+          value = format('.3f')(
+            fetchedTile.tileData.valuesByRow[rowIndex][colIndex]
+          );
           text = value;
 
           if (Array.isArray(rowSelection)) {
