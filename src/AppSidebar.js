@@ -251,10 +251,17 @@ const AppSidebar = React.memo(function AppSidebar() {
     setShowWelcome(true);
   }, [setShowWelcome]);
 
+  const openWelcomeIntro = useCallback(() => {
+    setShowWelcome('intro');
+  }, [setShowWelcome]);
+
   useEffect(() => {
-    if (showWelcome) showModal(Welcome, closeWelcome);
+    if (showWelcome)
+      showModal(Welcome, closeWelcome, {
+        openIntroHandler: openWelcomeIntro,
+      });
     else showModal();
-  }, [showWelcome, showModal, closeWelcome]);
+  }, [showWelcome, showModal, closeWelcome, openWelcomeIntro]);
 
   const closeVariantsSettings = useCallback(() => {
     setShowVariantsSettings(false);
