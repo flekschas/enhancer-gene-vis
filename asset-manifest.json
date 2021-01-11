@@ -1,25 +1,30 @@
 {
   "files": {
     "main.css": "/enhancer-gene-vis/static/css/main.368ad156.chunk.css",
-    "main.js": "/enhancer-gene-vis/static/js/main.6d390b81.chunk.js",
-    "main.js.map": "/enhancer-gene-vis/static/js/main.6d390b81.chunk.js.map",
+    "main.js": "/enhancer-gene-vis/static/js/main.b3a999af.chunk.js",
+    "main.js.map": "/enhancer-gene-vis/static/js/main.b3a999af.chunk.js.map",
     "runtime-main.js": "/enhancer-gene-vis/static/js/runtime-main.64d847e9.js",
     "runtime-main.js.map": "/enhancer-gene-vis/static/js/runtime-main.64d847e9.js.map",
     "static/css/2.99e59d71.chunk.css": "/enhancer-gene-vis/static/css/2.99e59d71.chunk.css",
-    "static/js/2.b89abb3a.chunk.js": "/enhancer-gene-vis/static/js/2.b89abb3a.chunk.js",
-    "static/js/2.b89abb3a.chunk.js.map": "/enhancer-gene-vis/static/js/2.b89abb3a.chunk.js.map",
+    "static/js/2.93b11fe3.chunk.js": "/enhancer-gene-vis/static/js/2.93b11fe3.chunk.js",
+    "static/js/2.93b11fe3.chunk.js.map": "/enhancer-gene-vis/static/js/2.93b11fe3.chunk.js.map",
     "index.html": "/enhancer-gene-vis/index.html",
-    "precache-manifest.112bedcdc660713e65c95fa5d8bb9f21.js": "/enhancer-gene-vis/precache-manifest.112bedcdc660713e65c95fa5d8bb9f21.js",
+    "precache-manifest.0f1dabf3eb08bfa253d5c784da0185f3.js": "/enhancer-gene-vis/precache-manifest.0f1dabf3eb08bfa253d5c784da0185f3.js",
     "service-worker.js": "/enhancer-gene-vis/service-worker.js",
     "static/css/2.99e59d71.chunk.css.map": "/enhancer-gene-vis/static/css/2.99e59d71.chunk.css.map",
     "static/css/main.368ad156.chunk.css.map": "/enhancer-gene-vis/static/css/main.368ad156.chunk.css.map",
-    "static/js/2.b89abb3a.chunk.js.LICENSE.txt": "/enhancer-gene-vis/static/js/2.b89abb3a.chunk.js.LICENSE.txt"
+    "static/js/2.93b11fe3.chunk.js.LICENSE.txt": "/enhancer-gene-vis/static/js/2.93b11fe3.chunk.js.LICENSE.txt",
+    "static/media/enhancer-view-2.png": "/enhancer-gene-vis/static/media/enhancer-view-2.5240166b.png",
+    "static/media/enhancer-view-3.png": "/enhancer-gene-vis/static/media/enhancer-view-3.bf2e34ef.png",
+    "static/media/enhancer-view-5.png": "/enhancer-gene-vis/static/media/enhancer-view-5.cf1c5548.png",
+    "static/media/gene-view-1.png": "/enhancer-gene-vis/static/media/gene-view-1.0cd2047f.png",
+    "static/media/gene-view-2.png": "/enhancer-gene-vis/static/media/gene-view-2.a8614234.png"
   },
   "entrypoints": [
     "static/js/runtime-main.64d847e9.js",
     "static/css/2.99e59d71.chunk.css",
-    "static/js/2.b89abb3a.chunk.js",
+    "static/js/2.93b11fe3.chunk.js",
     "static/css/main.368ad156.chunk.css",
-    "static/js/main.6d390b81.chunk.js"
+    "static/js/main.b3a999af.chunk.js"
   ]
 }
