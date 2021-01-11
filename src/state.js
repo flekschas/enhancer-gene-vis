@@ -162,6 +162,11 @@ export const dnaAccessLabelStyleState = atom({
   default: getDefault('dal', 'indicator'),
 });
 
+export const dnaAccessRowNormState = atom({
+  key: 'dnaAccessRowNorm',
+  default: getDefault('darn', true, booleanQueryStringDecoder),
+});
+
 export const dnaAccessLabelShowInfoState = atom({
   key: 'dnaAccessLabelShowInfos',
   default: getDefault('dai', true, booleanQueryStringDecoder),
@@ -383,6 +388,11 @@ export const useDnaAccessLabelStyle = () =>
   useRecoilQueryString('dal', dnaAccessLabelStyleState);
 export const useDnaAccessLabelStyleSyncher = () =>
   useRecoilQueryStringSyncher('dal', dnaAccessLabelStyleState);
+
+export const useDnaAccessRowNorm = () =>
+  useRecoilQueryString('darn', dnaAccessRowNormState);
+export const useDnaAccessRowNormSyncher = () =>
+  useRecoilQueryStringSyncher('darn', dnaAccessRowNormState);
 
 export const useDnaAccessShowInfos = () =>
   useRecoilQueryString('dai', dnaAccessLabelShowInfoState);

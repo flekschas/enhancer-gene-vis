@@ -14,6 +14,7 @@ import TitleBar from './TitleBar';
 
 import {
   dnaAccessLabelStyleState,
+  dnaAccessRowNormState,
   focusGeneEndWithAssembly,
   focusGeneStartWithAssembly,
   focusVariantPositionWithAssembly,
@@ -56,6 +57,11 @@ const useStyles = makeStyles((theme) => ({
 const updateViewConfigDnaAccessLabels = (labels) => (viewConfig) => {
   viewConfig.views[0].tracks.top[3].options.showRowLabels =
     !labels || labels === 'hidden' ? false : labels;
+  return viewConfig;
+};
+
+const updateViewConfigDnaAccessRowNorm = (rowNorm) => (viewConfig) => {
+  viewConfig.views[0].tracks.top[3].options.rowNormalization = rowNorm;
   return viewConfig;
 };
 
@@ -113,6 +119,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
 
   const sampleSelection = useRecoilValue(sampleSelectionState);
   const labelStyle = useRecoilValue(dnaAccessLabelStyleState);
+  const rowNorm = useRecoilValue(dnaAccessRowNormState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const variantTracks = useRecoilValue(variantTracksState);
   const focusGeneStart = useRecoilValue(focusGeneStartWithAssembly(chromInfo));
@@ -146,6 +153,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
         updateViewConfigFocusVariant(focusVariantPosition, [2]),
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigDnaAccessLabels(labelStyle),
+        updateViewConfigDnaAccessRowNorm(rowNorm),
         updateViewConfigDnaAccessXDomain(
           focusVariantPosition,
           focusGeneStart,
@@ -169,6 +177,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
       labelStyle,
       chromInfo,
       sampleSelection,
+      rowNorm,
     ]
   );
 

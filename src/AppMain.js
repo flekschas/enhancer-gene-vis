@@ -24,6 +24,7 @@ import {
   useFocusGeneSyncher,
   useFocusVariantSyncher,
   useDnaAccessLabelStyleSyncher,
+  useDnaAccessRowNormSyncher,
   useDnaAccessShowInfosSyncher,
   useXDomainStartWithAssemblySyncher,
   useXDomainEndWithAssemblySyncher,
@@ -101,6 +102,7 @@ const AppMain = React.memo(function AppMain() {
   useFocusGeneSyncher();
   useFocusVariantSyncher();
   useDnaAccessLabelStyleSyncher();
+  useDnaAccessRowNormSyncher();
   useDnaAccessShowInfosSyncher();
   useEnhancerRegionsShowInfosSyncher();
   useEnhancerRegionsHideUnfocusedSyncher();

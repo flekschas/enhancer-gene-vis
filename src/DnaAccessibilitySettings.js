@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
 import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked';
@@ -9,11 +9,16 @@ import FormLabel from '@material-ui/core/FormLabel';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useDnaAccessLabelStyle } from './state';
+import AntSwitch from './AntSwitch';
+
+import { useDnaAccessLabelStyle, useDnaAccessRowNorm } from './state';
 
 const useStyles = makeStyles((theme) => ({
   iconRadioLegend: {
     margin: theme.spacing(2, 0, 0.25, 0),
+  },
+  switch: {
+    margin: 0,
   },
 }));
 
@@ -23,19 +28,34 @@ const DnaAccessibilitySettings = React.memo(
       dnaAccessLabelStyle,
       setDnaAccessLabelStyle,
     ] = useDnaAccessLabelStyle();
+    const [dnaAccessRowNorm, setDnaAccessRowNorm] = useDnaAccessRowNorm();
 
-    const changeDnaAccessLabelStyle = useCallback(
-      (value) => () => {
-        setDnaAccessLabelStyle(value);
-      },
-      [setDnaAccessLabelStyle]
-    );
+    const changeDnaAccessLabelStyle = (value) => () => {
+      setDnaAccessLabelStyle(value);
+    };
+
+    const changeDnaAccessRowNorm = (event) => {
+      setDnaAccessRowNorm(event.target.checked);
+    };
 
     // On every render
     const classes = useStyles();
 
     return (
       <React.Fragment>
+        <Box m={1}>
+          <FormControlLabel
+            className={classes.switch}
+            control={
+              <AntSwitch
+                checked={dnaAccessRowNorm}
+                onChange={changeDnaAccessRowNorm}
+                name="true"
+              />
+            }
+            label="Row-wise normalization"
+          />
+        </Box>
         <Box m={1}>
           <FormControl component="fieldset">
             <FormLabel component="legend" className={classes.iconRadioLegend}>
