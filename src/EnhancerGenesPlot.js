@@ -766,10 +766,10 @@ const plotEnhancerGeneConnections = (
       axisRight(distanceHeightScale)
         .tickSize(width)
         .tickFormat(function geneDistanceAxisTickFormat(d) {
-          const s = (d / 1e5).toFixed(0);
+          const s = (d / 1e6).toFixed(1);
           return this.parentNode.nextSibling
             ? s
-            : `${s} kbps distance to enhancer`;
+            : `${s} Mbp distance to enhancer`;
         })
         .tickValues(tickValues)
     )
