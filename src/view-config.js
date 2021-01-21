@@ -36,7 +36,12 @@ export const updateViewConfigVariantTracks = (variantTrackConfigs) => (
         variantTrack.server = trackConfig.server;
         variantTrack.tilesetUid = trackConfig.tilesetUid;
         variantTrack.uid = `variants-${trackConfig.tilesetUid}`;
-        variantTrack.options.name = trackConfig.label || 'Variants';
+        if (trackConfig.label) {
+          variantTrack.options.name = trackConfig.label;
+        } else {
+          // Lets rely on the tileset name
+          delete variantTrack.options.name;
+        }
         tracks.push(variantTrack);
       } else if (trackConfig.file) {
         variantTrack.data = { type: 'localBed', id: trackConfig.file.name };
