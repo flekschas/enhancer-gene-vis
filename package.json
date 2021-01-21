@@ -28,7 +28,6 @@
     "higlass": "^1.11.3",
     "higlass-arcs": "^0.3.0",
     "higlass-register": "^0.3.0",
-    "interval-tree-1d": "^1.0.3",
     "lodash-es": "^4.17.15",
     "pixi.js": "^5.3.0",
     "prop-types": "^15.7.2",

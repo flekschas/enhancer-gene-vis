@@ -1,4 +1,4 @@
-import createIntervalTree from 'interval-tree-1d';
+import IntervalTree from '@flatten-js/interval-tree';
 
 import {
   DEFAULT_COLOR_MAP,
@@ -176,15 +176,15 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
     initTile(tile) {
       const intervals = [];
 
+      tile.intervalTree = new IntervalTree(intervals);
+
       tile.tileData.forEach((item, i) => {
         item.distance = getItemDistance(item) || -1;
         item.cX = item.xStart + (item.xEnd - item.xStart) / 2;
         item.regionId = getRegionId(item);
         item.isLeftToRight = item.xStart < item.xEnd;
-        intervals.push([item.xStart, item.xEnd, i]);
+        tile.intervalTree.insert([item.xStart, item.xEnd], i);
       });
-
-      tile.intervalTree = createIntervalTree(intervals);
     }
 
     updateStratificationOption() {
@@ -889,8 +889,8 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const xAbsHi = this._xScale.invert(relX + 1);
 
       let foundItem;
-      fetchedTile.intervalTree.queryInterval(xAbsLo, xAbsHi, (interval) => {
-        const item = fetchedTile.tileData[interval[2]];
+      fetchedTile.intervalTree.search([xAbsLo, xAbsHi]).forEach((idx) => {
+        const item = fetchedTile.tileData[idx];
         if (this.getCategory(item) === category) {
           foundItem = item;
           return true;
