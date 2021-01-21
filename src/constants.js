@@ -433,7 +433,8 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                 // server: 'http://localhost:9876/api/v1',
                 // tilesetUid: 'RefSeqCurated170308bedCollapsedGeneBoundsTSS500bp',
                 server: 'https://resgen.io/api/v1',
-                tilesetUid: 'VMZDLKrtQDmJMSjg7Ds4yA',
+                // tilesetUid: 'VMZDLKrtQDmJMSjg7Ds4yA',
+                tilesetUid: 'QRtec09sQjuVmUaB_uUFEw', // with scores for prioritization
                 options: {
                   fontSize: 9,
                   plusStrandColor: 'black',
@@ -441,6 +442,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                   geneAnnotationHeight: 12,
                   geneLabelPosition: 'outside',
                   geneStrandSpacing: 2,
+                  maxPerTile: 25,
                 },
               },
               {
@@ -621,7 +623,6 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
         {
           uid: 'region-focus',
           includes: [
-            'chroms-viewport',
             'genes-tss-viewport',
             'variants',
             'arcs-stacked-bars',
@@ -982,7 +983,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
       overlays: [
         {
           uid: 'region-focus',
-          includes: ['chroms', 'genes', 'variants', 'dna-accessibility'],
+          includes: ['genes', 'variants', 'dna-accessibility'],
           options: {
             extent: [],
             minWidth: 3,

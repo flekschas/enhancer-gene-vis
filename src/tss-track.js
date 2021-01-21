@@ -1,4 +1,5 @@
 import createPubSub from 'pub-sub-es';
+import { sortedIndex } from 'lodash-es';
 
 function createTssTrack(HGC, ...args) {
   if (!new.target) {
@@ -15,42 +16,36 @@ function createTssTrack(HGC, ...args) {
       this.publish = publish;
       this.subscribe = subscribe;
       this.unsubscribe = unsubscribe;
+
+      this.collectAnnotationsBound = this.collectAnnotations.bind(this);
+
+      this.updateOptions();
     }
 
-    drawPoly(tile, xStartPos, xEndPos, rectY, doubleRadius = false) {
-      // prettier-ignore
-      const drawnPoly = [
-        // left top
-        xStartPos, rectY,
-        // right top
-        xEndPos, rectY,
-        // right bottom
-        xEndPos, this.dimensions[1],
-         // left bottom
-        xStartPos, this.dimensions[1]
-      ];
-
-      const anchorRadius = 1;
-      const radius = 2;
-
-      tile.rectGraphics.drawCircle(
-        xStartPos,
-        this.finalDotYPos(rectY, anchorRadius),
-        radius
-      );
-
-      return drawnPoly;
+    updateOptions() {
+      this.options.maxPerTile = this.options.maxPerTile || 50;
     }
 
-    renderRows(tile, rows, maxRows, startY, endY, fill) {
+    drawPoly() {}
+
+    renderRows() {}
+
+    collectAnnotations(tile) {
       const zoomLevel = +tile.tileId.split('.')[0];
 
       this.initialize();
 
       const focusRegion = this.options.focusRegion || [Infinity, Infinity];
 
-      const circleDraws = [];
-      const circleFocusDraws = [];
+      const annotations = [];
+
+      const rows = [
+        ...(tile.plusStrandRows || []),
+        ...(tile.minusStrandRows || []),
+      ];
+
+      const sortedIdxs = [];
+      const sortedValues = [];
 
       for (let j = 0; j < rows.length; j++) {
         for (let i = 0; i < rows[j].length; i++) {
@@ -81,31 +76,38 @@ function createTssTrack(HGC, ...args) {
               xStartAbs: txStart,
               xEndAbs: txEnd,
               data: td,
+              isFocused: txStart <= focusRegion[1] && txEnd >= focusRegion[0],
             };
 
-            if (txStart <= focusRegion[1] && txEnd >= focusRegion[0]) {
-              circleFocusDraws.push(circleDraw);
-            } else {
-              circleDraws.push(circleDraw);
-            }
+            const idx = sortedIndex(sortedValues, td.importance);
+            sortedValues.splice(idx, 0, td.importance);
+            sortedIdxs.splice(idx, 0, annotations.push(circleDraw) - 1);
           }
         }
-
-        circleDraws.forEach((circleDraw) => {
-          this.publish('annotationDrawn', circleDraw);
-        });
       }
+
+      if (annotations.length <= this.options.maxPerTile) return annotations;
+
+      return sortedIdxs
+        .slice(0, this.options.maxPerTile)
+        .map((idx) => annotations[idx]);
     }
 
     rerender() {
-      // Monkey patch because TiledPixiTrack doesn't always fire correctly
-      this.draw();
-      this.publish('tilesDrawn', { uuid: this.uuid });
+      this.updateOptions();
+      this.updateExistingGraphics();
     }
 
     updateExistingGraphics() {
       super.updateExistingGraphics();
-      this.publish('tilesDrawn', { uuid: this.uuid });
+      const annotations = Object.values(this.visibleAndFetchedTiles())
+        .map(this.collectAnnotationsBound)
+        .reduce(
+          (allAnnotations, tileAnnotations) =>
+            allAnnotations.concat(tileAnnotations),
+          []
+        );
+      this.publish('tilesDrawn', { uuid: this.uuid, annotations });
     }
 
     getMouseOverHtml() {
