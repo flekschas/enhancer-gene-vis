@@ -6,7 +6,9 @@ import {
   DEFAULT_COLOR_MAP_LIGHT,
   EPS,
 } from './constants';
-import { contains, dashedXLineTo, toFixed } from './utils';
+import { dashedXLineTo, toFixed } from './utils';
+
+const intersects = (a, b) => a[0] < b[1] && a[1] >= b[0];
 
 const VS = `
   precision mediump float;
@@ -450,7 +452,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         return (item) => {
           item.__focus =
             this.getGene(item) === this.focusGene &&
-            contains(this.getRegion(item), this.focusRegion);
+            intersects(this.getRegion(item), this.focusRegion);
           return item.__focus;
         };
       }
@@ -464,7 +466,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       if (this.getRegion && this.focusRegion) {
         return (item) => {
-          item.__focus = contains(this.getRegion(item), this.focusRegion);
+          item.__focus = intersects(this.getRegion(item), this.focusRegion);
           return item.__focus;
         };
       }
