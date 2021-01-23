@@ -12,6 +12,12 @@ import {
   customBooleanQueryStringDecoder,
   getQueryStringValue,
   toAbsPosition,
+  isChrRange,
+  chrPosUrlDecoder,
+  chrPosUrlEncoder,
+  chrRangePosUrlDecoder,
+  chrRangePosUrlEncoder,
+  chrRangePosEncoder,
 } from './utils';
 
 import {
@@ -27,16 +33,12 @@ import {
   SAMPLES,
 } from './constants';
 
+import { getDnaAccessXDomain } from './view-config';
+
 const getDefault = (key, initialValue, decoder) => {
   const qVal = getQueryStringValue(key, decoder);
   return qVal === undefined ? initialValue : qVal;
 };
-
-const chrPosUrlEncoder = (chrPos) =>
-  chrPos ? chrPos.replace(':', '.') : chrPos;
-
-const chrPosUrlDecoder = (chrPos) =>
-  chrPos ? chrPos.replace('.', ':') : chrPos;
 
 const showWelcomeDecoder = customBooleanQueryStringDecoder(['intro']);
 
@@ -182,19 +184,34 @@ export const focusGeneOptionState = atom({
   default: null,
 });
 
-export const focusVariantState = atom({
-  key: 'focusVariant',
-  default: getDefault('v', 'rs1250566'),
-});
-
-export const focusVariantOptionState = atom({
-  key: 'focusVariantOption',
-  default: null,
+export const focusRegionState = atom({
+  key: `focusRegion`,
+  default: getDefault('f', 'rs1250566', (v) =>
+    isChrRange(v) ? chrRangePosUrlDecoder(v) : v
+  ),
 });
 
 export const focusRegionOptionState = atom({
-  key: 'focusRegionOption',
-  default: null,
+  key: `focusRegionOption`,
+  default: getDefault('f', null, (v) => {
+    if (!isChrRange(v)) return null;
+
+    const [start, end] = chrRangePosUrlDecoder(v);
+
+    if (!start || !end) return null;
+
+    const [chrStart, txStart] = start.split(':');
+    const [chrEnd, txEnd] = end.split(':');
+
+    return {
+      chrStart,
+      chrEnd,
+      txStart: +txStart,
+      txEnd: +txEnd,
+      geneName: chrRangePosEncoder([start, end]),
+      type: 'region',
+    };
+  }),
 });
 
 export const variantYScaleState = atom({
@@ -332,40 +349,112 @@ export const focusGeneEndWithAssembly = memoize(
   (chromInfo) => chromInfo.totalLength
 );
 
-export const focusVariantPositionWithAssembly = memoize((chromInfo) =>
-  selector({
-    key: `focusVariantPosition-${chromInfo.totalLength}`,
-    get: ({ get }) => {
-      const focusVariantOption = get(focusVariantOptionState);
-      return focusVariantOption
-        ? toAbsPosition(
-            `${focusVariantOption.chr}:${focusVariantOption.txStart}`,
-            chromInfo
-          )
-        : null;
-    },
-  })
+export const focusRegionAbsWithAssembly = memoize(
+  (chromInfo) =>
+    selector({
+      key: `focusRegionAbs-${chromInfo.totalLength}`,
+      get: ({ get }) => {
+        const focusRegionOption = get(focusRegionOptionState);
+
+        if (!focusRegionOption) return null;
+
+        if (focusRegionOption.chrStart)
+          return [
+            toAbsPosition(
+              `${focusRegionOption.chrStart}:${focusRegionOption.txStart}`,
+              chromInfo
+            ),
+            toAbsPosition(
+              `${focusRegionOption.chrEnd}:${focusRegionOption.txEnd}`,
+              chromInfo
+            ),
+          ];
+
+        const startAbs = toAbsPosition(
+          `${focusRegionOption.chr}:${focusRegionOption.txStart}`,
+          chromInfo
+        );
+
+        return [startAbs, startAbs + 1];
+      },
+    }),
+  (chromInfo) => chromInfo.totalLength
 );
 
-export const focusVariantRelPositionState = selector({
-  key: 'focusVariantRelPosition',
+export const focusRegionRelState = selector({
+  key: 'focusVariantRel',
   get: ({ get }) => {
-    const focusVariantOption = get(focusVariantOptionState);
-    return focusVariantOption ? +focusVariantOption.txStart : null;
+    const focusRegionOption = get(focusRegionOptionState);
+
+    if (!focusRegionOption) return null;
+
+    if (
+      focusRegionOption.chrStart &&
+      focusRegionOption.chrEnd &&
+      focusRegionOption.chrStart !== focusRegionOption.chrEnd
+    )
+      // The relative position doesn't exist because the selected region
+      // stretches across chromsomes
+      return Number.NaN;
+
+    if (focusRegionOption.chrStart) {
+      return (
+        +focusRegionOption.txStart +
+        (+focusRegionOption.txEnd - +focusRegionOption.txStart) / 2
+      );
+    }
+
+    return +focusRegionOption.txStart;
   },
 });
 
-export const focusVariantStrPositionState = selector({
-  key: 'focusVariantStrPosition',
+export const focusRegionStrState = selector({
+  key: 'focusRegionStr',
   get: ({ get }) => {
-    const focusVariantOption = get(focusVariantOptionState);
-    return focusVariantOption
-      ? `${focusVariantOption.chr}:${focusVariantOption.txStart}`
-      : null;
+    const focusRegionOption = get(focusRegionOptionState);
+
+    if (!focusRegionOption) return null;
+
+    const chrRange = focusRegionOption.chrStart
+      ? [
+          `${focusRegionOption.chrStart}:${focusRegionOption.txStart}`,
+          `${focusRegionOption.chrEnd}:${focusRegionOption.txEnd}`,
+        ]
+      : [
+          `${focusRegionOption.chr}:${focusRegionOption.txStart}`,
+          `${focusRegionOption.chr}:${focusRegionOption.txEnd}`,
+        ];
+
+    return chrRangePosEncoder(chrRange);
   },
 });
 
-// Predefined hooks
+export const dnaAccessXDomainWithAssembly = memoize(
+  (chromInfo) =>
+    selector({
+      key: 'dnaAccessXDomain',
+      get: ({ get }) => {
+        const focusRegionAbs = get(focusRegionAbsWithAssembly(chromInfo));
+        const focusGeneStart = get(focusGeneStartWithAssembly(chromInfo));
+        const focusGeneEnd = get(focusGeneEndWithAssembly(chromInfo));
+        const xDomainStartAbs = get(xDomainStartAbsWithAssembly(chromInfo));
+        const xDomainEndAbs = get(xDomainEndAbsWithAssembly(chromInfo));
+
+        return getDnaAccessXDomain(
+          focusRegionAbs,
+          focusGeneStart,
+          focusGeneEnd,
+          xDomainStartAbs,
+          xDomainEndAbs
+        );
+      },
+    }),
+  (chromInfo) => chromInfo.totalLength
+);
+
+/*
+ Predefined Hooks
+ */
 export const useVariantTracks = () =>
   useRecoilQueryString('vt', variantTracksState, variantTracksEncoder);
 export const useVariantTracksSyncher = () =>
@@ -379,10 +468,14 @@ export const useFocusGene = () => useRecoilQueryString('g', focusGeneState);
 export const useFocusGeneSyncher = () =>
   useRecoilQueryStringSyncher('g', focusGeneState);
 
-export const useFocusVariant = () =>
-  useRecoilQueryString('v', focusVariantState);
-export const useFocusVariantSyncher = () =>
-  useRecoilQueryStringSyncher('v', focusVariantState);
+export const useFocusRegion = (chromInfo) =>
+  useRecoilQueryString('f', focusRegionState, (v) =>
+    Array.isArray(v) ? chrRangePosUrlEncoder(v) : v
+  );
+export const useFocusRegionSyncher = (chromInfo) =>
+  useRecoilQueryStringSyncher('f', focusRegionState, (v) =>
+    Array.isArray(v) ? chrRangePosUrlEncoder(v) : v
+  );
 
 export const useDnaAccessLabelStyle = () =>
   useRecoilQueryString('dal', dnaAccessLabelStyleState);

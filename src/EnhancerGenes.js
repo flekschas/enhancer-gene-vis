@@ -8,24 +8,21 @@ import EnhancerGenesSettings from './EnhancerGenesSettings';
 import EnhancerGenesPlot from './EnhancerGenesPlot';
 import TitleBar from './TitleBar';
 
-import { focusVariantState, useEnhancerGenesShowInfos } from './state';
+import { focusRegionState, useEnhancerGenesShowInfos } from './state';
 
 const useStyles = makeStyles((theme) => ({
-  root: {
-    // marginLeft: '-8px',
-  },
   plot: {
     minHeight: '6rem',
   },
 }));
 
 const EnhancerGenes = React.memo(function EnhancerGenes() {
-  const focusVariant = useRecoilValue(focusVariantState);
+  const focusRegion = useRecoilValue(focusRegionState);
 
   const classes = useStyles();
 
   return (
-    <div className={classes.root}>
+    <div>
       <TitleBar
         id="enhancer-gene"
         title="Enhancer-Gene Connections"
@@ -35,9 +32,7 @@ const EnhancerGenes = React.memo(function EnhancerGenes() {
         Help={EnhancerGenesHelp}
         Settings={EnhancerGenesSettings}
       />
-      <div className={classes.plot}>
-        {focusVariant && <EnhancerGenesPlot />}
-      </div>
+      <div className={classes.plot}>{focusRegion && <EnhancerGenesPlot />}</div>
     </div>
   );
 });

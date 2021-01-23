@@ -7,7 +7,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import {
   enhancerGenesCellEncodingState,
   enhancerGenesShowInfoState,
-  focusVariantState,
+  focusRegionState,
+  focusRegionStrState,
 } from './state';
 
 const useStyles = makeStyles((theme) => ({
@@ -41,7 +42,8 @@ const useStyles = makeStyles((theme) => ({
 
 const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   const showInfo = useRecoilValue(enhancerGenesShowInfoState);
-  const focusVariant = useRecoilValue(focusVariantState);
+  const focusRegion = useRecoilValue(focusRegionState);
+  const focusRegionStr = useRecoilValue(focusRegionStrState);
   const cellEncoding = useRecoilValue(enhancerGenesCellEncodingState);
 
   const classes = useStyles();
@@ -50,7 +52,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
 
   return (
     <div>
-      {!focusVariant && (
+      {!focusRegion && (
         <Grid
           container
           justify="center"
@@ -58,49 +60,49 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
           className={classes.placeholder}
         >
           <Typography className={classes.text}>
-            Select a variant to see details
+            Select a variant or focus region to see details
           </Typography>
         </Grid>
       )}
-      {focusVariant && cellEncoding === 'number' && (
+      {focusRegion && cellEncoding === 'number' && (
         <React.Fragment>
           <Typography className={classes.text}>
             <span className={classes.small}>■</span>
             <span className={classes.medium}>■</span>
             <span className={classes.large}>■</span>
             <strong>Absolute number</strong> of enhancer-gene connections
-            overlapping <em>{focusVariant}</em> by sample groups across
+            overlapping <em>{focusRegionStr}</em> by sample groups across
             up/downstream genes.
           </Typography>
         </React.Fragment>
       )}
-      {focusVariant && cellEncoding === 'percent' && (
+      {focusRegion && cellEncoding === 'percent' && (
         <React.Fragment>
           <Typography className={classes.text}>
             <span className={classes.small}>■</span>
             <span className={classes.medium}>■</span>
             <span className={classes.large}>■</span>
             <strong>Percentage</strong> of enhancer-gene connections overlapping{' '}
-            <em>{focusVariant}</em> within a sample group across up/downstream
+            <em>{focusRegionStr}</em> within a sample group across up/downstream
             genes.
           </Typography>
         </React.Fragment>
       )}
-      {focusVariant && cellEncoding === 'distribution' && (
+      {focusRegion && cellEncoding === 'distribution' && (
         <React.Fragment>
           <Typography className={classes.text}>
             <strong>Distribution</strong> of the prediction scores of
-            enhancer-gene connections overlapping <em>{focusVariant}</em> by
+            enhancer-gene connections overlapping <em>{focusRegionStr}</em> by
             sample group across up/downstream genes.
           </Typography>
         </React.Fragment>
       )}
-      {focusVariant && cellEncoding === 'array' && (
+      {focusRegion && cellEncoding === 'array' && (
         <React.Fragment>
           <Typography className={classes.text}>
             <span>■</span>
             <strong>Presence</strong> of enhancer-gene connections overlapping{' '}
-            <em>{focusVariant}</em> by samples across sample groups and
+            <em>{focusRegionStr}</em> by samples across sample groups and
             up/downstream genes.
           </Typography>
         </React.Fragment>

@@ -1014,3 +1014,9 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
     },
   ],
 };
+
+export const IGNORED_FOCUS_ELEMENTS = new Set(['input', 'textarea']);
+
+export const HIGLASS_PAN_ZOOM = 'panZoom';
+
+export const HIGLASS_SELECT = 'select';

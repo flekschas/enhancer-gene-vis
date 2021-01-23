@@ -7,6 +7,7 @@ import Grid from '@material-ui/core/Grid';
 import Chip from '@material-ui/core/Chip';
 import SvgIcon from '@material-ui/core/SvgIcon';
 import FlashOnIcon from '@material-ui/icons/FlashOn';
+import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import { makeStyles } from '@material-ui/core/styles';
 import { identity } from '@flekschas/utils';
 
@@ -95,11 +96,43 @@ function VariantOption(props) {
   );
 }
 
+function RegionOption(props) {
+  return (
+    <Grid
+      key={props.option.geneName}
+      container
+      direction="row"
+      alignItems="center"
+    >
+      <FilterCenterFocusIcon fontSize="small" />
+      <span>{props.option.geneName}</span>
+    </Grid>
+  );
+}
+
 function Option(props) {
   if (props.option.type === 'gene') return <GeneOption option={props.option} />;
   if (props.option.type === 'variant')
     return <VariantOption option={props.option} />;
+  if (props.option.type === 'region')
+    return <RegionOption option={props.option} />;
   return <div>{props.option.geneName}</div>;
+}
+
+function getIcon(icon) {
+  switch (icon) {
+    case 'gene':
+      return <GeneIcon />;
+
+    case 'variant':
+      return <FlashOnIcon />;
+
+    case 'region':
+      return <FilterCenterFocusIcon />;
+
+    default:
+      return undefined;
+  }
 }
 
 export default function SearchField(props) {
@@ -201,7 +234,7 @@ export default function SearchField(props) {
       renderTags={(v, getTagProps) =>
         v.map((option, index) => (
           <Chip
-            icon={option.type === 'gene' ? <GeneIcon /> : <FlashOnIcon />}
+            icon={getIcon(option.type)}
             key={option.geneName}
             label={option.geneName}
             {...getTagProps({ index })}

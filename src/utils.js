@@ -198,3 +198,69 @@ export const customBooleanQueryStringDecoder = (excluded = []) => {
     return v === 'true';
   };
 };
+
+export const isChrRange = (chrRange) =>
+  chrRange.match(/^chr(\d+)[:.](\d+)(([-~+])(\d+))?(-chr(\d+)[:.](\d+))?$/);
+
+export const getIntervalCenter = (interval) =>
+  interval[0] + (interval[1] - interval[0]) / 2;
+
+export const chrPosUrlDecoder = (chrPos) =>
+  chrPos ? chrPos.replace('.', ':') : chrPos;
+
+export const chrPosUrlEncoder = (chrPos) =>
+  chrPos ? chrPos.replace(':', '.') : chrPos;
+
+export const chrPosAdd = (chrPos, value) => {
+  if (!chrPos) return chrPos;
+
+  const [chrom, pos] = chrPos.split(':');
+
+  return `${chrom}:${+pos + +value}`;
+};
+
+export const chrRangePosUrlDecoder = (chrRangePos) => {
+  if (!chrRangePos) return chrRangePos;
+
+  let [start, end] = chrRangePos.split('-');
+  let range = null;
+
+  [start, range] = chrPosUrlDecoder(start).split('~');
+
+  if (end) {
+    end = chrPosUrlDecoder(end);
+  } else if (range) {
+    end = chrPosAdd(start, range);
+  } else {
+    end = chrPosAdd(start, 1);
+  }
+
+  return [start, end];
+};
+
+export const chrRangePosEncoder = (
+  chrRangePos,
+  chrPosEncoder = identity,
+  lengthOperator = '+'
+) => {
+  if (!chrRangePos) return chrRangePos;
+
+  const [startChrom, startPos] = chrRangePos[0].split(':');
+  const [endChrom, endPos] = chrRangePos[1].split(':');
+
+  if (startChrom === endChrom) {
+    const length = Math.abs(+endPos - +startPos);
+
+    if (length < 2) return chrPosEncoder(chrRangePos[0]);
+
+    if (length < 100000)
+      return `${chrPosEncoder(chrRangePos[0])}${lengthOperator}${length}`;
+
+    return `${chrPosEncoder(chrRangePos[0])}-${endPos}`;
+  }
+
+  return chrRangePos.map(chrPosEncoder).join('-');
+};
+
+export const chrRangePosUrlEncoder = (chrRangePos) =>
+  chrRangePosEncoder(chrRangePos, chrPosUrlEncoder, '~');

@@ -1,5 +1,7 @@
 import { deepClone, isFunction } from '@flekschas/utils';
 
+import { getIntervalCenter } from './utils';
+
 import { DEFAULT_VARIANT_TRACK_DEF } from './constants';
 
 const getFocusGeneRegion = (viewConfig) => {
@@ -58,7 +60,7 @@ export const updateViewConfigVariantTracks = (variantTrackConfigs) => (
   return viewConfig;
 };
 
-export const updateViewConfigFocusVariant = (position, trackIdxs = []) => (
+export const updateViewConfigFocusRegion = (region, trackIdxs = []) => (
   viewConfig
 ) => {
   const delFocusRegion = (track, focusRegion) => {
@@ -81,13 +83,14 @@ export const updateViewConfigFocusVariant = (position, trackIdxs = []) => (
     }
   };
 
-  if (Number.isNaN(+position) || position === null) {
+  if (!Array.isArray(region) || region === null) {
     trackIdxs.forEach((trackIdx) => {
       delFocusRegion(viewConfig.views[0].tracks.top[trackIdx]);
     });
     viewConfig.views[0].overlays[0].options.extent = [];
   } else {
-    const focusRegion = [position - 0.5, position + 0.5];
+    const focusRegion = [region[0] - 0.5, region[1] - 0.5];
+
     trackIdxs.forEach((trackIdx) => {
       setFocusRegion(viewConfig.views[0].tracks.top[trackIdx], focusRegion);
     });
@@ -157,4 +160,42 @@ export const updateViewConfigFocusGene = (gene, start, end) => (viewConfig) => {
   }
 
   return viewConfig;
+};
+
+export const getDnaAccessXDomain = (
+  focusRegionAbs,
+  focusGeneStart,
+  focusGeneEnd,
+  xDomainStartAbs,
+  xDomainEndAbs
+) => {
+  const enhancerViewRange = xDomainEndAbs - xDomainStartAbs;
+  const enhancerViewCenter = xDomainStartAbs + enhancerViewRange / 2;
+
+  if (focusRegionAbs) {
+    const focusRegionCenter = getIntervalCenter(focusRegionAbs);
+    if (
+      enhancerViewRange < 5000 &&
+      Math.abs(enhancerViewCenter - focusRegionCenter) < 1000
+    ) {
+      return [xDomainStartAbs, xDomainEndAbs];
+    }
+    return [focusRegionAbs[0] - 2500, focusRegionAbs[1] + 2500];
+  }
+
+  if (focusGeneStart && focusGeneEnd) {
+    const midPos = focusGeneStart + (focusGeneEnd - focusGeneStart) / 2;
+
+    if (
+      enhancerViewRange < 5000 &&
+      enhancerViewCenter > focusGeneStart &&
+      enhancerViewCenter < focusGeneEnd
+    ) {
+      return [xDomainStartAbs, xDomainEndAbs];
+    }
+
+    return [midPos - 2500, midPos + 2500];
+  }
+
+  return [xDomainStartAbs, xDomainEndAbs];
 };

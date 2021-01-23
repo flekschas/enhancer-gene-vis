@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import {
   enhancerRegionsShowInfoState,
-  focusVariantState,
+  focusRegionState,
   focusGeneState,
 } from './state';
 
@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
 const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   const showInfo = useRecoilValue(enhancerRegionsShowInfoState);
   const focusGene = useRecoilValue(focusGeneState);
-  const focusVariant = useRecoilValue(focusVariantState);
+  const focusRegion = useRecoilValue(focusRegionState);
 
   const classes = useStyles();
 
@@ -39,25 +39,25 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
 
   return (
     <React.Fragment>
-      {focusGene && focusVariant && (
+      {focusGene && focusRegion && (
         <Typography className={classes.text} noWrap>
           <span className={classes.pink}>■</span> Enhancers containing{' '}
-          <em>{focusVariant}</em> and predicted to regulate <em>{focusGene}</em>
+          <em>{focusRegion}</em> and predicted to regulate <em>{focusGene}</em>
         </Typography>
       )}
-      {focusGene && !focusVariant && (
+      {focusGene && !focusRegion && (
         <Typography className={classes.text} noWrap>
           <span className={classes.pink}>■</span> Enhancers predicted to
           regulate <em>{focusGene}</em>
         </Typography>
       )}
-      {!focusGene && focusVariant && (
+      {!focusGene && focusRegion && (
         <Typography className={classes.text} noWrap>
           <span className={classes.pink}>■</span> Enhancers containing{' '}
-          <em>{focusVariant}</em>
+          <em>{focusRegion}</em>
         </Typography>
       )}
-      {focusGene || focusVariant ? (
+      {focusGene || focusRegion ? (
         <Typography className={classes.text} noWrap>
           <span className={classes.gray}>■</span> All other predicted enhancers
         </Typography>

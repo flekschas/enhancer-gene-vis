@@ -24,14 +24,14 @@ import {
   focusGeneEndWithAssembly,
   focusGeneOptionState,
   focusGeneStartWithAssembly,
-  focusVariantOptionState,
-  focusVariantPositionWithAssembly,
+  focusRegionOptionState,
+  focusRegionAbsWithAssembly,
   higlassEnhancerRegionsState,
   sampleGroupSelectionSizesState,
   selectedSamplesState,
   useEnhancerRegionsShowInfos,
   useFocusGene,
-  useFocusVariant,
+  useFocusRegion,
   useXDomainEndWithAssembly,
   useXDomainStartWithAssembly,
   variantTracksState,
@@ -42,13 +42,20 @@ import {
 
 import {
   updateViewConfigFocusGene,
-  updateViewConfigFocusVariant,
+  updateViewConfigFocusRegion,
   updateViewConfigVariantYScale,
   updateViewConfigXDomain,
   updateViewConfigVariantTracks,
 } from './view-config';
 
-import { DEFAULT_VIEW_CONFIG_ENHANCER } from './constants';
+import {
+  DEFAULT_VIEW_CONFIG_ENHANCER,
+  HIGLASS_PAN_ZOOM,
+  HIGLASS_SELECT,
+  IGNORED_FOCUS_ELEMENTS,
+} from './constants';
+
+import { chrRangePosEncoder } from './utils';
 
 import 'higlass/dist/hglib.css';
 
@@ -161,19 +168,17 @@ const EnhancerRegion = React.memo((props) => {
   );
 
   const setFocusGene = useFocusGene()[1];
-  const setFocusVariant = useFocusVariant()[1];
+  const setFocusRegion = useFocusRegion()[1];
   const setXDomainStart = useXDomainStartWithAssembly(chromInfo)[1];
   const setXDomainEnd = useXDomainEndWithAssembly(chromInfo)[1];
-  const setFocusVariantOption = useSetRecoilState(focusVariantOptionState);
+  const setFocusRegionOption = useSetRecoilState(focusRegionOptionState);
   const setHiglass = useSetRecoilState(higlassEnhancerRegionsState);
 
   const variantTracks = useRecoilValue(variantTracksState);
   const hideUnfocused = useRecoilValue(enhancerRegionsHideUnfocusedState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const colorEncoding = useRecoilValue(enhancerRegionsColorEncodingState);
-  const focusVariantPosition = useRecoilValue(
-    focusVariantPositionWithAssembly(chromInfo)
-  );
+  const focusRegionAbs = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
   const xDomainStartAbs = useRecoilValue(
     xDomainStartAbsWithAssembly(chromInfo)
   );
@@ -187,6 +192,9 @@ const EnhancerRegion = React.memo((props) => {
 
   const [higlassMouseOver, setHiglassMouseOver] = useState(false);
   const [higlassFocus, setHiglassFocus] = useState(false);
+  const higlassApi = useRef(null);
+  const higlassRangeSelection = useRef(null);
+  const higlassListeners = useRef([]);
   const higlassContainerRef = useRef(null);
   const higlassEnhancerClickSelection = useRef(null);
   const higlassMouseDown = useRef(false);
@@ -229,7 +237,7 @@ const EnhancerRegion = React.memo((props) => {
           focusGeneStart,
           focusGeneEnd
         ),
-        updateViewConfigFocusVariant(focusVariantPosition, [2, 4]),
+        updateViewConfigFocusRegion(focusRegionAbs, [2, 4]),
         updateViewConfigFocusStyle(hideUnfocused),
         updateViewConfigColorEncoding(colorEncoding),
         updateViewConfigVariantYScale(variantYScale),
@@ -247,7 +255,7 @@ const EnhancerRegion = React.memo((props) => {
       focusGeneOption,
       focusGeneStart,
       focusGeneEnd,
-      focusVariantPosition,
+      focusRegionAbs,
       hideUnfocused,
       colorEncoding,
       variantYScale,
@@ -283,9 +291,9 @@ const EnhancerRegion = React.memo((props) => {
         type: 'gene',
       });
     } else if (event.type === 'snp') {
-      setFocusVariant(event.payload.name);
+      setFocusRegion(event.payload.name);
       higlassEnhancerClickSelection.current = true;
-      setFocusVariantOption({
+      setFocusRegionOption({
         chr: event.payload.fields[0],
         txStart: event.payload.fields[1],
         txEnd: event.payload.fields[2],
@@ -293,8 +301,18 @@ const EnhancerRegion = React.memo((props) => {
         score: event.payload.importance,
         type: 'variant',
       });
-    } else if (event.type === 'annotation') {
-      console.log('clicked on annotation', event.payload);
+    } else if (event.type === 'annotation' && event.payload.item) {
+      setFocusRegionOption({
+        chrStart: event.payload.item.fields[0],
+        txStart: +event.payload.item.fields[1],
+        chrEnd: event.payload.item.fields[0],
+        txEnd: +event.payload.item.fields[2],
+        geneName: chrRangePosEncoder([
+          `${event.payload.item.fields[0]}:${event.payload.item.fields[1]}`,
+          `${event.payload.item.fields[0]}:${event.payload.item.fields[2]}`,
+        ]),
+        type: 'region',
+      });
     }
   };
 
@@ -310,17 +328,28 @@ const EnhancerRegion = React.memo((props) => {
     250
   );
 
-  const windowMouseDownClearHandler = useCallback((e) => {
-    if (!isParentOf(e.target, higlassContainerRef.current)) {
-      setHiglassFocus(false);
-    }
-    higlassMouseDown.current = false;
-  }, []);
+  const higlassRangeSelectionHandler = (event) => {
+    if (event.dataRange[0]) [higlassRangeSelection.current] = event.dataRange;
+  };
+
+  const windowMouseDownClearHandler = useCallback(
+    (e) => {
+      if (!isParentOf(e.target, higlassContainerRef.current)) {
+        setHiglassFocus(false);
+      }
+    },
+    [setFocusRegion, chromInfo]
+  );
 
   useEffect(
     () => {
       window.addEventListener('mouseup', windowMouseDownClearHandler);
       window.addEventListener('blur', windowMouseDownClearHandler);
+
+      return () => {
+        window.removeEventListener('mouseup', windowMouseDownClearHandler);
+        window.removeEventListener('blur', windowMouseDownClearHandler);
+      };
     },
     // Execute only once on initialization
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -335,11 +364,24 @@ const EnhancerRegion = React.memo((props) => {
     (higlassInstance) => {
       if (higlassInstance !== null) {
         setHiglass(higlassInstance.api);
-        higlassInstance.api.on('click', higlassClickHandler);
-        higlassInstance.api.on(
-          'location',
-          higlassLocationChangeHandlerDb,
-          'context'
+        higlassApi.current = higlassInstance.api;
+        higlassInstance.api.setRangeSelectionToInt();
+        higlassListeners.current.push(
+          higlassInstance.api.on('click', higlassClickHandler)
+        );
+        higlassListeners.current.push(
+          higlassInstance.api.on(
+            'location',
+            higlassLocationChangeHandlerDb,
+            'context'
+          )
+        );
+        higlassListeners.current.push(
+          higlassInstance.api.on(
+            'rangeSelection',
+            higlassRangeSelectionHandler,
+            'context'
+          )
         );
         higlassInstance.api
           .getComponent()
@@ -368,6 +410,87 @@ const EnhancerRegion = React.memo((props) => {
   const higlassContainerMouseLeaveHandler = () => {
     setHiglassMouseOver(false);
   };
+
+  // On init only
+  useEffect(
+    () => {
+      function keydownHandler(event) {
+        if (
+          IGNORED_FOCUS_ELEMENTS.has(
+            document.activeElement.tagName.toLowerCase()
+          )
+        )
+          return;
+
+        event.preventDefault();
+
+        if (event.altKey) higlassApi.current.activateTool(HIGLASS_SELECT);
+      }
+
+      function keyupHandler(event) {
+        if (
+          IGNORED_FOCUS_ELEMENTS.has(
+            document.activeElement.tagName.toLowerCase()
+          )
+        )
+          return;
+
+        event.preventDefault();
+
+        if (higlassRangeSelection.current) {
+          const chrRange = higlassRangeSelection.current.map(
+            chromInfo.absToChr
+          );
+          const [chrStart, txStart] = chrRange[0];
+          const [chrEnd, txEnd] = chrRange[1];
+          setFocusRegion([`${chrStart}:${txStart}`, `${chrEnd}:${txEnd}`]);
+          setFocusRegionOption({
+            chrStart,
+            txStart,
+            chrEnd,
+            txEnd,
+            geneName: chrRangePosEncoder([
+              `${chrStart}:${txStart}`,
+              `${chrEnd}:${txEnd}`,
+            ]),
+            type: 'region',
+          });
+        }
+
+        higlassRangeSelection.current = null;
+        higlassApi.current.activateTool(HIGLASS_PAN_ZOOM);
+      }
+
+      document.addEventListener('keydown', keydownHandler);
+      document.addEventListener('keyup', keyupHandler);
+
+      return () => {
+        document.removeEventListener('keydown', keydownHandler);
+        document.removeEventListener('keyup', keyupHandler);
+      };
+    },
+    // Execute only once on initialization
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chromInfo]
+  );
+
+  // Unmount
+  useEffect(
+    () => () => {
+      if (higlassApi.current) {
+        higlassListeners.current.forEach(({ event, handler }) => {
+          higlassApi.current.off(event, handler);
+        });
+        higlassApi.current
+          .getComponent()
+          .element.removeEventListener('mousedown', higlassMouseDownHandler);
+        higlassApi.current.destroy();
+      }
+    },
+    // Execute only once on initialization
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   // Run on every render
   const classes = useStyles();

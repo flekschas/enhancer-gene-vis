@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { deepClone } from '@flekschas/utils';
+import { useRecoilState } from 'recoil';
+import { deepClone, isString } from '@flekschas/utils';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
@@ -11,9 +12,15 @@ import FileInput from './FileInput';
 import { useChromInfo } from './ChromInfoProvider';
 import createLocalBedDataServer from './local-bed-data-server';
 
-import { useFocusVariant, useVariantTracks } from './state';
+import {
+  focusRegionOptionState,
+  useFocusRegion,
+  useVariantTracks,
+} from './state';
 
 import { LOCAL_BED_TILESET_INFO_HG19 } from './constants';
+
+import { chrRangePosEncoder } from './utils';
 
 const useStyles = makeStyles((theme) => ({
   note: {
@@ -253,8 +260,13 @@ const VariantsSettings = React.memo(function VariantsSettings({
 }) {
   const chromInfo = useChromInfo();
 
-  const setFocusVariant = useFocusVariant()[1];
+  const setFocusRegion = useFocusRegion()[1];
   const [variantTracks, setVariantTracks] = useVariantTracks();
+
+  const [focusRegionOption, setFocusRegionOption] = useRecoilState(
+    focusRegionOptionState
+  );
+
   const [tmpVariantTracks, setTmpVariantTracks] = useState(() =>
     deepClone(variantTracks)
   );
@@ -326,15 +338,41 @@ const VariantsSettings = React.memo(function VariantsSettings({
           newTrackConfig.file !== currVariantTracks.current[i].file
       )
     ) {
-      setFocusVariant(null);
+      setFocusRegion((currFocusRegion) => {
+        if (isString(currFocusRegion)) {
+          return [
+            `${focusRegionOption.chrStart}:${focusRegionOption.txStart}`,
+            `${focusRegionOption.chrEnd}:${focusRegionOption.txEnd}`,
+          ];
+        }
+        return currFocusRegion;
+      });
+      setFocusRegionOption((currFocusRegionOption) => {
+        if (currFocusRegionOption.chr) {
+          return {
+            chrStart: currFocusRegionOption.chr,
+            chrEnd: currFocusRegionOption.chr,
+            txStart: currFocusRegionOption.txStart,
+            txEnd: currFocusRegionOption.txEnd,
+            geneName: chrRangePosEncoder([
+              `${currFocusRegionOption.chr}:${currFocusRegionOption.txStart}`,
+              `${currFocusRegionOption.chr}:${currFocusRegionOption.txEnd}`,
+            ]),
+            type: 'region',
+          };
+        }
+        return currFocusRegionOption;
+      });
     }
     closeHandler();
   }, [
     chromInfo,
     tmpVariantTracks,
     closeHandler,
+    focusRegionOption,
     setVariantTracks,
-    setFocusVariant,
+    setFocusRegion,
+    setFocusRegionOption,
   ]);
 
   const classes = useStyles();

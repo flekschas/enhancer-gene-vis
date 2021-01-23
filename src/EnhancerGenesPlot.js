@@ -20,10 +20,10 @@ import {
   enhancerGenesCellEncodingState,
   enhancerGenesPaddingState,
   enhancerGenesSvgState,
-  focusVariantPositionWithAssembly,
-  focusVariantRelPositionState,
-  focusVariantState,
-  focusVariantStrPositionState,
+  focusRegionAbsWithAssembly,
+  focusRegionRelState,
+  focusRegionState,
+  focusRegionStrState,
   sampleSelectionState,
   sampleGroupSelectionSizesState,
 } from './state';
@@ -36,7 +36,7 @@ import {
   DEFAULT_VIEW_CONFIG_ENHANCER,
   SAMPLE_IDX,
 } from './constants';
-import { scaleBand } from './utils';
+import { getIntervalCenter, scaleBand } from './utils';
 import usePrevious from './use-previous';
 
 import './EnhancerGenesPlot.css';
@@ -169,7 +169,7 @@ const plotEnhancerGeneConnections = (
     showTooltip = identity,
     tooltipClasses = [],
     position = '',
-    variant = null,
+    focusRegion = null,
   } = {}
 ) => {
   if (!width || !data) return;
@@ -376,7 +376,7 @@ const plotEnhancerGeneConnections = (
   const arrayTooltipTitleGetter = (d) => (
     <React.Fragment>
       The enhancer overlapping <strong>{position}</strong>
-      {variant ? ` (${variant})` : ''} is predicted to regulate{' '}
+      {focusRegion ? ` (${focusRegion})` : ''} is predicted to regulate{' '}
       <strong>{d.gene}</strong> in sample <strong>{d.sample}</strong> with a
       score of <strong className="value">{d.value.toFixed(3)}</strong>.
     </React.Fragment>
@@ -801,11 +801,11 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
     sampleGroupSelectionSizesState
   );
   const geneCellEncoding = useRecoilValue(enhancerGenesCellEncodingState);
-  const position = useRecoilValue(focusVariantPositionWithAssembly(chromInfo));
-  const relPosition = useRecoilValue(focusVariantRelPositionState);
-  const strPosition = useRecoilValue(focusVariantStrPositionState);
+  const absPosition = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
+  const focusRegion = useRecoilValue(focusRegionState);
+  const relPosition = useRecoilValue(focusRegionRelState);
+  const strPosition = useRecoilValue(focusRegionStrState);
   const genePadding = useRecoilValue(enhancerGenesPaddingState);
-  const variant = useRecoilValue(focusVariantState);
 
   const [plotEl, setPlotEl] = useRecoilState(enhancerGenesSvgState);
 
@@ -819,24 +819,26 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   useEffect(() => {
     let active = true;
 
-    if (position === null || tilesetInfo === null) return undefined;
+    if (absPosition === null || tilesetInfo === null) return undefined;
+
+    const absCenterPos = getIntervalCenter(absPosition);
 
     const tileWidth = getTileWidth(tilesetInfo);
-    const tileXPos = Math.floor(position / tileWidth);
+    const tileXPos = Math.floor(absCenterPos / tileWidth);
     const tileId = `${uuid}.${tilesetInfo.max_zoom}.${tileXPos}`;
 
     setIsLoadingTile(true);
     fetchTile(tileId).then((_tile) => {
       if (active) {
         setIsLoadingTile(false);
-        setTile(filterByPosition(_tile[tileId], position));
+        setTile(filterByPosition(_tile[tileId], absCenterPos));
       }
     });
 
     return () => {
       active = false;
     };
-  }, [position, tilesetInfo]);
+  }, [absPosition, tilesetInfo]);
 
   const plotElRef = useCallback(
     (node) => {
@@ -1006,7 +1008,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
         classes,
         tooltipClasses,
         position: strPosition,
-        variant,
+        focusRegion,
       });
     },
     // `prevGeneCellEncoding` is ommitted on purpose to avoid circular updates.

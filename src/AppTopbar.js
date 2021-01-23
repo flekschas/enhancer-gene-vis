@@ -14,12 +14,16 @@ import usePrevious from './use-previous';
 
 import {
   focusGeneOptionState,
-  focusVariantOptionState,
+  // focusVariantOptionState,
+  focusRegionOptionState,
   useFocusGene,
-  useFocusVariant,
+  // useFocusVariant,
+  useFocusRegion,
 } from './state';
 
 import { DRAWER_WIDTH, GENE_SEARCH_URL, VARIANT_SEARCH_URL } from './constants';
+
+import { isChrRange } from './utils';
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -39,21 +43,29 @@ const useStyles = makeStyles((theme) => ({
 const locationSearch = async (query) => {
   if (!query) return undefined;
 
-  const match = query.match(/^chr(\d+):(\d)+$/);
-  if (
-    match &&
-    ((+match[1] > 0 && +match[1] < 23) ||
-      +match[1].toLowerCase() === 'x' ||
-      +match[1].toLowerCase() === 'y')
-  ) {
+  const match = isChrRange(query);
+
+  if (!match) return undefined;
+
+  const startChr = match[1];
+  const startPos = +match[2];
+  const endChr = match[7] || match[1];
+
+  let endPos =
+    match[8] ||
+    (match[4] === '~' || match[4] === '+' ? startPos + +match[5] : +match[5]);
+
+  endPos = Number.isNaN(endPos) ? startPos + 1 : endPos;
+
+  if (startChr && startPos && endChr && endPos) {
     return [
       {
-        chr: `chr${match[1]}`,
-        txStart: +match[2],
-        txEnd: +match[2] + 1,
-        score: 0,
+        chrStart: `chr${startChr}`,
+        chrEnd: `chr${endChr}`,
+        txStart: startPos,
+        txEnd: endPos,
         geneName: query,
-        type: 'nucleotide',
+        type: 'region',
       },
     ];
   }
@@ -63,37 +75,40 @@ const locationSearch = async (query) => {
 
 const AppTopbar = React.memo(function AppTopbar() {
   const [focusGene, setFocusGene] = useFocusGene();
-  const [focusVariant, setFocusVariant] = useFocusVariant();
+  // const [focusVariant, setFocusVariant] = useFocusVariant();
+  const [focusRegion, setFocusRegion] = useFocusRegion();
+
   const [focusGeneOption, setFocusGeneOption] = useRecoilState(
     focusGeneOptionState
   );
-  const [focusVariantOption, setFocusVariantOption] = useRecoilState(
-    focusVariantOptionState
+  const [focusRegionOption, setFocusRegionOption] = useRecoilState(
+    focusRegionOptionState
   );
 
   const prevFocusGeneOption = usePrevious(focusGeneOption);
-  const prevFocusVariantOption = usePrevious(focusVariantOption);
+  // const prevFocusVariantOption = usePrevious(focusVariantOption);
+  const prevFocusRegionOption = usePrevious(focusRegionOption);
 
   // Derived State
-  const focusGeneVariantOptions = useMemo(
+  const focusOptions = useMemo(
     () => {
-      const _focusGeneVariant = [];
-      // Add the focus element that has not changed first!
+      const _focusOptions = [];
+      // At first we add the focus element that has not changed!
       if (focusGeneOption && focusGeneOption === prevFocusGeneOption)
-        _focusGeneVariant.push(focusGeneOption);
-      if (focusVariantOption && focusVariantOption === prevFocusVariantOption)
-        _focusGeneVariant.push(focusVariantOption);
-      // Now add the focused element that has changed!
+        _focusOptions.push(focusGeneOption);
+      if (focusRegionOption && focusRegionOption === prevFocusRegionOption)
+        _focusOptions.push(focusRegionOption);
+      // Subsequently, we add the focused element that has changed!
       if (focusGeneOption && focusGeneOption !== prevFocusGeneOption)
-        _focusGeneVariant.push(focusGeneOption);
-      if (focusVariantOption && focusVariantOption !== prevFocusVariantOption)
-        _focusGeneVariant.push(focusVariantOption);
-      return _focusGeneVariant;
+        _focusOptions.push(focusGeneOption);
+      if (focusRegionOption && focusRegionOption !== prevFocusRegionOption)
+        _focusOptions.push(focusRegionOption);
+      return _focusOptions;
     },
     // `prevFocusGeneOption` and `prevFocusVariantOption` are ommitted
     // on purpose to avoid circular updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [focusGeneOption, focusVariantOption]
+    [focusGeneOption, focusRegionOption]
   );
 
   const clearFocusGene = () => {
@@ -101,45 +116,57 @@ const AppTopbar = React.memo(function AppTopbar() {
     setFocusGeneOption(null);
   };
 
-  const clearFocusVariant = () => {
-    setFocusVariant('');
-    setFocusVariantOption(null);
+  const clearFocusRegion = () => {
+    setFocusRegion('');
+    setFocusRegionOption(null);
   };
 
-  const focusGeneVariantChangeHandler = (newValues) => {
-    if (newValues.length) {
+  const focusOptionChangeHandler = (newOptions) => {
+    if (newOptions.length) {
       const newFocusElements = {};
-      // We only allow exactly two selections
-      newValues.slice(newValues.length - 2).forEach((newValue) => {
-        switch (newValue.type) {
+      // We only allow exactly two options!
+      newOptions.slice(newOptions.length - 2).forEach((newOption) => {
+        switch (newOption.type) {
           case 'gene':
-            newFocusElements.gene = newValue;
-            if (focusGene !== newValue.geneName) {
-              setFocusGene(newValue.geneName);
-              setFocusGeneOption(newValue);
+            newFocusElements.gene = newOption;
+            if (focusGene !== newOption.geneName) {
+              setFocusGene(newOption.geneName);
+              setFocusGeneOption(newOption);
             }
             break;
 
           case 'variant':
-            newFocusElements.variant = newValue;
-            if (focusVariant !== newValue.geneName) {
-              setFocusVariant(newValue.geneName);
-              setFocusVariantOption(newValue);
+            newFocusElements.variant = newOption;
+            if (focusRegion !== newOption.geneName) {
+              setFocusRegion(newOption.geneName);
+              setFocusRegionOption(newOption);
+            }
+            break;
+
+          case 'region':
+            newFocusElements.region = newOption;
+            if (focusRegion !== newOption.geneName) {
+              setFocusRegion([
+                `${newOption.chrStart}:${newOption.txStart}`,
+                `${newOption.chrEnd}:${newOption.txEnd}`,
+              ]);
+              setFocusRegionOption(newOption);
             }
             break;
 
           default:
             // eslint-disable-next-line no-console
-            console.warn('Unknown focus element', newValue);
+            console.warn('Unknown focus element', newOption);
             break;
         }
       });
       // Unset focus elements
       if (focusGene && !newFocusElements.gene) clearFocusGene();
-      if (focusVariant && !newFocusElements.variant) clearFocusVariant();
+      if (focusRegion && !newFocusElements.region && !newFocusElements.variant)
+        clearFocusRegion();
     } else {
       clearFocusGene();
-      clearFocusVariant();
+      clearFocusRegion();
     }
   };
 
@@ -157,7 +184,7 @@ const AppTopbar = React.memo(function AppTopbar() {
             label={
               <Grid container direction="row" alignItems="center">
                 <SearchIcon fontSize="small" />
-                <span style={{ marginLeft: 3 }}>Gene or Variant</span>
+                <span style={{ marginLeft: 3 }}>Gene, Variant, or Region</span>
               </Grid>
             }
             customSearch={locationSearch}
@@ -165,8 +192,8 @@ const AppTopbar = React.memo(function AppTopbar() {
               { url: GENE_SEARCH_URL, type: 'gene' },
               { url: VARIANT_SEARCH_URL, type: 'variant' },
             ]}
-            onChange={focusGeneVariantChangeHandler}
-            value={focusGeneVariantOptions}
+            onChange={focusOptionChangeHandler}
+            value={focusOptions}
             variant="filled"
             larger
             fullWidth

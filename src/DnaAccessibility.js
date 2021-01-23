@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
@@ -15,17 +15,15 @@ import TitleBar from './TitleBar';
 import {
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,
-  focusGeneEndWithAssembly,
-  focusGeneStartWithAssembly,
-  focusVariantPositionWithAssembly,
+  dnaAccessXDomainWithAssembly,
+  focusRegionAbsWithAssembly,
   higlassDnaAccessState,
   sampleSelectionState,
   useDnaAccessShowInfos,
   variantTracksState,
   variantYScaleState,
-  xDomainEndAbsWithAssembly,
-  xDomainStartAbsWithAssembly,
 } from './state';
+
 import {
   DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,
   DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
@@ -33,7 +31,7 @@ import {
 import useDebounce from './use-debounce';
 
 import {
-  updateViewConfigFocusVariant,
+  updateViewConfigFocusRegion,
   updateViewConfigVariantYScale,
   updateViewConfigXDomain,
   updateViewConfigVariantTracks,
@@ -65,46 +63,6 @@ const updateViewConfigDnaAccessRowNorm = (rowNorm) => (viewConfig) => {
   return viewConfig;
 };
 
-const getDnaAccessXDomain = (
-  focusVariantPosition,
-  focusGeneStart,
-  focusGeneEnd,
-  xDomainStartAbs,
-  xDomainEndAbs
-) => {
-  const enhancerViewRange = xDomainEndAbs - xDomainStartAbs;
-  const enhancerViewCenter = xDomainStartAbs + enhancerViewRange / 2;
-
-  if (focusVariantPosition) {
-    if (
-      enhancerViewRange < 5000 &&
-      Math.abs(enhancerViewCenter - focusVariantPosition) < 1000
-    ) {
-      return [xDomainStartAbs, xDomainEndAbs];
-    }
-    return [focusVariantPosition - 2500, focusVariantPosition + 2500];
-  }
-
-  if (focusGeneStart && focusGeneEnd) {
-    const midPos = focusGeneStart + (focusGeneEnd - focusGeneStart) / 2;
-
-    if (
-      enhancerViewRange < 5000 &&
-      enhancerViewCenter > focusGeneStart &&
-      enhancerViewCenter < focusGeneEnd
-    ) {
-      return [xDomainStartAbs, xDomainEndAbs];
-    }
-
-    return [midPos - 2500, midPos + 2500];
-  }
-
-  return [xDomainStartAbs, xDomainEndAbs];
-};
-
-const updateViewConfigDnaAccessXDomain = (...args) =>
-  updateViewConfigXDomain(...getDnaAccessXDomain(...args), { force: true });
-
 const updateViewConfigRowSelection = (selection) => (viewConfig) => {
   viewConfig.views[0].tracks.top[3].options.rowSelections = DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
     (rowId, i) => selection[i]
@@ -122,18 +80,12 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
   const rowNorm = useRecoilValue(dnaAccessRowNormState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const variantTracks = useRecoilValue(variantTracksState);
-  const focusGeneStart = useRecoilValue(focusGeneStartWithAssembly(chromInfo));
-  const focusGeneEnd = useRecoilValue(focusGeneEndWithAssembly(chromInfo));
-  const focusVariantPosition = useRecoilValue(
-    focusVariantPositionWithAssembly(chromInfo)
-  );
+  const focusRegionAbs = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
 
-  const xDomainStartAbsDb = useDebounce(
-    useRecoilValue(xDomainStartAbsWithAssembly(chromInfo)),
-    500
-  );
-  const xDomainEndAbsDb = useDebounce(
-    useRecoilValue(xDomainEndAbsWithAssembly(chromInfo)),
+  const higlassApi = useRef(null);
+
+  const xDomainAbsDb = useDebounce(
+    useRecoilValue(dnaAccessXDomainWithAssembly(chromInfo)),
     500
   );
 
@@ -141,6 +93,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
     (higlassInstance) => {
       if (higlassInstance !== null) {
         setHiglassDnaAccess(higlassInstance.api);
+        higlassApi.current = higlassInstance.api;
       }
     },
     [setHiglassDnaAccess]
@@ -150,17 +103,11 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
     () =>
       pipe(
         updateViewConfigVariantTracks(variantTracks),
-        updateViewConfigFocusVariant(focusVariantPosition, [2]),
+        updateViewConfigFocusRegion(focusRegionAbs, [2]),
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigDnaAccessLabels(labelStyle),
         updateViewConfigDnaAccessRowNorm(rowNorm),
-        updateViewConfigDnaAccessXDomain(
-          focusVariantPosition,
-          focusGeneStart,
-          focusGeneEnd,
-          xDomainStartAbsDb,
-          xDomainEndAbsDb
-        ),
+        updateViewConfigXDomain(...xDomainAbsDb, { force: true }),
         updateViewConfigRowSelection(sampleSelection)
       )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,17 +115,25 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
       // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
       // updating the view-config on every pan or zoom event.
       variantTracks,
-      focusVariantPosition,
-      focusGeneStart,
-      focusGeneEnd,
-      xDomainStartAbsDb,
-      xDomainEndAbsDb,
+      focusRegionAbs,
+      xDomainAbsDb,
       variantYScale,
       labelStyle,
-      chromInfo,
       sampleSelection,
       rowNorm,
     ]
+  );
+
+  // Unmount
+  useEffect(
+    () => () => {
+      if (higlassApi.current) {
+        higlassApi.current.destroy();
+      }
+    },
+    // Execute only once on initialization
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   // On every render

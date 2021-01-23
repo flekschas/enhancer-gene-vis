@@ -3,6 +3,7 @@ import { useRecoilState } from 'recoil';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
+import { isString } from '@flekschas/utils';
 
 import AppSidebar from './AppSidebar';
 import AppTopbar from './AppTopbar';
@@ -16,13 +17,13 @@ import { useChromInfo } from './ChromInfoProvider';
 
 import {
   focusGeneOptionState,
-  focusVariantOptionState,
+  focusRegionOptionState,
   useFocusGene,
-  useFocusVariant,
+  useFocusRegion,
   useVariantTracksSyncher,
   useShowWelcomeSyncher,
   useFocusGeneSyncher,
-  useFocusVariantSyncher,
+  useFocusRegionSyncher,
   useDnaAccessLabelStyleSyncher,
   useDnaAccessRowNormSyncher,
   useDnaAccessShowInfosSyncher,
@@ -100,7 +101,7 @@ const AppMain = React.memo(function AppMain() {
   useVariantTracksSyncher();
   useShowWelcomeSyncher();
   useFocusGeneSyncher();
-  useFocusVariantSyncher();
+  useFocusRegionSyncher();
   useDnaAccessLabelStyleSyncher();
   useDnaAccessRowNormSyncher();
   useDnaAccessShowInfosSyncher();
@@ -115,13 +116,13 @@ const AppMain = React.memo(function AppMain() {
   useXDomainEndWithAssemblySyncher(chromInfo);
 
   const [focusGene, setFocusGene] = useFocusGene();
-  const [focusVariant, setFocusVariant] = useFocusVariant();
+  const [focusRegion, setFocusRegion] = useFocusRegion();
 
   const [focusGeneOption, setFocusGeneOption] = useRecoilState(
     focusGeneOptionState
   );
-  const [focusVariantOption, setFocusVariantOption] = useRecoilState(
-    focusVariantOptionState
+  const [focusRegionOption, setFocusRegionOption] = useRecoilState(
+    focusRegionOptionState
   );
 
   const clearFocusGene = () => {
@@ -138,17 +139,17 @@ const AppMain = React.memo(function AppMain() {
     }
   };
 
-  const clearFocusVariant = () => {
-    setFocusVariant('');
-    setFocusVariantOption(null);
+  const clearFocusRegion = () => {
+    setFocusRegion('');
+    setFocusRegionOption(null);
   };
 
-  const focusVariantChangeHandler = (newValue) => {
+  const focusRegionChangeHandler = (newValue) => {
     if (newValue) {
-      setFocusVariant(newValue.geneName);
-      setFocusVariantOption(newValue);
+      setFocusRegion(newValue.geneName);
+      setFocusRegionOption(newValue);
     } else {
-      clearFocusVariant();
+      clearFocusRegion();
     }
   };
 
@@ -162,15 +163,19 @@ const AppMain = React.memo(function AppMain() {
           const r = await fetch(`${GENE_SEARCH_URL}&ac=${focusGene}`);
           const results = await r.json();
           const result = results[0];
-          result.type = 'gene';
-          focusGeneChangeHandler(results[0]);
+          if (result) {
+            result.type = 'gene';
+            focusGeneChangeHandler(results[0]);
+          }
         }
-        if (focusVariant && !focusVariantOption) {
-          const r = await fetch(`${VARIANT_SEARCH_URL}&ac=${focusVariant}`);
+        if (focusRegion && isString(focusRegion) && !focusRegionOption) {
+          const r = await fetch(`${VARIANT_SEARCH_URL}&ac=${focusRegion}`);
           const results = await r.json();
           const result = results[0];
-          result.type = 'variant';
-          focusVariantChangeHandler(results[0]);
+          if (result) {
+            result.type = 'variant';
+            focusRegionChangeHandler(results[0]);
+          }
         }
       })();
     },
