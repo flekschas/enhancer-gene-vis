@@ -231,7 +231,11 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
           ),
           HGC.utils.colorToHex(
             group.backgroundColor ||
-              DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP.length]
+              DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP_LIGHT.length]
+          ),
+          HGC.utils.colorToHex(
+            group.backgroundColor ||
+              DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
           ),
         ]);
         group.categories
@@ -913,10 +917,10 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const { item, category } = element;
 
       if (item) {
-        const [color, bg] = this.groupToColor.get(
+        const [, bg, text] = this.groupToColor.get(
           this.categoryToGroup.get(category)
         );
-        const colorHex = `#${color.toString(16)}`;
+        const colorHex = `#${text.toString(16)}`;
         const bgHex = `#${bg.toString(16)}`;
         const value = this.getImportance(item).toFixed(2);
         return `<div style="margin: -0.25rem; padding: 0 0.25rem; background: ${bgHex}"><strong style="color: ${colorHex};">${category}:</strong> ${value}</div>`;
