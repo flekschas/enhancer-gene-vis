@@ -1,4 +1,4 @@
-import { identity } from '@flekschas/utils';
+import { identity, range } from '@flekschas/utils';
 import { axisRight, scaleLinear, scaleLog, select } from 'd3';
 import React, {
   useCallback,
@@ -36,7 +36,7 @@ import {
   DEFAULT_VIEW_CONFIG_ENHANCER,
   SAMPLE_IDX,
 } from './constants';
-import { getIntervalCenter, scaleBand } from './utils';
+import { scaleBand } from './utils';
 import usePrevious from './use-previous';
 
 import './EnhancerGenesPlot.css';
@@ -80,8 +80,10 @@ const {
   tilesetUid: uuid,
 } = DEFAULT_VIEW_CONFIG_ENHANCER.views[0].tracks.top[3].contents[1];
 
-const fetchTile = async (tileId) => {
-  const response = await fetch(`${server}/tiles/?d=${tileId}`);
+const fetchTiles = async (tileIds) => {
+  const response = await fetch(
+    `${server}/tiles/?${tileIds.map((tileId) => `d=${tileId}`).join('&')}`
+  );
   return response.json();
 };
 
@@ -103,11 +105,13 @@ DEFAULT_STRATIFICATION.groups.forEach((group, i) => {
   });
 });
 
-const getTileWidth = (tilesetInfo) =>
+const getMinTileSize = (tilesetInfo) =>
   tilesetInfo.max_width / 2 ** tilesetInfo.max_zoom;
 
-const filterByPosition = (tile, position) =>
-  tile.filter((entry) => position >= entry.xStart && position <= entry.xEnd);
+const filterIntervalsByRange = (tile, absRange) =>
+  tile.filter(
+    (interval) => interval.xEnd >= absRange[0] && interval.xStart < absRange[1]
+  );
 
 // From https://observablehq.com/@d3/beeswarm
 const dodge = (data, radius, yScale) => {
@@ -801,7 +805,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
     sampleGroupSelectionSizesState
   );
   const geneCellEncoding = useRecoilValue(enhancerGenesCellEncodingState);
-  const absPosition = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
+  const absRange = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
   const focusRegion = useRecoilValue(focusRegionState);
   const relPosition = useRecoilValue(focusRegionRelState);
   const strPosition = useRecoilValue(focusRegionStrState);
@@ -817,28 +821,48 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   const prevGeneCellEncoding = usePrevious(geneCellEncoding);
 
   useEffect(() => {
+    // Determine highest resolution tiles
     let active = true;
 
-    if (absPosition === null || tilesetInfo === null) return undefined;
+    if (absRange === null || tilesetInfo === null) return undefined;
 
-    const absCenterPos = getIntervalCenter(absPosition);
+    const [absStart, absEnd] = absRange;
+    const regionLength = Math.abs(absEnd - absStart);
 
-    const tileWidth = getTileWidth(tilesetInfo);
-    const tileXPos = Math.floor(absCenterPos / tileWidth);
-    const tileId = `${uuid}.${tilesetInfo.max_zoom}.${tileXPos}`;
+    const minTileSize = getMinTileSize(tilesetInfo);
+
+    const k = 5;
+    const zoomOutLevel = Math.max(
+      0,
+      Math.ceil(Math.log2(regionLength / minTileSize / k))
+    );
+    const zoomLevel = tilesetInfo.max_zoom - zoomOutLevel;
+
+    const tileSize = minTileSize * 2 ** zoomOutLevel;
+
+    const tileXPosStart = Math.floor(absStart / tileSize);
+    const tileXPosEnd = Math.floor(absEnd / tileSize);
+
+    const tileIds = range(tileXPosStart, tileXPosEnd + 1).reduce(
+      (ids, xPos) => {
+        ids.push(`${uuid}.${zoomLevel}.${xPos}`);
+        return ids;
+      },
+      []
+    );
 
     setIsLoadingTile(true);
-    fetchTile(tileId).then((_tile) => {
+    fetchTiles(tileIds).then((tiles) => {
       if (active) {
         setIsLoadingTile(false);
-        setTile(filterByPosition(_tile[tileId], absCenterPos));
+        setTile(filterIntervalsByRange(Object.values(tiles).flat(), absRange));
       }
     });
 
     return () => {
       active = false;
     };
-  }, [absPosition, tilesetInfo]);
+  }, [absRange, tilesetInfo]);
 
   const plotElRef = useCallback(
     (node) => {

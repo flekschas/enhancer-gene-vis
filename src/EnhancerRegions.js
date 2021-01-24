@@ -332,14 +332,11 @@ const EnhancerRegion = React.memo((props) => {
     if (event.dataRange[0]) [higlassRangeSelection.current] = event.dataRange;
   };
 
-  const windowMouseDownClearHandler = useCallback(
-    (e) => {
-      if (!isParentOf(e.target, higlassContainerRef.current)) {
-        setHiglassFocus(false);
-      }
-    },
-    [setFocusRegion, chromInfo]
-  );
+  const windowMouseDownClearHandler = useCallback((e) => {
+    if (!isParentOf(e.target, higlassContainerRef.current)) {
+      setHiglassFocus(false);
+    }
+  }, []);
 
   useEffect(
     () => {
