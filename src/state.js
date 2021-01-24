@@ -187,14 +187,14 @@ export const focusGeneOptionState = atom({
 export const focusRegionState = atom({
   key: `focusRegion`,
   default: getDefault('f', 'rs1250566', (v) =>
-    isChrRange(v) ? chrRangePosUrlDecoder(v) : v
+    v && isChrRange(v) ? chrRangePosUrlDecoder(v) : v
   ),
 });
 
 export const focusRegionOptionState = atom({
   key: `focusRegionOption`,
   default: getDefault('f', null, (v) => {
-    if (!isChrRange(v)) return null;
+    if (!v || !isChrRange(v)) return null;
 
     const [start, end] = chrRangePosUrlDecoder(v);
 
