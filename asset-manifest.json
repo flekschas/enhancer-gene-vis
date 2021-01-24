@@ -1,19 +1,19 @@
 {
   "files": {
     "main.css": "/enhancer-gene-vis/static/css/main.368ad156.chunk.css",
-    "main.js": "/enhancer-gene-vis/static/js/main.b3a999af.chunk.js",
-    "main.js.map": "/enhancer-gene-vis/static/js/main.b3a999af.chunk.js.map",
+    "main.js": "/enhancer-gene-vis/static/js/main.529ee68c.chunk.js",
+    "main.js.map": "/enhancer-gene-vis/static/js/main.529ee68c.chunk.js.map",
     "runtime-main.js": "/enhancer-gene-vis/static/js/runtime-main.64d847e9.js",
     "runtime-main.js.map": "/enhancer-gene-vis/static/js/runtime-main.64d847e9.js.map",
     "static/css/2.99e59d71.chunk.css": "/enhancer-gene-vis/static/css/2.99e59d71.chunk.css",
-    "static/js/2.93b11fe3.chunk.js": "/enhancer-gene-vis/static/js/2.93b11fe3.chunk.js",
-    "static/js/2.93b11fe3.chunk.js.map": "/enhancer-gene-vis/static/js/2.93b11fe3.chunk.js.map",
+    "static/js/2.c40708ff.chunk.js": "/enhancer-gene-vis/static/js/2.c40708ff.chunk.js",
+    "static/js/2.c40708ff.chunk.js.map": "/enhancer-gene-vis/static/js/2.c40708ff.chunk.js.map",
     "index.html": "/enhancer-gene-vis/index.html",
-    "precache-manifest.0f1dabf3eb08bfa253d5c784da0185f3.js": "/enhancer-gene-vis/precache-manifest.0f1dabf3eb08bfa253d5c784da0185f3.js",
+    "precache-manifest.e44d34c5e1a448a4466afdd372855508.js": "/enhancer-gene-vis/precache-manifest.e44d34c5e1a448a4466afdd372855508.js",
     "service-worker.js": "/enhancer-gene-vis/service-worker.js",
     "static/css/2.99e59d71.chunk.css.map": "/enhancer-gene-vis/static/css/2.99e59d71.chunk.css.map",
     "static/css/main.368ad156.chunk.css.map": "/enhancer-gene-vis/static/css/main.368ad156.chunk.css.map",
-    "static/js/2.93b11fe3.chunk.js.LICENSE.txt": "/enhancer-gene-vis/static/js/2.93b11fe3.chunk.js.LICENSE.txt",
+    "static/js/2.c40708ff.chunk.js.LICENSE.txt": "/enhancer-gene-vis/static/js/2.c40708ff.chunk.js.LICENSE.txt",
     "static/media/enhancer-view-2.png": "/enhancer-gene-vis/static/media/enhancer-view-2.5240166b.png",
     "static/media/enhancer-view-3.png": "/enhancer-gene-vis/static/media/enhancer-view-3.bf2e34ef.png",
     "static/media/enhancer-view-5.png": "/enhancer-gene-vis/static/media/enhancer-view-5.cf1c5548.png",
@@ -23,8 +23,8 @@
   "entrypoints": [
     "static/js/runtime-main.64d847e9.js",
     "static/css/2.99e59d71.chunk.css",
-    "static/js/2.93b11fe3.chunk.js",
+    "static/js/2.c40708ff.chunk.js",
     "static/css/main.368ad156.chunk.css",
-    "static/js/main.b3a999af.chunk.js"
+    "static/js/main.529ee68c.chunk.js"
   ]
 }
