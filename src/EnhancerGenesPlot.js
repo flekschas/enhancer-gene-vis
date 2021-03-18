@@ -417,6 +417,7 @@ const plotEnhancerGeneConnections = (
     {
       cellWidth = rowHeight,
       fillColor = DEFAULT_COLOR_MAP_LIGHT,
+      forceMaxSize = false,
       textColor = DEFAULT_COLOR_MAP_DARK,
       showText = true,
       showZero = true,
@@ -424,16 +425,20 @@ const plotEnhancerGeneConnections = (
       tooltipTitleGetter = null,
     } = {}
   ) => {
+    const sizeGetter = forceMaxSize
+      ? () => valueScale.range()[1]
+      : (d) => valueScale(valueGetter(d));
+
     const bg = selection
       .selectAll('.bg')
       .data((d) => [d])
       .join('rect')
       .attr('class', 'bg')
       .attr('fill', (d) => fillColor[d.row % fillColor.length])
-      .attr('x', (d) => (cellWidth - valueScale(valueGetter(d))) / 2)
-      .attr('y', (d) => (rowHeight - valueScale(valueGetter(d))) / 2)
-      .attr('width', (d) => valueScale(valueGetter(d)))
-      .attr('height', (d) => valueScale(valueGetter(d)))
+      .attr('x', (d) => (cellWidth - sizeGetter(d)) / 2)
+      .attr('y', (d) => (rowHeight - sizeGetter(d)) / 2)
+      .attr('width', sizeGetter)
+      .attr('height', sizeGetter)
       .attr('opacity', (d) => +(valueGetter(d) > 0));
 
     if (showTooltipOnMouseEnter) {
@@ -454,13 +459,15 @@ const plotEnhancerGeneConnections = (
     }
 
     if (showText) {
+      let style = 'font-size: 12px; font-weight: bold;';
+      if (showTooltip) style += ' pointer-events: none;';
       selection
         .selectAll('.box-text')
         .data((d) => [d])
         .join('text')
         .attr('class', 'box-text')
         .attr('fill', (d) => textColor[d.row % textColor.length])
-        .attr('style', 'font-size: 12px; font-weight: bold;')
+        .attr('style', style)
         .attr('dominant-baseline', 'middle')
         .attr('text-anchor', 'middle')
         .attr('x', cellWidth / 2)
@@ -469,6 +476,13 @@ const plotEnhancerGeneConnections = (
         .text((d) => valueGetter(d));
     }
   };
+
+  const enhancerTooltipTitleGetter = (d) => (
+    <React.Fragment>
+      Found {d.numEnhancers} active enhancer overlapping {position} across all{' '}
+      {d.category.size} {Object.values(categories)[d.row].name} samples.
+    </React.Fragment>
+  );
 
   const boxTooltipTitleGetter = (d) => (
     <React.Fragment>
@@ -481,8 +495,8 @@ const plotEnhancerGeneConnections = (
     <React.Fragment>
       The most likely active enhancer for {d.maxScoreSample.gene} has an ABC
       score of <strong className="value">{d.maxScore.toFixed(3)}</strong> and is
-      found in {d.maxScoreSample.sample} (Overall max. ABC score is{' '}
-      {data.maxScore.toFixed(3)}).
+      found in {d.maxScoreSample.sample.replaceAll('_', ' ')} (Overall max. ABC
+      score is {data.maxScore.toFixed(3)}).
     </React.Fragment>
   );
 
@@ -507,7 +521,12 @@ const plotEnhancerGeneConnections = (
     .attr('class', 'enhancer-gene-aggregate')
     .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`);
 
-  plotBox(enhancerGCellG, categorySizeScale, (d) => d.numEnhancers);
+  plotBox(enhancerGCellG, categorySizeScale, (d) => d.numEnhancers, {
+    fillColor: ['#fff'],
+    showTooltip: true,
+    tooltipTitleGetter: enhancerTooltipTitleGetter,
+    forceMaxSize: true,
+  });
 
   // Draw border
   svg
