@@ -10,7 +10,7 @@ const useStyles = makeStyles({
     zIndex: 10,
     width: 1,
     height: 1,
-    background: 'black',
+    background: 'transparent',
     fontWeight: 'normal',
     pointerEvents: 'none',
     '& strong': {
