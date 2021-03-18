@@ -69,17 +69,6 @@ const FS = `
   }
 `;
 
-const getIs2d = (tile) =>
-  tile.tileData.length && tile.tileData[0].yStart !== undefined;
-
-const get1dStart = (item) => item.xStart;
-
-const get2dStart = (item) => item.xStart + (item.xEnd - item.xStart) / 2;
-
-const get1dEnd = (item) => item.xEnd;
-
-const get2dEnd = (item) => item.yStart + (item.yEnd - item.yStart) / 2;
-
 const getHistMax = (fetchedTiles) =>
   fetchedTiles.reduce(
     (histMax, tile) => Math.max(histMax, tile.histogramMax),
@@ -167,18 +156,7 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
     }
 
     initTile(tile) {
-      const is2d = getIs2d(tile);
-      const getStart = is2d ? get2dStart : get1dStart;
-      const getEnd = is2d ? get2dEnd : get1dEnd;
-
-      tile.tileData.forEach((item) => {
-        item.start = getStart(item);
-        item.end = getEnd(item);
-        item.isLeftToRight = item.start < item.end;
-      });
-
       tile.histogramMax = 0;
-
       this.updateTileFocusMap(tile);
     }
 
@@ -418,17 +396,22 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
         ? Math.round(this.tilesetInfo.tile_size / this.binSize)
         : DEFAULT_TILE_SIZE / this.binSize;
 
-      this.getOffset = this.options.offsetField
-        ? (item) => this.chromOffsets[item.fields[this.options.offsetField]]
-        : () => 0;
+      this.getOffset =
+        !Number.isNaN(+this.options.offsetField) &&
+        this.options.offsetField >= 0
+          ? (item) => this.chromOffsets[item.fields[this.options.offsetField]]
+          : () => 0;
 
-      this.getStart = this.options.startField
-        ? (item) => this.getOffset(item) + +item.fields[this.options.startField]
-        : (item) => item.xStart;
+      this.getStart =
+        !Number.isNaN(+this.options.startField) && this.options.startField >= 0
+          ? (item) =>
+              this.getOffset(item) + +item.fields[this.options.startField]
+          : (item) => item.xStart;
 
-      this.getEnd = this.options.endField
-        ? (item) => this.getOffset(item) + +item.fields[this.options.endField]
-        : (item) => item.xEnd;
+      this.getEnd =
+        !Number.isNaN(+this.options.endField) && this.options.endField >= 0
+          ? (item) => this.getOffset(item) + +item.fields[this.options.endField]
+          : (item) => item.xEnd;
 
       this.getImportance = this.options.importanceField
         ? (item) => +item.fields[this.options.importanceField]
@@ -544,21 +527,6 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
       this.valueScaleInverted = scaleLinear()
         .domain([0, this.histMax])
         .range([0, height]);
-    }
-
-    itemToPoint(item) {
-      return {
-        xStart: this._xScale(item.start),
-        xEnd: this._xScale(item.start),
-        yStart: this.heightScale(
-          this.categoryToY.get(item.fields[this.categoryField].toLowerCase())
-        ),
-        yEnd: () => {},
-        opacity: this.opacityScale(this.getImportance(item)),
-        focused:
-          item.xStart <= this.focusRegion[1] &&
-          item.xEnd >= this.focusRegion[0],
-      };
     }
 
     histToSegments(tile) {
