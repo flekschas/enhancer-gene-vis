@@ -246,7 +246,7 @@ export const enhancerGenesPaddingState = atom({
 
 export const enhancerGenesCellEncodingState = atom({
   key: 'enhancerGenesCellEncoding',
-  default: getDefault('egce', 'number'),
+  default: getDefault('egce', 'max-score'),
 });
 
 export const enhancerGenesSvgState = atom({

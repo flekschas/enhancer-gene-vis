@@ -64,6 +64,18 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
           </Typography>
         </Grid>
       )}
+      {focusRegion && cellEncoding === 'max-score' && (
+        <React.Fragment>
+          <Typography className={classes.text}>
+            <span className={classes.small}>■</span>
+            <span className={classes.medium}>■</span>
+            <span className={classes.large}>■</span>
+            <strong>Max. ABC score</strong> of enhancer-gene connections
+            overlapping <em>{focusRegionStr}</em> by sample groups across
+            up/downstream genes.
+          </Typography>
+        </React.Fragment>
+      )}
       {focusRegion && cellEncoding === 'number' && (
         <React.Fragment>
           <Typography className={classes.text}>

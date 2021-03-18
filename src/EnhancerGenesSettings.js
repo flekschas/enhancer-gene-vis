@@ -68,6 +68,26 @@ const EnhancerGenesSettings = React.memo(function EnhancerGenesSettings() {
             value={cellEncoding}
           >
             <FormControlLabel
+              label="Max. ABC prediction score"
+              value="number"
+              className={classes.iconRadio}
+              control={
+                <IconButton
+                  size="small"
+                  onClick={changeCellEncoding('max-score')}
+                >
+                  {cellEncoding === 'max-score' ? (
+                    <RadioButtonCheckedIcon
+                      className={classes.iconRadioActive}
+                      fontSize="inherit"
+                    />
+                  ) : (
+                    <RadioButtonUncheckedIcon fontSize="inherit" />
+                  )}
+                </IconButton>
+              }
+            />
+            <FormControlLabel
               label="Abs. number of predictions"
               value="number"
               className={classes.iconRadio}

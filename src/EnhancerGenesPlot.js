@@ -34,6 +34,8 @@ import {
   DEFAULT_COLOR_MAP_LIGHT,
   DEFAULT_STRATIFICATION,
   DEFAULT_VIEW_CONFIG_ENHANCER,
+  BIOSAMPLE_COLUMN,
+  GENE_NAME_COLUMN,
   SAMPLE_IDX,
 } from './constants';
 import { scaleBand } from './utils';
@@ -117,7 +119,7 @@ const filterIntervalsByRange = (tile, absRange) =>
 const dodge = (data, radius, yScale) => {
   const radius2 = radius ** 2;
   const circles = data
-    .map((d) => ({ y: yScale(d.value), data: d }))
+    .map((d) => ({ y: yScale(d.score), data: d }))
     .sort((a, b) => a.y - b.y);
   const epsilon = 1e-3;
   let head = null;
@@ -198,6 +200,7 @@ const plotEnhancerGeneConnections = (
     (max, cat) => Math.max(max, cat.numEnhancers),
     0
   );
+
   const categorySizeScale = scaleLog()
     .domain([1, maxCatgorySize])
     .range([2, rowHeight])
@@ -205,6 +208,11 @@ const plotEnhancerGeneConnections = (
 
   const percentScale = scaleLinear()
     .domain([0, 1])
+    .range([0, rowHeight])
+    .clamp(true);
+
+  const scoreScale = scaleLinear()
+    .domain([0, data.maxScore])
     .range([0, rowHeight])
     .clamp(true);
 
@@ -360,7 +368,7 @@ const plotEnhancerGeneConnections = (
       .on('mouseenter', (event, d) => {
         const bBox = event.target.getBoundingClientRect();
         const title =
-          (tooltipTitleGetter && tooltipTitleGetter(d)) || d.value.toFixed(3);
+          (tooltipTitleGetter && tooltipTitleGetter(d)) || d.score.toFixed(3);
         showTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
           arrow: true,
           placement: 'top',
@@ -382,7 +390,7 @@ const plotEnhancerGeneConnections = (
       The enhancer overlapping <strong>{position}</strong>
       {focusRegion ? ` (${focusRegion})` : ''} is predicted to regulate{' '}
       <strong>{d.gene}</strong> in sample <strong>{d.sample}</strong> with a
-      score of <strong className="value">{d.value.toFixed(3)}</strong>.
+      score of <strong className="value">{d.score.toFixed(3)}</strong>.
     </React.Fragment>
   );
 
@@ -464,9 +472,17 @@ const plotEnhancerGeneConnections = (
 
   const boxTooltipTitleGetter = (d) => (
     <React.Fragment>
-      <strong className="value">{d.length}</strong> out of {d.size}{' '}
-      <em>{Object.values(categories)[d.row].name}</em> samples have predicted
-      enhancer activity.
+      <strong className="value">{d.length}</strong> active enhancers found
+      across {d.size} {Object.values(categories)[d.row].name} samples.
+    </React.Fragment>
+  );
+
+  const boxScoreTooltipTitleGetter = (d) => (
+    <React.Fragment>
+      The most likely active enhancer for {d.maxScoreSample.gene} has an ABC
+      score of <strong className="value">{d.maxScore.toFixed(3)}</strong> and is
+      found in {d.maxScoreSample.sample} (Overall max. ABC score is{' '}
+      {data.maxScore.toFixed(3)}).
     </React.Fragment>
   );
 
@@ -578,8 +594,7 @@ const plotEnhancerGeneConnections = (
       break;
 
     case 'number':
-    case 'percent':
-    default: {
+    case 'percent': {
       const valueScale =
         geneCellEncoding === 'percent' ? percentScale : categorySizeScale;
 
@@ -594,6 +609,19 @@ const plotEnhancerGeneConnections = (
         fillColor: DEFAULT_COLOR_MAP,
         showTooltip: true,
         tooltipTitleGetter: boxTooltipTitleGetter,
+      });
+
+      break;
+    }
+
+    case 'max-score':
+    default: {
+      plotBox(genesUpstreamGCellG, scoreScale, (d) => d.maxScore, {
+        showText: false,
+        cellWidth: genesUpstreamScale.bandwidth(),
+        fillColor: DEFAULT_COLOR_MAP,
+        showTooltip: true,
+        tooltipTitleGetter: boxScoreTooltipTitleGetter,
       });
 
       break;
@@ -691,8 +719,7 @@ const plotEnhancerGeneConnections = (
       break;
 
     case 'number':
-    case 'percent':
-    default: {
+    case 'percent': {
       const valueScale =
         geneCellEncoding === 'percent' ? percentScale : categorySizeScale;
 
@@ -707,6 +734,19 @@ const plotEnhancerGeneConnections = (
         fillColor: DEFAULT_COLOR_MAP,
         showTooltip: true,
         tooltipTitleGetter: boxTooltipTitleGetter,
+      });
+
+      break;
+    }
+
+    case 'max-score':
+    default: {
+      plotBox(genesDownstreamGCellG, scoreScale, (d) => d.maxScore, {
+        showText: false,
+        cellWidth: genesDownstreamScale.bandwidth(),
+        fillColor: DEFAULT_COLOR_MAP,
+        showTooltip: true,
+        tooltipTitleGetter: boxScoreTooltipTitleGetter,
       });
 
       break;
@@ -896,12 +936,12 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
       const genesDownstreamByDist = new TinyQueue([], distComparator);
 
       tile.forEach((entry) => {
-        const sample = entry.fields[10];
+        const sample = entry.fields[BIOSAMPLE_COLUMN];
 
         // Exclude samples that have been deselected
         if (!sampleSelection[SAMPLE_IDX[sample]]) return;
 
-        const geneName = entry.fields[6];
+        const geneName = entry.fields[GENE_NAME_COLUMN];
 
         if (!genes[geneName]) {
           const relGenePos = +entry.fields[4];
@@ -918,6 +958,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
 
           Object.values(categories).forEach(({ name, size }) => {
             genes[geneName].samplesByCategory[name] = [];
+            genes[geneName].samplesByCategory[name].maxScore = 0;
             genes[geneName].samplesByCategory[name].size =
               sampleGroupSelectionSizes[name];
           });
@@ -929,14 +970,29 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
           else genesUpstreamByDist.push(genes[geneName]);
         }
 
-        genes[geneName].samplesByCategory[samples[sample].category.name].push({
+        const sampleCat = samples[sample].category.name;
+        const sampleObj = {
           gene: geneName,
           sample,
-          sampleCategory: samples[sample].category.name,
-          value: entry.importance,
-        });
+          sampleCategory: sampleCat,
+          score: entry.importance,
+        };
+
+        genes[geneName].samplesByCategory[sampleCat].push(sampleObj);
+
+        if (
+          entry.importance >
+          genes[geneName].samplesByCategory[sampleCat].maxScore
+        ) {
+          genes[geneName].samplesByCategory[sampleCat].maxScore =
+            entry.importance;
+          genes[geneName].samplesByCategory[
+            sampleCat
+          ].maxScoreSample = sampleObj;
+        }
+
         maxScore = Math.max(maxScore, entry.importance);
-        categoryAggregation[samples[sample].category.name].numEnhancers++;
+        categoryAggregation[sampleCat].numEnhancers++;
       });
 
       const genesDownstreamByDistArr = [];
