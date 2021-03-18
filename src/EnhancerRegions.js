@@ -49,6 +49,7 @@ import {
 } from './view-config';
 
 import {
+  BIOSAMPLE_COLUMN,
   DEFAULT_VIEW_CONFIG_ENHANCER,
   HIGLASS_PAN_ZOOM,
   HIGLASS_SELECT,
@@ -141,15 +142,15 @@ const updateViewConfigColorEncoding = (coloring) => (viewConfig) => {
 const updateViewConfigFilter = (selectedSamples) => (viewConfig) => {
   viewConfig.views[0].tracks.top[3].contents[0].options.filter = {
     set: selectedSamples,
-    field: 10,
+    field: BIOSAMPLE_COLUMN,
   };
   viewConfig.views[0].tracks.top[3].contents[1].options.filter = {
     set: selectedSamples,
-    field: 10,
+    field: BIOSAMPLE_COLUMN,
   };
   viewConfig.views[0].tracks.top[4].options.filter = {
     set: selectedSamples,
-    field: 10,
+    field: BIOSAMPLE_COLUMN,
   };
   return viewConfig;
 };

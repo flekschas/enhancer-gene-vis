@@ -60,8 +60,28 @@ export const GENE_SEARCH_URL =
 export const VARIANT_SEARCH_URL =
   'https://resgen.io/api/v1/suggest/?d=VF5-RDXWTxidGMJU7FeaxA';
 
+export const BIOSAMPLE_COLUMN = 10; // V2
+// export const BIOSAMPLE_COLUMN = 6; // V3
+
+export const GENE_NAME_COLUMN = 6; // V2
+// export const GENE_NAME_COLUMN = 3; // V3
+
+export const ABC_SCORE_COLUMN = 7; // V2
+// export const ABC_SCORE_COLUMN = 5; // V3
+
+export const ENHANCER_START_COLUMN = 1; // V2 & V3
+
+export const TSS_CHROM_COLUMN = 3; // V2
+// export const TSS_CHROM_COLUMN = 0; // V3
+
+export const TSS_START_COLUMN = 4; // V2
+// export const TSS_START_COLUMN = 4; // V3
+
+export const TSS_END_COLUMN = 5; // V2
+// export const TSS_END_COLUMN = 4; // V3
+
 export const DEFAULT_STRATIFICATION = {
-  categoryField: 10,
+  categoryField: BIOSAMPLE_COLUMN,
   axisShowGroupSeparator: true,
   axisNoGroupColor: false,
   groups: [
@@ -529,8 +549,8 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                   strokeWidth: 1,
                   strokeOpacity: 0.05,
                   arcStyle: 'circle',
-                  startField: 1,
-                  endField: 4,
+                  startField: ENHANCER_START_COLUMN,
+                  endField: TSS_START_COLUMN,
                   filter: {
                     set: SAMPLES,
                     field: 10,
@@ -541,11 +561,14 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                 type: 'stacked-bar',
                 // server: 'http://localhost:9876/api/v1',
                 // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
+                // tilesetUid:
+                //   'AllPredictionsAvgHiCABC0015minus150ForABCPaperV3txtsimplifiedgzhg19beddb',
                 server: 'https://resgen.io/api/v1',
                 // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
                 // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
                 // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
                 tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
+                // tilesetUid: 'e3lpYv5LSIiik7CFtuAMTw', // V3
                 height: 72,
                 uid: 'stacked-bars',
                 options: {
@@ -558,10 +581,10 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                   markSize: 4,
                   markOpacity: 0.33,
                   labelColor: 'black',
-                  offsetField: 3,
-                  startField: 4,
-                  endField: 5,
-                  importanceField: 7,
+                  offsetField: TSS_CHROM_COLUMN,
+                  startField: TSS_START_COLUMN,
+                  endField: TSS_END_COLUMN,
+                  importanceField: ABC_SCORE_COLUMN,
                   importanceDomain: [0, 1],
                   focusRegion: [
                     1680373143 + 81046453 - 25,
@@ -580,11 +603,14 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             type: 'stratified-bed',
             // server: 'http://localhost:9876/api/v1',
             // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
+            // tilesetUid:
+            //   'AllPredictionsAvgHiCABC0015minus150ForABCPaperV3txtsimplifiedgzhg19beddb',
             server: 'https://resgen.io/api/v1',
             // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
             // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
             // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
             tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
+            // tilesetUid: 'e3lpYv5LSIiik7CFtuAMTw', // V3
             height: 413,
             uid: 'indicatorByCellTypes',
             options: {
@@ -602,8 +628,8 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
               arcStyle: 'indicator',
               indicatorStyle: 'category-rect',
               labelColor: 'black',
-              geneField: 6,
-              importanceField: 7,
+              geneField: GENE_NAME_COLUMN,
+              importanceField: ABC_SCORE_COLUMN,
               importanceDomain: [0, 1],
               // focusRegion: [
               //   1680373143 + 81046453 - 25,
