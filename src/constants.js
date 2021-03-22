@@ -60,25 +60,18 @@ export const GENE_SEARCH_URL =
 export const VARIANT_SEARCH_URL =
   'https://resgen.io/api/v1/suggest/?d=VF5-RDXWTxidGMJU7FeaxA';
 
-export const BIOSAMPLE_COLUMN = 10; // V2
-// export const BIOSAMPLE_COLUMN = 6; // V3
+const EG_TILE_UID = 'GOxTKzoLSsuw0BaG6eBrXw'; // V2
+// const EG_TILE_UID = 'e3lpYv5LSIiik7CFtuAMTw'; // V3
 
-export const GENE_NAME_COLUMN = 6; // V2
-// export const GENE_NAME_COLUMN = 3; // V3
+const EG_TILE_V3 = EG_TILE_UID === 'e3lpYv5LSIiik7CFtuAMTw';
 
-export const ABC_SCORE_COLUMN = 7; // V2
-// export const ABC_SCORE_COLUMN = 5; // V3
-
+export const BIOSAMPLE_COLUMN = EG_TILE_V3 ? 6 : 10;
+export const GENE_NAME_COLUMN = EG_TILE_V3 ? 3 : 6;
+export const ABC_SCORE_COLUMN = EG_TILE_V3 ? 5 : 7;
 export const ENHANCER_START_COLUMN = 1; // V2 & V3
-
-export const TSS_CHROM_COLUMN = 3; // V2
-// export const TSS_CHROM_COLUMN = 0; // V3
-
-export const TSS_START_COLUMN = 4; // V2
-// export const TSS_START_COLUMN = 4; // V3
-
-export const TSS_END_COLUMN = 5; // V2
-// export const TSS_END_COLUMN = 4; // V3
+export const TSS_CHROM_COLUMN = EG_TILE_V3 ? 0 : 3;
+export const TSS_START_COLUMN = 4; // V2 & V3
+export const TSS_END_COLUMN = EG_TILE_V3 ? 4 : 5;
 
 export const DEFAULT_STRATIFICATION = {
   categoryField: BIOSAMPLE_COLUMN,
@@ -541,7 +534,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                 type: '1d-arcs',
                 uid: 'arcs',
                 server: 'https://resgen.io/api/v1',
-                tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw',
+                tilesetUid: EG_TILE_UID,
                 height: 72,
                 options: {
                   labelPosition: 'hidden',
@@ -553,7 +546,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                   endField: TSS_START_COLUMN,
                   filter: {
                     set: SAMPLES,
-                    field: 10,
+                    field: BIOSAMPLE_COLUMN,
                   },
                 },
               },
@@ -567,8 +560,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
                 // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
                 // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
                 // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
-                tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
-                // tilesetUid: 'e3lpYv5LSIiik7CFtuAMTw', // V3
+                tilesetUid: EG_TILE_UID,
                 height: 72,
                 uid: 'stacked-bars',
                 options: {
@@ -609,8 +601,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER = {
             // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
             // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
             // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
-            tilesetUid: 'GOxTKzoLSsuw0BaG6eBrXw', // improved bed
-            // tilesetUid: 'e3lpYv5LSIiik7CFtuAMTw', // V3
+            tilesetUid: EG_TILE_UID,
             height: 413,
             uid: 'indicatorByCellTypes',
             options: {
