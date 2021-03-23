@@ -60,8 +60,8 @@ export const GENE_SEARCH_URL =
 export const VARIANT_SEARCH_URL =
   'https://resgen.io/api/v1/suggest/?d=VF5-RDXWTxidGMJU7FeaxA';
 
-const EG_TILE_UID = 'GOxTKzoLSsuw0BaG6eBrXw'; // V2
-// const EG_TILE_UID = 'e3lpYv5LSIiik7CFtuAMTw'; // V3
+// const EG_TILE_UID = 'GOxTKzoLSsuw0BaG6eBrXw'; // V2
+const EG_TILE_UID = 'e3lpYv5LSIiik7CFtuAMTw'; // V3
 
 const EG_TILE_V3 = EG_TILE_UID === 'e3lpYv5LSIiik7CFtuAMTw';
 
