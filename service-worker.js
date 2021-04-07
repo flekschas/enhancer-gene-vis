@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/enhancer-gene-vis/precache-manifest.312bc1d99d1d9d9625ca14cad37d50dc.js"
+  "/enhancer-gene-vis/precache-manifest.bda0dc97fc3b440adee0e0da9bb5f848.js"
 );
 
 self.addEventListener('message', (event) => {
