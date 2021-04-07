@@ -259,6 +259,7 @@ const AppSidebar = React.memo(function AppSidebar() {
     if (showWelcome)
       showModal(Welcome, closeWelcome, {
         openIntroHandler: openWelcomeIntro,
+        closeIntroHandler: openWelcome,
       });
     else showModal();
   }, [showWelcome, showModal, closeWelcome, openWelcomeIntro]);

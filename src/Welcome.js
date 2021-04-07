@@ -91,6 +91,7 @@ const useStyles = makeStyles((theme) => ({
 const Welcome = React.memo(function Welcome({
   closeHandler,
   openIntroHandler,
+  closeIntroHandler,
 }) {
   const showWelcome = useRecoilValue(showWelcomeState);
 
@@ -413,6 +414,14 @@ const Welcome = React.memo(function Welcome({
         </p>
         <Typography align="center" className={classes.introStartExploring}>
           <Button
+            className={classes.showIntro}
+            onClick={closeIntroHandler}
+            variant="contained"
+            disableElevation
+          >
+            Back
+          </Button>
+          <Button
             className={classes.startExploring}
             onClick={closeHandler}
             variant="contained"
@@ -448,33 +457,40 @@ const Welcome = React.memo(function Welcome({
       </Typography>
       <p id="description">
         This web application visualizes genome-wide enhancer-gene connections
-        that were predicted with the <em>Activity-By-Contact</em> (ABC) model.
-        You can interactively browse the entire human genome and filter
-        enhancers by region, gene, or containing variant.
+        predicted with the <em>Activity-By-Contact</em> (ABC) model. You can
+        interactively browse the entire human genome (hg19), filter enhancers by
+        region, gene, or sample, and link enhancers to genetic risk variants.
       </p>
       <p>
-        For information regarding the ABC model please refer to our initial
-        publication:{' '}
+        For more background information please refer to our publication:{' '}
         <a
-          href="https://www.nature.com/articles/s41588-019-0538-0"
+          href="https://www.nature.com/articles/s41586-021-03446-x"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Fulco et al., Activity-by-contact model of enhancer–promoter
-          regulation from thousands of CRISPR perturbations,{' '}
-          <em>Nature Genetics</em> (2019)
+          Nasser et al., Genome-wide enhancer maps link risk variants to disease
+          genes, <em>Nature</em> (2021)
         </a>
         .
       </p>
       <p>
-        For more information about this web application, please click on{' '}
-        <em>Show Introduction</em>. If you find a bug or have a question, please{' '}
+        For more information about the visualizations, please click on{' '}
+        <em>Show Introduction</em>. If you find a bug or have ideas for
+        improvements, please don't hesitate{' '}
         <a
           href="https://github.com/flekschas/enhancer-gene-vis/issues"
           target="_blank"
           rel="noopener noreferrer"
         >
           open an issue on GitHub
+        </a>{' '}
+        or ping{' '}
+        <a
+          href="https://twitter.com/flekschas/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          @flekschas
         </a>
         .
       </p>
