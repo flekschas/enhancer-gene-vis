@@ -9,6 +9,7 @@ import AppSidebar from './AppSidebar';
 import AppTopbar from './AppTopbar';
 import EnhancerRegions from './EnhancerRegions';
 import EnhancerGenes from './EnhancerGenes';
+import EnhancerTable from './EnhancerTable';
 import DnaAccessibility from './DnaAccessibility';
 import ModalProvider from './ModalProvider';
 import TooltipProvider from './TooltipProvider';
@@ -85,6 +86,9 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   enhancerGenes: {
+    position: 'relative',
+  },
+  enhancerTable: {
     position: 'relative',
   },
   dnaAccessibility: {
@@ -207,6 +211,9 @@ const AppMain = React.memo(function AppMain() {
                     </Grid>
                     <Grid item className={classes.enhancerGenes}>
                       <EnhancerGenes />
+                    </Grid>
+                    <Grid item className={classes.enhancerTable}>
+                      <EnhancerTable />
                     </Grid>
                   </Grid>
                 </div>

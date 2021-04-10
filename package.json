@@ -37,6 +37,7 @@
     "react-bootstrap": "0.32.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1",
+    "react-virtualized": "^9.22.3",
     "recoil": "^0.1.2",
     "tinyqueue": "^2.0.3"
   },
