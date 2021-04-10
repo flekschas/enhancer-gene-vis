@@ -475,10 +475,19 @@ const createStackedBarTrack = function createStackedBarTrack(HGC, ...args) {
 
     computeChromOffets() {
       if (!this.tilesetInfo) return;
-      const chroms = this.tilesetInfo.chrom_names.split('\t');
-      const chromSizes = this.tilesetInfo.chrom_sizes
-        .split('\t')
-        .map((size) => +size);
+      let chroms;
+      let chromSizes;
+      if (this.tilesetInfo.chromsizes) {
+        // New Resgen format
+        chroms = this.tilesetInfo.chromsizes.map((size) => size[0]);
+        chromSizes = this.tilesetInfo.chromsizes.map((size) => size[1]);
+      } else {
+        // Normal HiGlass format
+        chroms = this.tilesetInfo.chrom_names.split('\t');
+        chromSizes = this.tilesetInfo.chrom_sizes
+          .split('\t')
+          .map((size) => +size);
+      }
       // eslint-disable-next-line prefer-destructuring
       this.chromOffsets = chroms.reduce(
         ([offsets, cumSum], chrom, i) => {
