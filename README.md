@@ -18,9 +18,9 @@
 
 **Website:** [https://flekschas.github.io/enhancer-gene-vis](https://flekschas.github.io/enhancer-gene-vis)
 
-**Citation** [Nasser et al., 2020](https://www.biorxiv.org/content/10.1101/2020.09.01.278093v1)
+**Paper:** [Nasser et al., "Genome-wide enhancer maps link risk variants to disease genes", Nature, 2021.](https://www.nature.com/articles/s41586-021-03446-x)
 
-This is the source code for the ABC enhancer-gene visualization web app.
+This web-based visualization provides access to genome-wide ABC enhancer-gene connections across 131 biosamples and allows you to correlated the enhancers with genetic variants.
 
 ## How?
 
