@@ -132,9 +132,9 @@ const Welcome = React.memo(function Welcome({
           <img src={imgEnhancerView1} alt="Enhancer-Gene Connection Overview" />
         </figure>
         <p>
-          However, enhancers are not always active in every cell type or state.
+          However, enhancers are not always active in every cell type or sample.
           Hence, in reality the looks more like below where <em>Enhancer 1</em>{' '}
-          is entirely inactive in <em>Sample 1</em> while <em>Sample 2</em> is
+          is inactive in <em>Sample 1</em> while <em>Enhancer 2</em> is
           inactive in <em>Sample 3</em>.
         </p>
         <figure className={classes.figure}>
