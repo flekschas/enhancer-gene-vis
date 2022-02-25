@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "62098e0c19d19ee3e610452b05b16ef7",
+    "revision": "963d8098e1457beb15aef2e4a9f4b3c8",
     "url": "/enhancer-gene-vis/index.html"
   },
   {
@@ -8,7 +8,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/enhancer-gene-vis/static/css/2.99e59d71.chunk.css"
   },
   {
-    "revision": "6d2ff9d204deb6aa96c1",
+    "revision": "8515efcb0eaee9ef2a8f",
     "url": "/enhancer-gene-vis/static/css/main.368ad156.chunk.css"
   },
   {
@@ -20,8 +20,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/enhancer-gene-vis/static/js/2.fe0c6abe.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "6d2ff9d204deb6aa96c1",
-    "url": "/enhancer-gene-vis/static/js/main.f53614ed.chunk.js"
+    "revision": "8515efcb0eaee9ef2a8f",
+    "url": "/enhancer-gene-vis/static/js/main.519fad0f.chunk.js"
   },
   {
     "revision": "0bbc266dd8c5d7c96aa1",
