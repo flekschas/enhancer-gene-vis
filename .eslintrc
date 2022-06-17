@@ -8,15 +8,16 @@
     "airbnb/base",
     "airbnb/hooks",
     "prettier",
-    "prettier/react",
     "plugin:prettier/recommended",
-    "react-app",
+    "react-app"
   ],
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
   "parserOptions": {
     "ecmaVersion": 6
   },
-  "plugins": ["prettier"],
+  "plugins": [
+    "prettier"
+  ],
   "rules": {
     "prettier/prettier": "error",
     "class-methods-use-this": 0,
@@ -24,8 +25,18 @@
     "no-plusplus": 0,
     "no-restricted-syntax": 0,
     "no-mixed-operators": 0,
-    "no-multi-spaces": ["error", { "ignoreEOLComments": true }],
-    "no-param-reassign": ["error", { "props": false }],
-    "no-underscore-dangle": 0,
+    "no-multi-spaces": [
+      "error",
+      {
+        "ignoreEOLComments": true
+      }
+    ],
+    "no-param-reassign": [
+      "error",
+      {
+        "props": false
+      }
+    ],
+    "no-underscore-dangle": 0
   }
 }
