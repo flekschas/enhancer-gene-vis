@@ -14,7 +14,7 @@ import OutlinedInput from '@material-ui/core/OutlinedInput';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import useDebounce from './use-debounce';
+import useDebounce from './hooks/use-debounce';
 
 const useStyles = makeStyles((theme) => ({
   root: {

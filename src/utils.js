@@ -1,5 +1,4 @@
 import { identity } from '@flekschas/utils';
-import queryString from 'query-string';
 
 export const contains = (a, b) => a[0] <= b[0] && a[1] >= b[1];
 
@@ -48,22 +47,6 @@ export const download = (filename, stringOrBlob) => {
     document.body.removeChild(elem);
     URL.revokeObjectURL(elem.href);
   }
-};
-
-export const getQueryStringValue = (key, decoder = identity) =>
-  decoder(queryString.parse(window.location.search)[key]);
-
-export const setQueryStringValue = (key, value, encoder = identity) => {
-  const values = queryString.parse(window.location.search);
-  const newQsValue = queryString.stringify(
-    {
-      ...values,
-      [key]: encoder(value),
-    },
-    { strict: false }
-  );
-  const url = `${window.location.origin}${window.location.pathname}?${newQsValue}`;
-  window.history.pushState({ path: url }, '', url);
 };
 
 export const toAbsPosition = (position, chromInfo) => {

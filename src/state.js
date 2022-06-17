@@ -3,14 +3,14 @@ import { memoize } from 'lodash-es';
 import { deepClone, identity } from '@flekschas/utils';
 
 import {
+  getQueryStringValue,
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
-} from './use-query-string';
+} from './utils/query-string';
 
 import {
   booleanQueryStringDecoder,
   customBooleanQueryStringDecoder,
-  getQueryStringValue,
   toAbsPosition,
   isChrRange,
   chrPosUrlDecoder,
@@ -161,7 +161,7 @@ export const showWelcomeState = atom({
 
 export const dnaAccessLabelStyleState = atom({
   key: 'dnaAccessLabelStyle',
-  default: getDefault('dal', 'indicator'),
+  default: getDefault('dal', 'indicator', identity),
 });
 
 export const dnaAccessRowNormState = atom({
@@ -176,7 +176,7 @@ export const dnaAccessLabelShowInfoState = atom({
 
 export const focusGeneState = atom({
   key: 'focusGene',
-  default: getDefault('g', ''),
+  default: getDefault('g', '', identity),
 });
 
 export const focusGeneOptionState = atom({
@@ -216,7 +216,7 @@ export const focusRegionOptionState = atom({
 
 export const variantYScaleState = atom({
   key: 'variantYScale',
-  default: getDefault('vy', 'pValue'),
+  default: getDefault('vy', 'pValue', identity),
 });
 
 export const enhancerRegionsHideUnfocusedState = atom({
@@ -226,7 +226,7 @@ export const enhancerRegionsHideUnfocusedState = atom({
 
 export const enhancerRegionsColorEncodingState = atom({
   key: 'enhancerRegionsColorEncoding',
-  default: getDefault('erc', 'solid'),
+  default: getDefault('erc', 'solid', identity),
 });
 
 export const enhancerRegionsShowInfoState = atom({
@@ -246,7 +246,7 @@ export const enhancerGenesPaddingState = atom({
 
 export const enhancerGenesCellEncodingState = atom({
   key: 'enhancerGenesCellEncoding',
-  default: getDefault('egce', 'max-score'),
+  default: getDefault('egce', 'max-score', identity),
 });
 
 export const enhancerGenesSvgState = atom({
