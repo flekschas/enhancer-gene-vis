@@ -134,8 +134,8 @@ const Welcome = React.memo(function Welcome({
         <p>
           However, enhancers are not always active in every cell type or sample.
           Hence, in reality the looks more like below where <em>Enhancer 1</em>{' '}
-          is inactive in <em>Sample 1</em> while <em>Enhancer 2</em> is
-          inactive in <em>Sample 3</em>.
+          is inactive in <em>Sample 1</em> while <em>Enhancer 2</em> is inactive
+          in <em>Sample 3</em>.
         </p>
         <figure className={classes.figure}>
           <img
