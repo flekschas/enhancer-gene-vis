@@ -3,9 +3,7 @@ import { RecoilState, useRecoilState, useRecoilValue } from 'recoil';
 import queryString, { ParsedQuery } from 'query-string';
 
 export type QueryStringEncoder<T> = (x: T) => string;
-export type QueryStringDecoder<T> = (
-  x: string | string[] | null | undefined
-) => T;
+export type QueryStringDecoder<T> = (x: string) => T;
 
 /**
  * Subscribes to changes to an atom, and provides a function to synchronously
@@ -66,7 +64,8 @@ export function getQueryStringValue<T>(
   key: string,
   decoder: QueryStringDecoder<T>
 ): T | null | undefined {
-  return decoder(queryString.parse(window.location.search)[key]);
+  const encodedValue = queryString.parse(window.location.search)[key] as string;
+  return encodedValue ? decoder(encodedValue) : undefined;
 }
 
 /**

@@ -5,19 +5,21 @@
   },
   "extends": [
     "eslint:recommended",
-    "airbnb/base",
+    "airbnb",
+    "airbnb-typescript",
     "airbnb/hooks",
     "prettier",
     "plugin:prettier/recommended",
     "react-app"
   ],
-  "parser": "@babel/eslint-parser",
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 6
+    "ecmaVersion": 6,
+    "project": "./tsconfig.json"
   },
   "plugins": ["prettier"],
   "rules": {
-    "prettier/prettier": "error",
+    "prettier/prettier": "warn",
     "class-methods-use-this": 0,
     "no-bitwise": 0,
     "no-plusplus": 0,

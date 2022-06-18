@@ -2,7 +2,7 @@ import { deepClone, isFunction } from '@flekschas/utils';
 
 import { getIntervalCenter } from './utils';
 
-import { DEFAULT_VARIANT_TRACK_DEF } from './constants';
+import { DEFAULT_VARIANT_TRACK_DEF } from './state/variant-track-state';
 
 const getFocusGeneRegion = (viewConfig) => {
   return viewConfig.views[0].overlays[1] &&

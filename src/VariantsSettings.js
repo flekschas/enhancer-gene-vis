@@ -12,11 +12,8 @@ import FileInput from './FileInput';
 import { useChromInfo } from './ChromInfoProvider';
 import createLocalBedDataServer from './local-bed-data-server';
 
-import {
-  focusRegionOptionState,
-  useFocusRegion,
-  useVariantTracks,
-} from './state';
+import { focusRegionOptionState, useFocusRegion } from './state';
+import { useVariantTracks } from './state/variant-track-state';
 
 import { LOCAL_BED_TILESET_INFO_HG19 } from './constants';
 
