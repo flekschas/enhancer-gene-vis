@@ -1,5 +1,5 @@
 import { deepClone } from '@flekschas/utils';
-import { atom } from 'recoil';
+import { atom, RecoilState } from 'recoil';
 import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
@@ -47,6 +47,7 @@ export const DEFAULT_VARIANT_TRACKS: VariantTrack[] = [
   },
 ];
 
+// TODO: Add strict type definition
 export const DEFAULT_VARIANT_TRACK_DEF = {
   type: 'point-annotation',
   height: 32,
@@ -148,7 +149,7 @@ function variantTracksDecoder(v?: string): VariantTrack[] {
   ];
 }
 
-export const variantTracksState = atom({
+export const variantTracksState: RecoilState<VariantTrack[]> = atom({
   key: 'variantTracks',
   default: getDefault(
     'vt',
@@ -157,10 +158,13 @@ export const variantTracksState = atom({
   ),
 });
 
-export function useVariantTracks() {
+export function useVariantTracks(): [
+  VariantTrack[],
+  (x: VariantTrack[]) => void
+] {
   return useRecoilQueryString('vt', variantTracksState, variantTracksEncoder);
 }
 
-export function useVariantTracksSyncher() {
+export function useVariantTracksSyncher(): void {
   useRecoilQueryStringSyncher('vt', variantTracksState, variantTracksEncoder);
 }
