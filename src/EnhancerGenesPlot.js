@@ -27,7 +27,7 @@ import {
 import {
   enhancerGenesCellEncodingState,
   enhancerGenesPaddingState,
-  enhancerGenesSvgState
+  enhancerGenesSvgState,
 } from './state/enhancer-gene-track-state';
 
 import {

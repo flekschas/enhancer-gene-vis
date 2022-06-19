@@ -32,7 +32,7 @@ import {
   useXDomainEndWithAssembly,
   useShowWelcome,
 } from './state';
-import {enhancerGenesSvgState} from './state/enhancer-gene-track-state';
+import { enhancerGenesSvgState } from './state/enhancer-gene-track-state';
 
 import { download, stringifySvg } from './utils';
 

@@ -1,40 +1,86 @@
 import { identity } from '@flekschas/utils';
-import { atom } from 'recoil';
-import { booleanQueryStringDecoder, useRecoilQueryString, useRecoilQueryStringSyncher } from '../utils/query-string';
+import { atom, RecoilState } from 'recoil';
+import {
+  booleanQueryStringDecoder,
+  useRecoilQueryString,
+  useRecoilQueryStringSyncher,
+} from '../utils/query-string';
 import { getDefault } from './utils';
 
+const enum EnhancerGeneQueryKey {
+  SHOW_INFO = 'egi',
+  PADDING = 'egp',
+  CELL_ENCODING = 'egce',
+}
 
-export const enhancerGenesShowInfoState = atom({
+export const enhancerGenesShowInfoState: RecoilState<boolean> = atom({
   key: 'enhancerGenesShowInfos',
-  default: getDefault('egi', true, booleanQueryStringDecoder),
+  default: getDefault(
+    EnhancerGeneQueryKey.SHOW_INFO,
+    true,
+    booleanQueryStringDecoder
+  ),
 });
 
-export const enhancerGenesPaddingState = atom({
+export const enhancerGenesPaddingState: RecoilState<boolean> = atom({
   key: 'enhancerGenesPadding',
-  default: getDefault('egp', false, booleanQueryStringDecoder),
+  default: getDefault(
+    EnhancerGeneQueryKey.PADDING,
+    false,
+    booleanQueryStringDecoder
+  ),
 });
 
-export const enhancerGenesCellEncodingState = atom({
+export const enhancerGenesCellEncodingState: RecoilState<string> = atom({
   key: 'enhancerGenesCellEncoding',
-  default: getDefault('egce', 'max-score', identity),
+  default: getDefault(
+    EnhancerGeneQueryKey.CELL_ENCODING,
+    'max-score',
+    identity
+  ),
 });
 
+// TODO: Determine type for this atom
 export const enhancerGenesSvgState = atom({
   key: 'enhancerGenesSvg',
   default: null,
 });
 
 export const useEnhancerGenesShowInfos = () =>
-  useRecoilQueryString('egi', enhancerGenesShowInfoState, toString);
+  useRecoilQueryString(
+    EnhancerGeneQueryKey.SHOW_INFO,
+    enhancerGenesShowInfoState,
+    toString
+  );
 export const useEnhancerGenesShowInfosSyncher = () =>
-  useRecoilQueryStringSyncher('egi', enhancerGenesShowInfoState, toString);
+  useRecoilQueryStringSyncher(
+    EnhancerGeneQueryKey.SHOW_INFO,
+    enhancerGenesShowInfoState,
+    toString
+  );
 
 export const useEnhancerGenesPadding = () =>
-  useRecoilQueryString('egp', enhancerGenesPaddingState, toString);
+  useRecoilQueryString(
+    EnhancerGeneQueryKey.PADDING,
+    enhancerGenesPaddingState,
+    toString
+  );
 export const useEnhancerGenesPaddingSyncher = () =>
-  useRecoilQueryStringSyncher('egp', enhancerGenesPaddingState, toString);
+  useRecoilQueryStringSyncher(
+    EnhancerGeneQueryKey.PADDING,
+    enhancerGenesPaddingState,
+    toString
+  );
 
 export const useEnhancerGenesCellEncoding = () =>
-  useRecoilQueryString('egce', enhancerGenesCellEncodingState, identity);
+  useRecoilQueryString(
+    EnhancerGeneQueryKey.CELL_ENCODING,
+    enhancerGenesCellEncodingState,
+    identity
+  );
 export const useEnhancerGenesCellEncodingSyncher = () =>
-  useRecoilQueryStringSyncher('egce', enhancerGenesCellEncodingState, identity);
+  useRecoilQueryStringSyncher(
+    EnhancerGeneQueryKey.CELL_ENCODING,
+    enhancerGenesCellEncodingState,
+    identity
+  );
