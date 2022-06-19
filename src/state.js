@@ -170,25 +170,6 @@ export const enhancerRegionsShowInfoState = atom({
   default: getDefault('eri', true, booleanQueryStringDecoder),
 });
 
-export const enhancerGenesShowInfoState = atom({
-  key: 'enhancerGenesShowInfos',
-  default: getDefault('egi', true, booleanQueryStringDecoder),
-});
-
-export const enhancerGenesPaddingState = atom({
-  key: 'enhancerGenesPadding',
-  default: getDefault('egp', false, booleanQueryStringDecoder),
-});
-
-export const enhancerGenesCellEncodingState = atom({
-  key: 'enhancerGenesCellEncoding',
-  default: getDefault('egce', 'max-score', identity),
-});
-
-export const enhancerGenesSvgState = atom({
-  key: 'enhancerGenesSvg',
-  default: null,
-});
 export const higlassEnhancerRegionsState = atom({
   key: 'higlassEnhancerRegions',
   default: null,
@@ -464,21 +445,6 @@ export const useEnhancerRegionsColorEncoding = () =>
   useRecoilQueryString('eri', enhancerRegionsColorEncodingState);
 export const useEnhancerRegionsColorEncodingSyncher = () =>
   useRecoilQueryStringSyncher('eri', enhancerRegionsColorEncodingState);
-
-export const useEnhancerGenesShowInfos = () =>
-  useRecoilQueryString('egi', enhancerGenesShowInfoState);
-export const useEnhancerGenesShowInfosSyncher = () =>
-  useRecoilQueryStringSyncher('egi', enhancerGenesShowInfoState);
-
-export const useEnhancerGenesPadding = () =>
-  useRecoilQueryString('egp', enhancerGenesPaddingState);
-export const useEnhancerGenesPaddingSyncher = () =>
-  useRecoilQueryStringSyncher('egp', enhancerGenesPaddingState);
-
-export const useEnhancerGenesCellEncoding = () =>
-  useRecoilQueryString('egce', enhancerGenesCellEncodingState);
-export const useEnhancerGenesCellEncodingSyncher = () =>
-  useRecoilQueryStringSyncher('egce', enhancerGenesCellEncodingState);
 
 export const useVariantYScale = () =>
   useRecoilQueryString('vs', variantYScaleState);

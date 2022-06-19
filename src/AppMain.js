@@ -31,12 +31,13 @@ import {
   useEnhancerRegionsShowInfosSyncher,
   useEnhancerRegionsHideUnfocusedSyncher,
   useEnhancerRegionsColorEncodingSyncher,
-  useEnhancerGenesShowInfosSyncher,
-  useEnhancerGenesPaddingSyncher,
-  useEnhancerGenesCellEncodingSyncher,
   useVariantYScaleSyncher,
 } from './state';
 import { useVariantTracksSyncher } from './state/variant-track-state';
+import {
+  useEnhancerGenesShowInfosSyncher,
+  useEnhancerGenesPaddingSyncher,
+  useEnhancerGenesCellEncodingSyncher} from './state/enhancer-gene-track-state';
 
 import { GENE_SEARCH_URL, VARIANT_SEARCH_URL } from './constants';
 

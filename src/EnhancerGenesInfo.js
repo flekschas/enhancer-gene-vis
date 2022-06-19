@@ -5,11 +5,12 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
 import {
-  enhancerGenesCellEncodingState,
-  enhancerGenesShowInfoState,
   focusRegionState,
   focusRegionStrState,
 } from './state';
+import {
+  enhancerGenesCellEncodingState,
+  enhancerGenesShowInfoState} from './state/enhancer-gene-track-state';
 
 const useStyles = makeStyles((theme) => ({
   root: {

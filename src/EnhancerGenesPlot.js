@@ -17,9 +17,6 @@ import { useChromInfo } from './ChromInfoProvider';
 import { useShowTooltip } from './TooltipProvider';
 
 import {
-  enhancerGenesCellEncodingState,
-  enhancerGenesPaddingState,
-  enhancerGenesSvgState,
   focusRegionAbsWithAssembly,
   focusRegionRelState,
   focusRegionState,
@@ -27,6 +24,11 @@ import {
   sampleSelectionState,
   sampleGroupSelectionSizesState,
 } from './state';
+import {
+  enhancerGenesCellEncodingState,
+  enhancerGenesPaddingState,
+  enhancerGenesSvgState
+} from './state/enhancer-gene-track-state';
 
 import {
   DEFAULT_COLOR_MAP,

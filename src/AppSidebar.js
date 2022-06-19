@@ -22,7 +22,6 @@ import { useChromInfo } from './ChromInfoProvider';
 import { useShowModal } from './ModalProvider';
 
 import {
-  enhancerGenesSvgState,
   higlassEnhancerRegionsState,
   higlassDnaAccessState,
   sampleFilterState,
@@ -33,6 +32,7 @@ import {
   useXDomainEndWithAssembly,
   useShowWelcome,
 } from './state';
+import {enhancerGenesSvgState} from './state/enhancer-gene-track-state';
 
 import { download, stringifySvg } from './utils';
 
