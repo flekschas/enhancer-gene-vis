@@ -11,7 +11,7 @@ import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import { makeStyles } from '@material-ui/core/styles';
 import { identity } from '@flekschas/utils';
 
-import useDebounce from './use-debounce';
+import useDebounce from './hooks/use-debounce';
 
 const useStyles = makeStyles((theme) => ({
   inputRoot: {
