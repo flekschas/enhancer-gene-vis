@@ -8,7 +8,8 @@ import EnhancerGenesSettings from './EnhancerGenesSettings';
 import EnhancerGenesPlot from './EnhancerGenesPlot';
 import TitleBar from './TitleBar';
 
-import { focusRegionState, useEnhancerGenesShowInfos } from './state';
+import { focusRegionState } from './state';
+import { useEnhancerGenesShowInfos } from './state/enhancer-gene-track-state';
 
 const useStyles = makeStyles((theme) => ({
   plot: {

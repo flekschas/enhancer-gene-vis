@@ -6,5 +6,5 @@ export function getDefault<T>(
   decoder: QueryStringDecoder<T>
 ) {
   const qVal = getQueryStringValue(key, decoder);
-  return qVal || initialValue;
+  return qVal === undefined ? initialValue : qVal;
 }
