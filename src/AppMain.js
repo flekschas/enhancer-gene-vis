@@ -20,7 +20,6 @@ import {
   focusRegionOptionState,
   useFocusGene,
   useFocusRegion,
-  useVariantTracksSyncher,
   useShowWelcomeSyncher,
   useFocusGeneSyncher,
   useFocusRegionSyncher,
@@ -37,6 +36,7 @@ import {
   useEnhancerGenesCellEncodingSyncher,
   useVariantYScaleSyncher,
 } from './state';
+import { useVariantTracksSyncher } from './state/variant-track-state';
 
 import { GENE_SEARCH_URL, VARIANT_SEARCH_URL } from './constants';
 

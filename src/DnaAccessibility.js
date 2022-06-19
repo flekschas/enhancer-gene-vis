@@ -20,9 +20,9 @@ import {
   higlassDnaAccessState,
   sampleSelectionState,
   useDnaAccessShowInfos,
-  variantTracksState,
   variantYScaleState,
 } from './state';
+import { variantTracksState } from './state/variant-track-state';
 
 import {
   DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,

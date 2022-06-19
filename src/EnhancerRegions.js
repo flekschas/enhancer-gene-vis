@@ -34,11 +34,11 @@ import {
   useFocusRegion,
   useXDomainEndWithAssembly,
   useXDomainStartWithAssembly,
-  variantTracksState,
   variantYScaleState,
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
 } from './state';
+import { variantTracksState } from './state/variant-track-state';
 
 import {
   updateViewConfigFocusGene,
