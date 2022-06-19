@@ -52,6 +52,7 @@ export const useEnhancerGenesShowInfos = () =>
     enhancerGenesShowInfoState,
     toString
   );
+
 export const useEnhancerGenesShowInfosSyncher = () =>
   useRecoilQueryStringSyncher(
     EnhancerGeneQueryKey.SHOW_INFO,
@@ -65,6 +66,7 @@ export const useEnhancerGenesPadding = () =>
     enhancerGenesPaddingState,
     toString
   );
+
 export const useEnhancerGenesPaddingSyncher = () =>
   useRecoilQueryStringSyncher(
     EnhancerGeneQueryKey.PADDING,
@@ -78,6 +80,7 @@ export const useEnhancerGenesCellEncoding = () =>
     enhancerGenesCellEncodingState,
     identity
   );
+
 export const useEnhancerGenesCellEncodingSyncher = () =>
   useRecoilQueryStringSyncher(
     EnhancerGeneQueryKey.CELL_ENCODING,
