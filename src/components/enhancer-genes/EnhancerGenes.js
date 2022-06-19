@@ -6,10 +6,10 @@ import EnhancerGenesInfo from './EnhancerGenesInfo';
 import EnhancerGenesHelp from './EnhancerGenesHelp';
 import EnhancerGenesSettings from './EnhancerGenesSettings';
 import EnhancerGenesPlot from './EnhancerGenesPlot';
-import TitleBar from './TitleBar';
+import TitleBar from '../../TitleBar';
 
-import { focusRegionState } from './state';
-import { useEnhancerGenesShowInfos } from './state/enhancer-gene-track-state';
+import { focusRegionState } from '../../state';
+import { useEnhancerGenesShowInfos } from '../../state/enhancer-gene-track-state';
 
 const useStyles = makeStyles((theme) => ({
   plot: {
