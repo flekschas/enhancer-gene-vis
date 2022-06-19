@@ -1,6 +1,6 @@
 import { atom, selector } from 'recoil';
 import { memoize } from 'lodash-es';
-import { deepClone, identity } from '@flekschas/utils';
+import { identity } from '@flekschas/utils';
 
 import {
   getQueryStringValue,
@@ -23,12 +23,6 @@ import {
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
-  DEFAULT_VARIANT_TRACKS,
-  DEFAULT_VARIANT_TRACK_SERVER_ABBR,
-  DEFAULT_VARIANT_TRACK_PVAL_COL,
-  DEFAULT_VARIANT_TRACK_PPROB_COL,
-  VARIANT_TRACK_ABBR_TO_SERVER,
-  VARIANT_TRACK_SERVER_TO_ABBR,
   GROUPED_SAMPLE_OPTIONS,
   SAMPLES,
 } from './constants';
@@ -41,55 +35,6 @@ const getDefault = (key, initialValue, decoder) => {
 };
 
 const showWelcomeDecoder = customBooleanQueryStringDecoder(['intro']);
-
-const variantTracksDecoder = (v) => {
-  if (!v) return undefined;
-
-  // tilesetId:rg:7:8
-  const [
-    tilesetUid,
-    serverAbbr = DEFAULT_VARIANT_TRACK_SERVER_ABBR,
-    columnPvalue = DEFAULT_VARIANT_TRACK_PVAL_COL,
-    columnPosteriorProbability = DEFAULT_VARIANT_TRACK_PPROB_COL,
-  ] = v.split(':');
-
-  const server = VARIANT_TRACK_ABBR_TO_SERVER[serverAbbr];
-
-  if (tilesetUid === undefined) return tilesetUid;
-
-  return [
-    {
-      server,
-      tilesetUid,
-      columnPvalue,
-      columnPosteriorProbability,
-      markColor: 'black',
-    },
-  ];
-};
-
-const variantTracksEncoder = (v) => {
-  if (!v || !Array.isArray(v) || v.length > 1) return '';
-
-  const { tilesetUid } = v[0];
-  const serverAbbr =
-    VARIANT_TRACK_SERVER_TO_ABBR[v[0].server] ===
-    DEFAULT_VARIANT_TRACK_SERVER_ABBR
-      ? null
-      : VARIANT_TRACK_SERVER_TO_ABBR[v[0].server];
-  const pValCol =
-    v[0].columnPvalue === DEFAULT_VARIANT_TRACK_PVAL_COL
-      ? null
-      : v[0].columnPvalue;
-  const pProbCol =
-    v[0].columnPosteriorProbability === DEFAULT_VARIANT_TRACK_PPROB_COL
-      ? null
-      : v[0].columnPosteriorProbability;
-
-  if (!tilesetUid || serverAbbr === undefined) return '';
-
-  return [tilesetUid, serverAbbr, pValCol, pProbCol].filter(identity).join(':');
-};
 
 // Atoms
 export const sampleFilterState = atom({
@@ -138,15 +83,6 @@ export const sampleGroupSelectionSizesState = selector({
       sizes[group.name] = get(sampleGroupWithGroup(group)).n;
       return sizes;
     }, {}),
-});
-
-export const variantTracksState = atom({
-  key: 'variantTracks',
-  default: getDefault(
-    'vt',
-    deepClone(DEFAULT_VARIANT_TRACKS),
-    variantTracksDecoder
-  ),
 });
 
 export const showVariantsSettingsState = atom({
@@ -455,10 +391,6 @@ export const dnaAccessXDomainWithAssembly = memoize(
 /*
  Predefined Hooks
  */
-export const useVariantTracks = () =>
-  useRecoilQueryString('vt', variantTracksState, variantTracksEncoder);
-export const useVariantTracksSyncher = () =>
-  useRecoilQueryStringSyncher('vt', variantTracksState, variantTracksEncoder);
 
 export const useShowWelcome = () => useRecoilQueryString('w', showWelcomeState);
 export const useShowWelcomeSyncher = () =>
