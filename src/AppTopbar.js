@@ -10,7 +10,7 @@ import SearchIcon from '@material-ui/icons/Search';
 
 import SearchField from './SearchField';
 
-import usePrevious from './hooks/use-previous';
+import usePrevious from './use-previous';
 
 import {
   focusGeneOptionState,

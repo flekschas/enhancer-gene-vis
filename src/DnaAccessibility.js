@@ -28,7 +28,7 @@ import {
   DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,
   DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
 } from './constants';
-import useDebounce from './hooks/use-debounce';
+import useDebounce from './use-debounce';
 
 import {
   updateViewConfigFocusRegion,

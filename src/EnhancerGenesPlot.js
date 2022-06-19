@@ -39,7 +39,7 @@ import {
   SAMPLE_IDX,
 } from './constants';
 import { scaleBand } from './utils';
-import usePrevious from './hooks/use-previous';
+import usePrevious from './use-previous';
 
 import './EnhancerGenesPlot.css';
 
