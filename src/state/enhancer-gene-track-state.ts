@@ -13,6 +13,14 @@ const enum EnhancerGeneQueryKey {
   CELL_ENCODING = 'egce',
 }
 
+export const enum EnhancerGeneCellEncodingType {
+  MAX_SCORE = 'max-score',
+  NUMBER = 'number',
+  PERCENT = 'percent',
+  DISTRIBUTION = 'distribution',
+  ARRAY = 'array',
+}
+
 export const enhancerGenesShowInfoState: RecoilState<boolean> = atom({
   key: 'enhancerGenesShowInfos',
   default: getDefault(
@@ -31,14 +39,16 @@ export const enhancerGenesPaddingState: RecoilState<boolean> = atom({
   ),
 });
 
-export const enhancerGenesCellEncodingState: RecoilState<string> = atom({
-  key: 'enhancerGenesCellEncoding',
-  default: getDefault(
-    EnhancerGeneQueryKey.CELL_ENCODING,
-    'max-score',
-    identity
-  ),
-});
+export const enhancerGenesCellEncodingState: RecoilState<EnhancerGeneCellEncodingType> = atom(
+  {
+    key: 'enhancerGenesCellEncoding',
+    default: getDefault(
+      EnhancerGeneQueryKey.CELL_ENCODING,
+      EnhancerGeneCellEncodingType.MAX_SCORE,
+      (string) => string as EnhancerGeneCellEncodingType
+    ),
+  }
+);
 
 // TODO: Determine type for this atom
 export const enhancerGenesSvgState = atom({

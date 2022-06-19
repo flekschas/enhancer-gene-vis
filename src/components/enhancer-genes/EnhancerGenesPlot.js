@@ -13,8 +13,8 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useChromInfo } from './ChromInfoProvider';
-import { useShowTooltip } from './TooltipProvider';
+import { useChromInfo } from '../../ChromInfoProvider';
+import { useShowTooltip } from '../../TooltipProvider';
 
 import {
   focusRegionAbsWithAssembly,
@@ -23,12 +23,12 @@ import {
   focusRegionStrState,
   sampleSelectionState,
   sampleGroupSelectionSizesState,
-} from './state';
+} from '../../state';
 import {
   enhancerGenesCellEncodingState,
   enhancerGenesPaddingState,
   enhancerGenesSvgState,
-} from './state/enhancer-gene-track-state';
+} from '../../state/enhancer-gene-track-state';
 
 import {
   DEFAULT_COLOR_MAP,
@@ -39,9 +39,9 @@ import {
   BIOSAMPLE_COLUMN,
   GENE_NAME_COLUMN,
   SAMPLE_IDX,
-} from './constants';
-import { scaleBand } from './utils';
-import usePrevious from './hooks/use-previous';
+} from '../../constants';
+import { scaleBand } from '../../utils';
+import usePrevious from '../../hooks/use-previous';
 
 import './EnhancerGenesPlot.css';
 
