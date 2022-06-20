@@ -52,11 +52,12 @@ import {
 
 import {
   BIOSAMPLE_COLUMN,
-  DEFAULT_VIEW_CONFIG_ENHANCER,
   HIGLASS_PAN_ZOOM,
   HIGLASS_SELECT,
   IGNORED_FOCUS_ELEMENTS,
 } from '../../constants';
+import {
+  DEFAULT_VIEW_CONFIG_ENHANCER,} from '../../view-config-types'
 
 import { chrRangePosEncoder } from '../../utils';
 

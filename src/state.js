@@ -21,11 +21,12 @@ import {
 } from './utils';
 
 import {
-  DEFAULT_X_DOMAIN_START,
-  DEFAULT_X_DOMAIN_END,
   GROUPED_SAMPLE_OPTIONS,
   SAMPLES,
 } from './constants';
+import {
+  DEFAULT_X_DOMAIN_START,
+  DEFAULT_X_DOMAIN_END,} from './view-config-types'
 
 import { getDnaAccessXDomain } from './view-config';
 
