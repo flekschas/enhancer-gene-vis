@@ -10,17 +10,41 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import Switch from '@material-ui/core/Switch';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useVariantYScale } from './state';
+import { useVariantYScale } from '../../state';
 import {
   useEnhancerRegionsHideUnfocused,
   useEnhancerRegionsColorEncoding,
-} from './state/enhancer-region-state';
+  EnhancerRegionColorEncodingType,
+} from '../../state/enhancer-region-state';
 
 const useStyles = makeStyles((theme) => ({
   iconRadioLegend: {
     margin: theme.spacing(2, 0, 0.25, 0),
   },
 }));
+
+type ColorEncodingSettingRenderInfo = {
+  type: EnhancerRegionColorEncodingType;
+  label: string;
+};
+const colorEncodingSettings: ColorEncodingSettingRenderInfo[] = [
+  {
+    type: EnhancerRegionColorEncodingType.SOLID,
+    label: 'Solid',
+  },
+  {
+    type: EnhancerRegionColorEncodingType.FREQUENCY,
+    label: 'Number of predictions',
+  },
+  {
+    type: EnhancerRegionColorEncodingType.HIGHEST_IMPORTANCE,
+    label: 'Highest prediction score',
+  },
+  {
+    type: EnhancerRegionColorEncodingType.CLOSEST_IMPORTANCE,
+    label: 'Closest prediction score',
+  },
+];
 
 const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   const [variantYScale, setVariantYScale] = useVariantYScale();
@@ -42,7 +66,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   );
 
   const changeColorEncoding = useCallback(
-    (value) => () => {
+    (value: EnhancerRegionColorEncodingType) => () => {
       setColorEncoding(value);
     },
     [setColorEncoding]
@@ -51,7 +75,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   const classes = useStyles();
 
   return (
-    <React.Fragment>
+    <>
       <Box m={1}>
         <FormControlLabel
           control={
@@ -77,7 +101,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
             <FormControlLabel
               label="p-value"
               value="pValue"
-              className={classes.iconRadio}
+              // className={classes.iconRadio}
               control={
                 <IconButton
                   size="small"
@@ -85,7 +109,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
                 >
                   {variantYScale === 'pValue' ? (
                     <RadioButtonCheckedIcon
-                      className={classes.iconRadioActive}
+                      // className={classes.iconRadioActive}
                       fontSize="inherit"
                     />
                   ) : (
@@ -97,7 +121,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
             <FormControlLabel
               label="Posterior probability"
               value="posteriorProbability"
-              className={classes.iconRadio}
+              // className={classes.iconRadio}
               control={
                 <IconButton
                   size="small"
@@ -105,7 +129,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
                 >
                   {variantYScale === 'posteriorProbability' ? (
                     <RadioButtonCheckedIcon
-                      className={classes.iconRadioActive}
+                      // className={classes.iconRadioActive}
                       fontSize="inherit"
                     />
                   ) : (
@@ -127,87 +151,32 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
             name="colorEncoding"
             value={colorEncoding}
           >
-            <FormControlLabel
-              label="Solid"
-              value="solid"
-              className={classes.iconRadio}
-              control={
-                <IconButton size="small" onClick={changeColorEncoding('solid')}>
-                  {colorEncoding === 'solid' ? (
-                    <RadioButtonCheckedIcon
-                      className={classes.iconRadioActive}
-                      fontSize="inherit"
-                    />
-                  ) : (
-                    <RadioButtonUncheckedIcon fontSize="inherit" />
-                  )}
-                </IconButton>
-              }
-            />
-            <FormControlLabel
-              label="Number of predictions"
-              value="frequency"
-              className={classes.iconRadio}
-              control={
-                <IconButton
-                  size="small"
-                  onClick={changeColorEncoding('frequency')}
-                >
-                  {colorEncoding === 'frequency' ? (
-                    <RadioButtonCheckedIcon
-                      className={classes.iconRadioActive}
-                      fontSize="inherit"
-                    />
-                  ) : (
-                    <RadioButtonUncheckedIcon fontSize="inherit" />
-                  )}
-                </IconButton>
-              }
-            />
-            <FormControlLabel
-              label="Highest prediction score"
-              value="highestImportance"
-              className={classes.iconRadio}
-              control={
-                <IconButton
-                  size="small"
-                  onClick={changeColorEncoding('highestImportance')}
-                >
-                  {colorEncoding === 'highestImportance' ? (
-                    <RadioButtonCheckedIcon
-                      className={classes.iconRadioActive}
-                      fontSize="inherit"
-                    />
-                  ) : (
-                    <RadioButtonUncheckedIcon fontSize="inherit" />
-                  )}
-                </IconButton>
-              }
-            />
-            <FormControlLabel
-              label="Closest prediction score"
-              value="closestImportance"
-              className={classes.iconRadio}
-              control={
-                <IconButton
-                  size="small"
-                  onClick={changeColorEncoding('closestImportance')}
-                >
-                  {colorEncoding === 'closestImportance' ? (
-                    <RadioButtonCheckedIcon
-                      className={classes.iconRadioActive}
-                      fontSize="inherit"
-                    />
-                  ) : (
-                    <RadioButtonUncheckedIcon fontSize="inherit" />
-                  )}
-                </IconButton>
-              }
-            />
+            {colorEncodingSettings.map((renderInfo) => (
+              <FormControlLabel
+                label={renderInfo.label}
+                value={renderInfo.type}
+                // className={classes.iconRadio}
+                control={
+                  <IconButton
+                    size="small"
+                    onClick={changeColorEncoding(renderInfo.type)}
+                  >
+                    {colorEncoding === renderInfo.type ? (
+                      <RadioButtonCheckedIcon
+                        // className={classes.iconRadioActive}
+                        fontSize="inherit"
+                      />
+                    ) : (
+                      <RadioButtonUncheckedIcon fontSize="inherit" />
+                    )}
+                  </IconButton>
+                }
+              />
+            ))}
           </RadioGroup>
         </FormControl>
       </Box>
-    </React.Fragment>
+    </>
   );
 });
 

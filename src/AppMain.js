@@ -7,7 +7,7 @@ import { isString } from '@flekschas/utils';
 
 import AppSidebar from './AppSidebar';
 import AppTopbar from './AppTopbar';
-import EnhancerRegions from './EnhancerRegions';
+import EnhancerRegions from './components/enhancer-regions/EnhancerRegions';
 import EnhancerGenes from './components/enhancer-genes/EnhancerGenes';
 import DnaAccessibility from './DnaAccessibility';
 import ModalProvider from './ModalProvider';

@@ -14,6 +14,13 @@ const enum EnhancerRegionQueryKey {
   COLOR_ENCODING = 'erc',
 }
 
+export const enum EnhancerRegionColorEncodingType {
+  SOLID = 'solid',
+  FREQUENCY = 'frequency',
+  HIGHEST_IMPORTANCE = 'highestImportance',
+  CLOSEST_IMPORTANCE = 'closestImportance',
+}
+
 export const enhancerRegionsHideUnfocusedState: RecoilState<boolean> = atom({
   key: 'enhancerRegionsHideUnfocused',
   default: getDefault(
@@ -23,10 +30,16 @@ export const enhancerRegionsHideUnfocusedState: RecoilState<boolean> = atom({
   ),
 });
 
-export const enhancerRegionsColorEncodingState: RecoilState<string> = atom({
-  key: 'enhancerRegionsColorEncoding',
-  default: getDefault(EnhancerRegionQueryKey.COLOR_ENCODING, 'solid', identity),
-});
+export const enhancerRegionsColorEncodingState: RecoilState<EnhancerRegionColorEncodingType> = atom(
+  {
+    key: 'enhancerRegionsColorEncoding',
+    default: getDefault(
+      EnhancerRegionQueryKey.COLOR_ENCODING,
+      EnhancerRegionColorEncodingType.SOLID,
+      (v) => v as EnhancerRegionColorEncodingType
+    ),
+  }
+);
 
 export const enhancerRegionsShowInfoState: RecoilState<boolean> = atom({
   key: 'enhancerRegionsShowInfos',

@@ -12,11 +12,11 @@ import { debounce, deepClone, isParentOf, pipe, sum } from '@flekschas/utils';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useChromInfo } from './ChromInfoProvider';
+import { useChromInfo } from '../../ChromInfoProvider';
 import EnhancerRegionsInfo from './EnhancerRegionsInfo';
 import EnhancerRegionsHelp from './EnhancerRegionsHelp';
 import EnhancerRegionsSettings from './EnhancerRegionsSettings';
-import TitleBar from './TitleBar';
+import TitleBar from '../../TitleBar';
 
 import {
   focusGeneEndWithAssembly,
@@ -34,13 +34,13 @@ import {
   variantYScaleState,
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
-} from './state';
+} from '../../state';
 import {
   enhancerRegionsColorEncodingState,
   enhancerRegionsHideUnfocusedState,
   useEnhancerRegionsShowInfos,
-} from './state/enhancer-region-state';
-import { variantTracksState } from './state/variant-track-state';
+} from '../../state/enhancer-region-state';
+import { variantTracksState } from '../../state/variant-track-state';
 
 import {
   updateViewConfigFocusGene,
@@ -48,7 +48,7 @@ import {
   updateViewConfigVariantYScale,
   updateViewConfigXDomain,
   updateViewConfigVariantTracks,
-} from './view-config';
+} from '../../view-config';
 
 import {
   BIOSAMPLE_COLUMN,
@@ -56,9 +56,9 @@ import {
   HIGLASS_PAN_ZOOM,
   HIGLASS_SELECT,
   IGNORED_FOCUS_ELEMENTS,
-} from './constants';
+} from '../../constants';
 
-import { chrRangePosEncoder } from './utils';
+import { chrRangePosEncoder } from '../../utils';
 
 import 'higlass/dist/hglib.css';
 
