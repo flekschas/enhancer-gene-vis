@@ -3,7 +3,7 @@ import Typography from '@material-ui/core/Typography';
 
 const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   return (
-    <React.Fragment>
+    <>
       <Typography>
         This panel visualizes the predicted enhancers by sample type as a
         matrix-like track. Each rectangle representes an enhancer. Promoter
@@ -15,7 +15,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
         plot below the gene annotations). Click on a variant or gene to select
         it. Selections are shown in pink/red.
       </Typography>
-    </React.Fragment>
+    </>
   );
 });
 

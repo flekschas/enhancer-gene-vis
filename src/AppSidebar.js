@@ -39,13 +39,13 @@ import { download, stringifySvg } from './utils';
 import {
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP,
-  DEFAULT_VIEW_CONFIG_ENHANCER,
   DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
   SVG_SKELETON,
   DRAWER_WIDTH,
   GROUPED_SAMPLE_OPTIONS,
   SAMPLE_TO_GROUP,
 } from './constants';
+import { DEFAULT_VIEW_CONFIG_ENHANCER } from './view-config-types';
 
 const useStyles = makeStyles((theme) => ({
   h1: {
