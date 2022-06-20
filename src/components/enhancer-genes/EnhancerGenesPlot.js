@@ -35,11 +35,12 @@ import {
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP_LIGHT,
   DEFAULT_STRATIFICATION,
-  DEFAULT_VIEW_CONFIG_ENHANCER,
   BIOSAMPLE_COLUMN,
   GENE_NAME_COLUMN,
   SAMPLE_IDX,
 } from '../../constants';
+import {
+  DEFAULT_VIEW_CONFIG_ENHANCER,} from '../../view-config-types'
 import { scaleBand } from '../../utils';
 import usePrevious from '../../hooks/use-previous';
 

@@ -3,8 +3,8 @@ import { useRecoilValue } from 'recoil';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { focusRegionState, focusGeneState } from './state';
-import { enhancerRegionsShowInfoState } from './state/enhancer-region-state';
+import { focusRegionState, focusGeneState } from '../../state';
+import { enhancerRegionsShowInfoState } from '../../state/enhancer-region-state';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -32,10 +32,10 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
 
   const classes = useStyles();
 
-  if (!showInfo) return '';
+  if (!showInfo) return null;
 
   return (
-    <React.Fragment>
+    <>
       {focusGene && focusRegion && (
         <Typography className={classes.text} noWrap>
           <span className={classes.pink}>■</span> Enhancers containing{' '}
@@ -63,7 +63,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
           <span className={classes.black}>■</span> All predicted enhancers
         </Typography>
       )}
-    </React.Fragment>
+    </>
   );
 });
 
