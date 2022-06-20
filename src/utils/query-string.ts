@@ -5,6 +5,8 @@ import queryString, { ParsedQuery } from 'query-string';
 export type QueryStringEncoder<T> = (x: T) => string;
 export type QueryStringDecoder<T> = (x: string) => T | undefined;
 
+export const booleanQueryStringEncoder: QueryStringEncoder<boolean> = (v) =>
+  v.toString();
 export const booleanQueryStringDecoder: QueryStringDecoder<boolean> = (v) =>
   v === undefined ? undefined : v === 'true';
 

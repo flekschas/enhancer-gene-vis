@@ -155,21 +155,6 @@ export const variantYScaleState = atom({
   default: getDefault('vy', 'pValue', identity),
 });
 
-export const enhancerRegionsHideUnfocusedState = atom({
-  key: 'enhancerRegionsHideUnfocused',
-  default: getDefault('erhu', false, booleanQueryStringDecoder),
-});
-
-export const enhancerRegionsColorEncodingState = atom({
-  key: 'enhancerRegionsColorEncoding',
-  default: getDefault('erc', 'solid', identity),
-});
-
-export const enhancerRegionsShowInfoState = atom({
-  key: 'enhancerRegionsShowInfos',
-  default: getDefault('eri', true, booleanQueryStringDecoder),
-});
-
 export const higlassEnhancerRegionsState = atom({
   key: 'higlassEnhancerRegions',
   default: null,
@@ -430,21 +415,6 @@ export const useXDomainEndWithAssemblySyncher = (chromInfo) =>
     xDomainEndWithAssembly(chromInfo),
     chrPosUrlEncoder
   );
-
-export const useEnhancerRegionsShowInfos = () =>
-  useRecoilQueryString('eri', enhancerRegionsShowInfoState);
-export const useEnhancerRegionsShowInfosSyncher = () =>
-  useRecoilQueryStringSyncher('eri', enhancerRegionsShowInfoState);
-
-export const useEnhancerRegionsHideUnfocused = () =>
-  useRecoilQueryString('eri', enhancerRegionsHideUnfocusedState);
-export const useEnhancerRegionsHideUnfocusedSyncher = () =>
-  useRecoilQueryStringSyncher('eri', enhancerRegionsHideUnfocusedState);
-
-export const useEnhancerRegionsColorEncoding = () =>
-  useRecoilQueryString('eri', enhancerRegionsColorEncodingState);
-export const useEnhancerRegionsColorEncodingSyncher = () =>
-  useRecoilQueryStringSyncher('eri', enhancerRegionsColorEncodingState);
 
 export const useVariantYScale = () =>
   useRecoilQueryString('vs', variantYScaleState);
