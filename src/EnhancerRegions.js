@@ -19,8 +19,6 @@ import EnhancerRegionsSettings from './EnhancerRegionsSettings';
 import TitleBar from './TitleBar';
 
 import {
-  enhancerRegionsColorEncodingState,
-  enhancerRegionsHideUnfocusedState,
   focusGeneEndWithAssembly,
   focusGeneOptionState,
   focusGeneStartWithAssembly,
@@ -29,7 +27,6 @@ import {
   higlassEnhancerRegionsState,
   sampleGroupSelectionSizesState,
   selectedSamplesState,
-  useEnhancerRegionsShowInfos,
   useFocusGene,
   useFocusRegion,
   useXDomainEndWithAssembly,
@@ -38,6 +35,11 @@ import {
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
 } from './state';
+import {
+  enhancerRegionsColorEncodingState,
+  enhancerRegionsHideUnfocusedState,
+  useEnhancerRegionsShowInfos,
+} from './state/enhancer-region-state';
 import { variantTracksState } from './state/variant-track-state';
 
 import {

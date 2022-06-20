@@ -10,11 +10,11 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import Switch from '@material-ui/core/Switch';
 import { makeStyles } from '@material-ui/core/styles';
 
+import { useVariantYScale } from './state';
 import {
   useEnhancerRegionsHideUnfocused,
   useEnhancerRegionsColorEncoding,
-  useVariantYScale,
-} from './state';
+} from './state/enhancer-region-state';
 
 const useStyles = makeStyles((theme) => ({
   iconRadioLegend: {

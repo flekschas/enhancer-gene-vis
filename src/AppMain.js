@@ -28,12 +28,14 @@ import {
   useDnaAccessShowInfosSyncher,
   useXDomainStartWithAssemblySyncher,
   useXDomainEndWithAssemblySyncher,
-  useEnhancerRegionsShowInfosSyncher,
-  useEnhancerRegionsHideUnfocusedSyncher,
-  useEnhancerRegionsColorEncodingSyncher,
   useVariantYScaleSyncher,
 } from './state';
 import { useVariantTracksSyncher } from './state/variant-track-state';
+import {
+  useEnhancerRegionsShowInfosSyncher,
+  useEnhancerRegionsHideUnfocusedSyncher,
+  useEnhancerRegionsColorEncodingSyncher,
+} from './state/enhancer-region-state';
 import {
   useEnhancerGenesShowInfosSyncher,
   useEnhancerGenesPaddingSyncher,
