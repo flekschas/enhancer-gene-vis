@@ -3,11 +3,8 @@ import { useRecoilValue } from 'recoil';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import {
-  enhancerRegionsShowInfoState,
-  focusRegionState,
-  focusGeneState,
-} from './state';
+import { focusRegionState, focusGeneState } from './state';
+import { enhancerRegionsShowInfoState } from './state/enhancer-region-state';
 
 const useStyles = makeStyles((theme) => ({
   root: {

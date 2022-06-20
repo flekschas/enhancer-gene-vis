@@ -2,6 +2,7 @@ import { identity } from '@flekschas/utils';
 import { atom, RecoilState } from 'recoil';
 import {
   booleanQueryStringDecoder,
+  booleanQueryStringEncoder,
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
@@ -60,28 +61,28 @@ export const useEnhancerGenesShowInfos = () =>
   useRecoilQueryString(
     EnhancerGeneQueryKey.SHOW_INFO,
     enhancerGenesShowInfoState,
-    toString
+    booleanQueryStringEncoder
   );
 
 export const useEnhancerGenesShowInfosSyncher = () =>
   useRecoilQueryStringSyncher(
     EnhancerGeneQueryKey.SHOW_INFO,
     enhancerGenesShowInfoState,
-    toString
+    booleanQueryStringEncoder
   );
 
 export const useEnhancerGenesPadding = () =>
   useRecoilQueryString(
     EnhancerGeneQueryKey.PADDING,
     enhancerGenesPaddingState,
-    toString
+    booleanQueryStringEncoder
   );
 
 export const useEnhancerGenesPaddingSyncher = () =>
   useRecoilQueryStringSyncher(
     EnhancerGeneQueryKey.PADDING,
     enhancerGenesPaddingState,
-    toString
+    booleanQueryStringEncoder
   );
 
 export const useEnhancerGenesCellEncoding = () =>
