@@ -4,6 +4,7 @@ import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
+import { Track, TrackType } from '../view-config-types';
 import { getDefault } from './utils';
 
 type VariantTrack = {
@@ -36,10 +37,12 @@ const DEFAULT_VARIANT_TRACK_SERVER_ABBR = VariantTrackAbbr.RG;
 const DEFAULT_VARIANT_TRACK_PVAL_COL = '7';
 const DEFAULT_VARIANT_TRACK_PPROB_COL = '8';
 
+export const DEFAULT_VARIANT_TRACK_SERVER = 'https://resgen.io/api/v1';
+export const DEFAULT_VARIANT_TRACK_TILESET = 'VF5-RDXWTxidGMJU7FeaxA';
 export const DEFAULT_VARIANT_TRACKS: VariantTrack[] = [
   {
-    server: 'https://resgen.io/api/v1',
-    tilesetUid: 'VF5-RDXWTxidGMJU7FeaxA',
+    server: DEFAULT_VARIANT_TRACK_SERVER,
+    tilesetUid: DEFAULT_VARIANT_TRACK_TILESET,
     columnPvalue: 7,
     columnPosteriorProbability: 8,
     markColor: 'black',
@@ -47,10 +50,12 @@ export const DEFAULT_VARIANT_TRACKS: VariantTrack[] = [
   },
 ];
 
-// TODO: Add strict type definition
-export const DEFAULT_VARIANT_TRACK_DEF = {
-  type: 'point-annotation',
+export const DEFAULT_VARIANT_TRACK_DEF: Track = {
+  type: TrackType.POINT_ANNOTATION,
+  uid: 'ibd-snps',
   height: 32,
+  server: DEFAULT_VARIANT_TRACK_SERVER,
+  tilesetUid: DEFAULT_VARIANT_TRACK_TILESET,
   options: {
     axisPositionHorizontal: 'right',
     markColor: 'black',
@@ -59,7 +64,8 @@ export const DEFAULT_VARIANT_TRACK_DEF = {
     markOpacity: 0.33,
     markOpacityFocus: 0.66,
     valueColumn: 7,
-    name: 'Variants',
+    focusRegion: [1680373143 + 81046453 - 25, 1680373143 + 81046453 + 25],
+    name: 'IBD Variants',
     labelPosition: 'topLeft',
     labelColor: 'black',
     labelOpacity: 0.33,

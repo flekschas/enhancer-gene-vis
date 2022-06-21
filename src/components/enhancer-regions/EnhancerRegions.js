@@ -56,8 +56,7 @@ import {
   HIGLASS_SELECT,
   IGNORED_FOCUS_ELEMENTS,
 } from '../../constants';
-import {
-  DEFAULT_VIEW_CONFIG_ENHANCER,} from '../../view-config-types'
+import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
 
 import { chrRangePosEncoder } from '../../utils';
 
