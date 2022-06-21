@@ -1,21 +1,18 @@
 import {
-  EG_TILE_V3,
   EG_TILE_UID,
-  SAMPLES,
-  BIOSAMPLE_COLUMN,
   ABC_SCORE_COLUMN,
   DEFAULT_STRATIFICATION,
   GENE_NAME_COLUMN,
 } from './constants';
+import {
+  DEFAULT_ENHANCER_GENE_ARC_TRACK,
+  DEFAULT_ENHANCER_GENE_STACKED_BAR_TRACK,
+} from './state/enhancer-region-state';
 import { DEFAULT_VARIANT_TRACK_DEF } from './state/variant-track-state';
 import { ViewConfig, TrackType } from './view-config-types';
 
 export const DEFAULT_X_DOMAIN_START = 1761366260;
 export const DEFAULT_X_DOMAIN_END = 1761603836;
-export const ENHANCER_START_COLUMN = 1; // V2 & V3
-export const TSS_CHROM_COLUMN = EG_TILE_V3 ? 0 : 3;
-export const TSS_START_COLUMN = 4; // V2 & V3
-export const TSS_END_COLUMN = EG_TILE_V3 ? 4 : 5;
 export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
   editable: false,
   trackSourceServers: ['//higlass.io/api/v1'],
@@ -136,65 +133,8 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
             uid: 'arcs-stacked-bars',
             height: 72,
             contents: [
-              {
-                type: TrackType.ARCS_1D,
-                uid: 'arcs',
-                server: 'https://resgen.io/api/v1',
-                tilesetUid: EG_TILE_UID,
-                height: 72,
-                options: {
-                  labelPosition: 'hidden',
-                  strokeColor: '#808080',
-                  strokeWidth: 1,
-                  strokeOpacity: 0.05,
-                  arcStyle: 'circle',
-                  startField: ENHANCER_START_COLUMN,
-                  endField: TSS_START_COLUMN,
-                  filter: {
-                    set: SAMPLES,
-                    field: BIOSAMPLE_COLUMN,
-                  },
-                },
-              },
-              {
-                type: TrackType.STACKED_BAR,
-                // server: 'http://localhost:9876/api/v1',
-                // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
-                // tilesetUid:
-                //   'AllPredictionsAvgHiCABC0015minus150ForABCPaperV3txtsimplifiedgzhg19beddb',
-                server: 'https://resgen.io/api/v1',
-                // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
-                // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
-                // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
-                tilesetUid: EG_TILE_UID,
-                height: 72,
-                uid: 'stacked-bars',
-                options: {
-                  binSize: 4,
-                  axisAlign: 'right',
-                  axisPositionHorizontal: 'right',
-                  labelPosition: 'topLeft',
-                  markColor: 'black',
-                  markColorFocus: '#cc0078',
-                  markSize: 4,
-                  markOpacity: 0.33,
-                  labelColor: 'black',
-                  offsetField: TSS_CHROM_COLUMN,
-                  startField: TSS_START_COLUMN,
-                  endField: TSS_END_COLUMN,
-                  importanceField: ABC_SCORE_COLUMN,
-                  importanceDomain: [0, 1],
-                  focusRegion: [
-                    1680373143 + 81046453 - 25,
-                    1680373143 + 81046453 + 25,
-                  ],
-                  name: 'Enhancer regions',
-                  stratification: DEFAULT_STRATIFICATION,
-                  showMousePosition: true,
-                  showGlobalMousePosition: true,
-                  mousePositionColor: 'black',
-                },
-              },
+              DEFAULT_ENHANCER_GENE_ARC_TRACK,
+              DEFAULT_ENHANCER_GENE_STACKED_BAR_TRACK,
             ],
           },
           {

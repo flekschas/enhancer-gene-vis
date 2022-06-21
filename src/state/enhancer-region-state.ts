@@ -1,17 +1,41 @@
 import { identity } from '@flekschas/utils';
 import { atom, RecoilState } from 'recoil';
 import {
+  ABC_SCORE_COLUMN,
+  BIOSAMPLE_COLUMN,
+  DEFAULT_STRATIFICATION,
+  EG_TILE_UID,
+  EG_TILE_V3,
+  SAMPLES,
+} from '../constants';
+import {
   booleanQueryStringDecoder,
   booleanQueryStringEncoder,
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
-import { getDefault } from './utils';
+import { Track, TrackType } from '../view-config-types';
+import {
+  getDefault,
+  SERVER_URL_TO_TRACK_SOURCE_ABBR,
+  TrackSourceAbbr,
+  TRACK_SOURCE_ABBR_TO_SERVER_URL,
+} from './utils';
+
+type EnhancerGeneTrackInfo = {
+  server: string;
+  tilesetUid: string;
+  offsetField: number;
+  startField: number;
+  endField: number;
+  importanceField: number;
+};
 
 const enum EnhancerRegionQueryKey {
   SHOW_INFO = 'eri',
   HIDE_UNFOCUSED = 'erhu',
   COLOR_ENCODING = 'erc',
+  TRACK = 'ert',
 }
 
 export const enum EnhancerRegionColorEncodingType {
@@ -20,6 +44,147 @@ export const enum EnhancerRegionColorEncodingType {
   HIGHEST_IMPORTANCE = 'highestImportance',
   CLOSEST_IMPORTANCE = 'closestImportance',
 }
+
+export const DEFAULT_ENHANCER_REGION_SERVER_ABBR = TrackSourceAbbr.RG;
+export const ENHANCER_START_COLUMN: number = 1; // V2 & V3
+export const TSS_CHROM_COLUMN: number = EG_TILE_V3 ? 0 : 3;
+export const TSS_START_COLUMN: number = 4; // V2 & V3
+export const TSS_END_COLUMN: number = EG_TILE_V3 ? 4 : 5;
+export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
+  server: 'https://resgen.io/api/v1',
+  tilesetUid: EG_TILE_UID,
+  offsetField: TSS_CHROM_COLUMN,
+  startField: TSS_START_COLUMN,
+  endField: TSS_END_COLUMN,
+  importanceField: ABC_SCORE_COLUMN,
+};
+export const DEFAULT_ENHANCER_GENE_ARC_TRACK: Track = {
+  type: TrackType.ARCS_1D,
+  uid: 'arcs',
+  server: 'https://resgen.io/api/v1',
+  tilesetUid: EG_TILE_UID,
+  height: 72,
+  options: {
+    labelPosition: 'hidden',
+    strokeColor: '#808080',
+    strokeWidth: 1,
+    strokeOpacity: 0.05,
+    arcStyle: 'circle',
+    startField: ENHANCER_START_COLUMN,
+    endField: TSS_START_COLUMN,
+    filter: {
+      set: SAMPLES,
+      field: BIOSAMPLE_COLUMN,
+    },
+  },
+};
+export const DEFAULT_ENHANCER_GENE_STACKED_BAR_TRACK: Track = {
+  type: TrackType.STACKED_BAR,
+  // server: 'http://localhost:9876/api/v1',
+  // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
+  // tilesetUid:
+  //   'AllPredictionsAvgHiCABC0015minus150ForABCPaperV3txtsimplifiedgzhg19beddb',
+  server: 'https://resgen.io/api/v1',
+  // tilesetUid: 'P0Ng5fhvQWeO7dlpx0FknA', // all chroms
+  // tilesetUid: 'PGXLE50tQyOayNXKUnX4fQ', // just chr10
+  // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
+  tilesetUid: EG_TILE_UID,
+  height: 72,
+  uid: 'stacked-bars',
+  options: {
+    binSize: 4,
+    axisAlign: 'right',
+    axisPositionHorizontal: 'right',
+    labelPosition: 'topLeft',
+    markColor: 'black',
+    markColorFocus: '#cc0078',
+    markSize: 4,
+    markOpacity: 0.33,
+    labelColor: 'black',
+    offsetField: TSS_CHROM_COLUMN,
+    startField: TSS_START_COLUMN,
+    endField: TSS_END_COLUMN,
+    importanceField: ABC_SCORE_COLUMN,
+    importanceDomain: [0, 1],
+    focusRegion: [1680373143 + 81046453 - 25, 1680373143 + 81046453 + 25],
+    name: 'Enhancer regions',
+    stratification: DEFAULT_STRATIFICATION,
+    showMousePosition: true,
+    showGlobalMousePosition: true,
+    mousePositionColor: 'black',
+  },
+};
+
+/**
+ * Encodes a Enhancer Region Track object into a colon-separated list of key properties.
+ *
+ * @param track The enhancer region track to encode
+ * @returns The encoded string form of the variant track
+ */
+export function enhancerRegionTrackEncoder(
+  track: EnhancerGeneTrackInfo
+): string {
+  const serverAbbr = SERVER_URL_TO_TRACK_SOURCE_ABBR[track.server];
+
+  if (!track.tilesetUid || !serverAbbr) {
+    throw new Error(
+      `Invalid variant track encoder argument, track must have tilesetUid and valid server: ${track}`
+    );
+  }
+
+  return [
+    track.tilesetUid,
+    serverAbbr,
+    track.startField,
+    track.endField,
+    track.offsetField,
+    track.importanceField,
+  ].join(':');
+}
+
+/**
+ * Decodes a string representing an enhancer region track back into an Enhancer Track object
+ *
+ * @param v The variant track string to decode
+ * @returns An array containing a single variant track
+ */
+function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
+  if (!v) throw new Error(`No string provided to variant track decoder`);
+
+  // Example: tilesetId:rg
+  const [
+    tilesetUid,
+    serverAbbr = DEFAULT_ENHANCER_REGION_SERVER_ABBR,
+    offsetField = TSS_CHROM_COLUMN,
+    startField = TSS_START_COLUMN,
+    endField = TSS_END_COLUMN,
+    importanceField = ABC_SCORE_COLUMN,
+  ] = v.split(':');
+
+  const server = TRACK_SOURCE_ABBR_TO_SERVER_URL[serverAbbr as TrackSourceAbbr];
+
+  if (tilesetUid === undefined) return tilesetUid;
+
+  return {
+    server,
+    tilesetUid,
+    startField: parseInt(startField.toString(), 10),
+    endField: parseInt(endField.toString(), 10),
+    offsetField: parseInt(offsetField.toString(), 10),
+    importanceField: parseInt(importanceField.toString(), 10),
+  } as EnhancerGeneTrackInfo;
+}
+
+export const enhancerRegionsTrackState: RecoilState<EnhancerGeneTrackInfo> = atom(
+  {
+    key: EnhancerRegionQueryKey.TRACK,
+    default: getDefault(
+      EnhancerRegionQueryKey.TRACK,
+      DEFAULT_ENHANCER_GENE_INFO,
+      enhancerRegionTrackDecoder
+    ),
+  }
+);
 
 export const enhancerRegionsHideUnfocusedState: RecoilState<boolean> = atom({
   key: 'enhancerRegionsHideUnfocused',
@@ -49,6 +214,19 @@ export const enhancerRegionsShowInfoState: RecoilState<boolean> = atom({
     booleanQueryStringDecoder
   ),
 });
+
+export const useEnhancerRegionsTrack = () =>
+  useRecoilQueryString(
+    EnhancerRegionQueryKey.TRACK,
+    enhancerRegionsTrackState,
+    enhancerRegionTrackEncoder
+  );
+export const useEnhancerRegionsTrackSyncher = () =>
+  useRecoilQueryStringSyncher(
+    EnhancerRegionQueryKey.TRACK,
+    enhancerRegionsTrackState,
+    enhancerRegionTrackEncoder
+  );
 
 export const useEnhancerRegionsShowInfos = () =>
   useRecoilQueryString(

@@ -5,7 +5,12 @@ import {
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
 import { Track, TrackType } from '../view-config-types';
-import { getDefault } from './utils';
+import {
+  getDefault,
+  TrackSourceAbbr,
+  TRACK_SOURCE_ABBR_TO_SERVER_URL,
+  SERVER_URL_TO_TRACK_SOURCE_ABBR,
+} from './utils';
 
 type VariantTrack = {
   server: string;
@@ -16,24 +21,7 @@ type VariantTrack = {
   label: string;
 };
 
-const enum VariantTrackAbbr {
-  RG = 'rg',
-  HG = 'hg',
-}
-
-const VARIANT_TRACK_ABBR_TO_SERVER: Record<VariantTrackAbbr, string> = {
-  [VariantTrackAbbr.RG]: 'https://resgen.io/api/v1',
-  [VariantTrackAbbr.HG]: 'https://higlass.io/api/v1',
-};
-
-const VARIANT_TRACK_SERVER_TO_ABBR: Record<
-  string,
-  VariantTrackAbbr
-> = Object.fromEntries(
-  Object.entries(VARIANT_TRACK_ABBR_TO_SERVER).map((kvPair) => kvPair.reverse())
-);
-
-const DEFAULT_VARIANT_TRACK_SERVER_ABBR = VariantTrackAbbr.RG;
+const DEFAULT_VARIANT_TRACK_SERVER_ABBR = TrackSourceAbbr.RG;
 const DEFAULT_VARIANT_TRACK_PVAL_COL = '7';
 const DEFAULT_VARIANT_TRACK_PPROB_COL = '8';
 
@@ -105,7 +93,7 @@ export function variantTracksEncoder(v: VariantTrack[]): string {
   }
 
   const track = v[0];
-  const serverAbbr = VARIANT_TRACK_SERVER_TO_ABBR[track.server];
+  const serverAbbr = SERVER_URL_TO_TRACK_SOURCE_ABBR[track.server];
 
   if (!track.tilesetUid || !serverAbbr) {
     throw new Error(
@@ -140,7 +128,7 @@ function variantTracksDecoder(v?: string): VariantTrack[] {
     columnPosteriorProbability = DEFAULT_VARIANT_TRACK_PPROB_COL,
   ] = v.split(':');
 
-  const server = VARIANT_TRACK_ABBR_TO_SERVER[serverAbbr as VariantTrackAbbr];
+  const server = TRACK_SOURCE_ABBR_TO_SERVER_URL[serverAbbr as TrackSourceAbbr];
 
   if (tilesetUid === undefined) return tilesetUid;
 
