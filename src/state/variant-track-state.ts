@@ -12,7 +12,7 @@ import {
   SERVER_URL_TO_TRACK_SOURCE_ABBR,
 } from './utils';
 
-type VariantTrack = {
+export type VariantTrack = {
   server: string;
   tilesetUid: string;
   columnPvalue: number;

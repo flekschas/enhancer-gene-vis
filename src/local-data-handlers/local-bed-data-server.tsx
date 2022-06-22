@@ -1,10 +1,10 @@
 import { globalPubSub } from 'pub-sub-es';
 import IntervalTree from '@flatten-js/interval-tree';
 
-import { toAbsPosition } from './utils';
+import { toAbsPosition } from '../utils';
 
 async function loadFile(
-  file,
+  file: File,
   chromInfo,
   { header = true, columnImportance = 7 } = {}
 ) {
@@ -30,8 +30,8 @@ async function loadFile(
 }
 
 const createLocalBedDataServer = (
-  file,
-  id,
+  file: File,
+  id: string,
   chromInfo,
   tilesetInfo,
   options

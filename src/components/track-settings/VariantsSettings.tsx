@@ -8,16 +8,26 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import FileInput from './FileInput';
-import { useChromInfo } from './ChromInfoProvider';
-import createLocalBedDataServer from './local-bed-data-server';
+import FileInput from '../FileInput';
+import { useChromInfo } from '../../ChromInfoProvider';
+import createLocalBedDataServer from '../../local-data-handlers/local-bed-data-server';
 
-import { focusRegionOptionState, useFocusRegion } from './state';
-import { useVariantTracks } from './state/variant-track-state';
+import { focusRegionOptionState, useFocusRegion } from '../../state';
+import { useVariantTracks, VariantTrack } from '../../state/variant-track-state';
 
-import { LOCAL_BED_TILESET_INFO_HG19 } from './constants';
+import { LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
 
-import { chrRangePosEncoder } from './utils';
+import { chrRangePosEncoder } from '../../utils';
+import { Server } from 'node:http';
+
+type VariantTrackSettingsState = {
+  server?: string;
+  file?: File;
+  tilesetUid?: string;
+  label?: string;
+  columnPvalue?: number;
+  columnPosteriorProbability?: number;
+};
 
 const useStyles = makeStyles((theme) => ({
   note: {
@@ -86,7 +96,7 @@ const useStylesTrackConfig = makeStyles((theme) => ({
   },
 }));
 
-const useStylesTooltipVisible = makeStyles((theme) => ({
+const useStylesTooltipVisible = makeStyles((_theme) => ({
   arrow: {
     color: 'black',
   },
@@ -95,16 +105,25 @@ const useStylesTooltipVisible = makeStyles((theme) => ({
   },
 }));
 
-const useStylesTooltipHidden = makeStyles((theme) => ({
+const useStylesTooltipHidden = makeStyles((_theme) => ({
   tooltip: {
     display: 'none',
   },
 }));
 
-const TrackConfig = React.memo(function TrackConfig({ config, onChange }) {
+type TrackConfigProps = {
+  config: VariantTrackSettingsState;
+  onChange: (config: VariantTrackSettingsState) => void;
+};
+const TrackConfig = React.memo(function TrackConfig({
+  config,
+  onChange,
+}: TrackConfigProps) {
   const [state, setState] = useState(config);
 
-  const propertyChangeHandler = (property) => (event) => {
+  const propertyChangeHandler = (property: string) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     // eslint-disable-next-line prefer-destructuring
     const value = event.target.value;
     setState((currState) => ({
@@ -113,7 +132,7 @@ const TrackConfig = React.memo(function TrackConfig({ config, onChange }) {
     }));
   };
 
-  const serverChangeHandler = (event) => {
+  const serverChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     const server = event.target.value;
     setState((currState) => ({
       ...currState,
@@ -122,7 +141,9 @@ const TrackConfig = React.memo(function TrackConfig({ config, onChange }) {
     }));
   };
 
-  const tilesetUidChangeHandler = (event) => {
+  const tilesetUidChangeHandler = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const tilesetUid = event.target.value;
     setState((currState) => ({
       ...currState,
@@ -131,7 +152,7 @@ const TrackConfig = React.memo(function TrackConfig({ config, onChange }) {
     }));
   };
 
-  const fileChangeHandler = (file) => {
+  const fileChangeHandler = (file: File) => {
     setState((currState) => ({
       ...currState,
       file,
@@ -152,14 +173,14 @@ const TrackConfig = React.memo(function TrackConfig({ config, onChange }) {
   }, [onChange, state, config]);
 
   const isRemote = Boolean(state.server || state.tilesetUid);
-  const isLocal = Boolean(state.whatever);
+  const isLocal = !isRemote;
 
   const classes = useStylesTrackConfig();
   const classesTooltipVisible = useStylesTooltipVisible();
   const classesTooltipHidden = useStylesTooltipHidden();
 
   return (
-    <React.Fragment>
+    <>
       <Grid alignItems="center" container>
         <Grid className={classes.grow} item>
           <Grid alignItems="center" container>
@@ -229,8 +250,9 @@ const TrackConfig = React.memo(function TrackConfig({ config, onChange }) {
           margin="normal"
           size="small"
           type="number"
-          min="1"
-          step="1"
+          // min="1"
+          InputProps={{inputProps: {min: "1", step: "1"}}}
+          // step="1"
           value={state.columnPvalue || 7}
           onChange={propertyChangeHandler('columnPvalue')}
           className={classes.propInput}
@@ -241,20 +263,24 @@ const TrackConfig = React.memo(function TrackConfig({ config, onChange }) {
           margin="normal"
           size="small"
           type="number"
-          min="1"
-          step="1"
+          // min="1"
+          InputProps={{inputProps: {min: "1", step: "1"}}}
+          // step="1"
           value={state.columnPosteriorProbability || 8}
           onChange={propertyChangeHandler('columnPosteriorProbability')}
           className={classes.propInput}
         />
       </Grid>
-    </React.Fragment>
+    </>
   );
 });
 
+type VariantsSettingsProps = {
+  closeHandler: () => void;
+}
 const VariantsSettings = React.memo(function VariantsSettings({
   closeHandler,
-}) {
+}: VariantsSettingsProps) {
   const chromInfo = useChromInfo();
 
   const setFocusRegion = useFocusRegion()[1];
@@ -268,7 +294,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
     deepClone(variantTracks)
   );
   const [changed, setChanged] = useState(false);
-  const variantTrackServers = useRef([]);
+  const variantTrackServers = useRef<Server[]>([]);
   const currVariantTracks = useRef(variantTracks);
 
   useEffect(() => {
@@ -276,7 +302,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
   }, [variantTracks]);
 
   const changeTmpVariantTracks = useCallback(
-    (i) => (newTrackConfig) => {
+    (i) => (newTrackConfig: VariantTrack) => {
       setTmpVariantTracks((currTmpVariantTracks) => {
         const newTmpVariantTracks = [...currTmpVariantTracks];
         newTmpVariantTracks[i] = newTrackConfig;
@@ -375,7 +401,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
   const classes = useStyles();
 
   return (
-    <React.Fragment>
+    <>
       <Typography
         id="title"
         align="center"
@@ -436,7 +462,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
           {changed ? 'Save' : 'Okay'}
         </Button>
       </Typography>
-    </React.Fragment>
+    </>
   );
 });
 
