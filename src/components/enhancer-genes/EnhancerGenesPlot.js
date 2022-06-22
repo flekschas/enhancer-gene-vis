@@ -39,8 +39,7 @@ import {
   GENE_NAME_COLUMN,
   SAMPLE_IDX,
 } from '../../constants';
-import {
-  DEFAULT_VIEW_CONFIG_ENHANCER,} from '../../view-config-types'
+import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
 import { scaleBand } from '../../utils';
 import usePrevious from '../../hooks/use-previous';
 
