@@ -11,14 +11,19 @@ import {
   EnhancerGeneTrackInfo,
 } from './state/enhancer-region-state';
 import { DEFAULT_VARIANT_TRACK_DEF } from './state/variant-track-state';
-import { ViewConfig, TrackType, Track, CombinedTrack } from './view-config-types';
+import {
+  ViewConfig,
+  TrackType,
+  Track,
+  CombinedTrack,
+} from './view-config-types';
 
 /**
  * Should only contain UIDs for "constant" tracks such as combined type tracks.
  * Tracks with dynamic UIDs based on tileset UIDs will not work in an enum.
  */
 export const enum CombinedTrackUid {
-  ARCS_AND_BARS = 'arcs-stacked-bars'
+  ARCS_AND_BARS = 'arcs-stacked-bars',
 }
 
 export const DEFAULT_X_DOMAIN_START = 1761366260;
@@ -270,10 +275,13 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
   ],
 };
 
-export const updateViewConfigEnhancerRegionTracks = (trackConfig: EnhancerGeneTrackInfo) => (
-  viewConfig: ViewConfig
-) => {
-  const combinedTrack = getTrackByUid(viewConfig, CombinedTrackUid.ARCS_AND_BARS);
+export const updateViewConfigEnhancerRegionTracks = (
+  trackConfig: EnhancerGeneTrackInfo
+) => (viewConfig: ViewConfig) => {
+  const combinedTrack = getTrackByUid(
+    viewConfig,
+    CombinedTrackUid.ARCS_AND_BARS
+  );
   if (combinedTrack.type === TrackType.COMBINED) {
     const contents = combinedTrack.contents;
     const updatedTrack = getUpdatedEnhancerGeneTrack(trackConfig);
@@ -283,7 +291,9 @@ export const updateViewConfigEnhancerRegionTracks = (trackConfig: EnhancerGeneTr
   return viewConfig;
 };
 
-export function getUpdatedEnhancerGeneTrack(trackConfig: EnhancerGeneTrackInfo) {
+export function getUpdatedEnhancerGeneTrack(
+  trackConfig: EnhancerGeneTrackInfo
+) {
   const enhancerGeneArcTrack = deepClone(DEFAULT_ENHANCER_GENE_ARC_TRACK);
   enhancerGeneArcTrack.server = trackConfig.server;
   enhancerGeneArcTrack.tilesetUid = trackConfig.tilesetUid;
@@ -291,7 +301,6 @@ export function getUpdatedEnhancerGeneTrack(trackConfig: EnhancerGeneTrackInfo) 
   enhancerGeneArcTrack.options.startField = trackConfig.startField;
   enhancerGeneArcTrack.options.endField = trackConfig.endField;
   return enhancerGeneArcTrack;
-
 }
 
 export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
@@ -306,31 +315,11 @@ export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
   return track;
 }
 
-export function replaceTrackByType(trackList: Track[], type: TrackType, newTrack: Track) {
+export function replaceTrackByType(
+  trackList: Track[],
+  type: TrackType,
+  newTrack: Track
+) {
   const index = trackList.findIndex((track) => track.type === type);
   trackList[index] = newTrack;
-  // const topTracks = viewConfig.views[0].tracks.top;
-  // if (!topTracks) {
-  //   throw new Error('No tracks found in top track layout');
-  // }
-  // let track: Track | undefined;
-  // for (const t of topTracks) {
-  //   if (t.type == TrackType.COMBINED) {
-  //     const combinedTrack = t as CombinedTrack;
-  //     const combinedTrackSubTrack = combinedTrack.contents.find((track) => track.type === type);
-  //     if (combinedTrackSubTrack) {
-  //       track = combinedTrackSubTrack;
-  //       break;
-  //     }
-  //   } else {
-  //     if (t.type === type) {
-  //       track = t;
-  //       break;
-  //     }
-  //   }
-  // }
-  // if (!track) {
-  //   throw new Error(`No track found with type: ${type}`);
-  // }
-  // return track;
 }

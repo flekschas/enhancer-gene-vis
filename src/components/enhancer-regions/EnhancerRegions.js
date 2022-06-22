@@ -41,7 +41,7 @@ import {
   useEnhancerRegionsShowInfos,
 } from '../../state/enhancer-region-state';
 import { variantTracksState } from '../../state/variant-track-state';
-import {enhancerRegionsTrackState} from '../../state/enhancer-region-state';
+import { enhancerRegionsTrackState } from '../../state/enhancer-region-state';
 
 import {
   updateViewConfigFocusGene,
@@ -57,7 +57,10 @@ import {
   HIGLASS_SELECT,
   IGNORED_FOCUS_ELEMENTS,
 } from '../../constants';
-import { DEFAULT_VIEW_CONFIG_ENHANCER, updateViewConfigEnhancerRegionTracks } from '../../view-config-typed';
+import {
+  DEFAULT_VIEW_CONFIG_ENHANCER,
+  updateViewConfigEnhancerRegionTracks,
+} from '../../view-config-typed';
 
 import { chrRangePosEncoder } from '../../utils';
 
@@ -251,7 +254,7 @@ const EnhancerRegion = React.memo((props) => {
         }),
         updateViewConfigFilter(selectedSamples),
         updateViewConfigMatrixHeight(numSamples),
-        updateViewConfigEnhancerRegionTracks(enhancerTrackConfig),
+        updateViewConfigEnhancerRegionTracks(enhancerTrackConfig)
       )(deepClone(DEFAULT_VIEW_CONFIG_ENHANCER)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [

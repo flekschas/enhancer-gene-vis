@@ -58,7 +58,7 @@ export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
   startField: TSS_START_COLUMN,
   endField: TSS_END_COLUMN,
   importanceField: ABC_SCORE_COLUMN,
-  label: 'Enhancer regions'
+  label: 'Enhancer regions',
 };
 export const DEFAULT_ENHANCER_GENE_ARC_TRACK: OneDimensionalArcTrack = {
   type: TrackType.ARCS_1D,
@@ -141,7 +141,7 @@ export function enhancerRegionTrackEncoder(
     track.endField,
     track.offsetField,
     track.importanceField,
-    track.label
+    track.label,
   ].join(':');
 }
 
@@ -162,7 +162,7 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
     startField = TSS_START_COLUMN,
     endField = TSS_END_COLUMN,
     importanceField = ABC_SCORE_COLUMN,
-    label
+    label,
   ] = v.split(':');
 
   const server = TRACK_SOURCE_ABBR_TO_SERVER_URL[serverAbbr as TrackSourceAbbr];
@@ -176,7 +176,7 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
     endField: parseInt(endField.toString(), 10),
     offsetField: parseInt(offsetField.toString(), 10),
     importanceField: parseInt(importanceField.toString(), 10),
-    label
+    label,
   } as EnhancerGeneTrackInfo;
 }
 
