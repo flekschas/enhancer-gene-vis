@@ -20,13 +20,11 @@ import {
   chrRangePosEncoder,
 } from './utils';
 
-import {
-  GROUPED_SAMPLE_OPTIONS,
-  SAMPLES,
-} from './constants';
+import { GROUPED_SAMPLE_OPTIONS, SAMPLES } from './constants';
 import {
   DEFAULT_X_DOMAIN_START,
-  DEFAULT_X_DOMAIN_END,} from './view-config-types'
+  DEFAULT_X_DOMAIN_END,
+} from './view-config-typed';
 
 import { getDnaAccessXDomain } from './view-config';
 

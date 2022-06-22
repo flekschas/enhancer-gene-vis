@@ -45,7 +45,7 @@ import {
   GROUPED_SAMPLE_OPTIONS,
   SAMPLE_TO_GROUP,
 } from './constants';
-import { DEFAULT_VIEW_CONFIG_ENHANCER } from './view-config-types';
+import { DEFAULT_VIEW_CONFIG_ENHANCER } from './view-config-typed';
 
 const useStyles = makeStyles((theme) => ({
   h1: {
