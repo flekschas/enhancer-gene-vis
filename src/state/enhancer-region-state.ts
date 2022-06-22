@@ -14,7 +14,7 @@ import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
-import { Track, TrackType } from '../view-config-types';
+import { OneDimensionalArcTrack, Track, TrackType } from '../view-config-types';
 import {
   getDefault,
   SERVER_URL_TO_TRACK_SOURCE_ABBR,
@@ -22,13 +22,14 @@ import {
   TRACK_SOURCE_ABBR_TO_SERVER_URL,
 } from './utils';
 
-type EnhancerGeneTrackInfo = {
+export type EnhancerGeneTrackInfo = {
   server: string;
   tilesetUid: string;
   offsetField: number;
   startField: number;
   endField: number;
   importanceField: number;
+  label: string;
 };
 
 const enum EnhancerRegionQueryKey {
@@ -57,8 +58,9 @@ export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
   startField: TSS_START_COLUMN,
   endField: TSS_END_COLUMN,
   importanceField: ABC_SCORE_COLUMN,
+  label: 'Enhancer regions'
 };
-export const DEFAULT_ENHANCER_GENE_ARC_TRACK: Track = {
+export const DEFAULT_ENHANCER_GENE_ARC_TRACK: OneDimensionalArcTrack = {
   type: TrackType.ARCS_1D,
   uid: 'arcs',
   server: 'https://resgen.io/api/v1',
@@ -139,6 +141,7 @@ export function enhancerRegionTrackEncoder(
     track.endField,
     track.offsetField,
     track.importanceField,
+    track.label
   ].join(':');
 }
 
@@ -159,6 +162,7 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
     startField = TSS_START_COLUMN,
     endField = TSS_END_COLUMN,
     importanceField = ABC_SCORE_COLUMN,
+    label
   ] = v.split(':');
 
   const server = TRACK_SOURCE_ABBR_TO_SERVER_URL[serverAbbr as TrackSourceAbbr];
@@ -172,6 +176,7 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
     endField: parseInt(endField.toString(), 10),
     offsetField: parseInt(offsetField.toString(), 10),
     importanceField: parseInt(importanceField.toString(), 10),
+    label
   } as EnhancerGeneTrackInfo;
 }
 

@@ -41,6 +41,7 @@ import {
   useEnhancerRegionsShowInfos,
 } from '../../state/enhancer-region-state';
 import { variantTracksState } from '../../state/variant-track-state';
+import {enhancerRegionsTrackState} from '../../state/enhancer-region-state';
 
 import {
   updateViewConfigFocusGene,
@@ -56,7 +57,7 @@ import {
   HIGLASS_SELECT,
   IGNORED_FOCUS_ELEMENTS,
 } from '../../constants';
-import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
+import { DEFAULT_VIEW_CONFIG_ENHANCER, updateViewConfigEnhancerRegionTracks } from '../../view-config-typed';
 
 import { chrRangePosEncoder } from '../../utils';
 
@@ -178,6 +179,7 @@ const EnhancerRegion = React.memo((props) => {
   const setHiglass = useSetRecoilState(higlassEnhancerRegionsState);
 
   const variantTracks = useRecoilValue(variantTracksState);
+  const enhancerTrackConfig = useRecoilValue(enhancerRegionsTrackState);
   const hideUnfocused = useRecoilValue(enhancerRegionsHideUnfocusedState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const colorEncoding = useRecoilValue(enhancerRegionsColorEncodingState);
@@ -248,7 +250,8 @@ const EnhancerRegion = React.memo((props) => {
           force: shouldSkipUpdatingXDomain,
         }),
         updateViewConfigFilter(selectedSamples),
-        updateViewConfigMatrixHeight(numSamples)
+        updateViewConfigMatrixHeight(numSamples),
+        updateViewConfigEnhancerRegionTracks(enhancerTrackConfig),
       )(deepClone(DEFAULT_VIEW_CONFIG_ENHANCER)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
