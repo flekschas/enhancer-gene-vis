@@ -7,12 +7,22 @@
  *  - Whether to show welcome modal
  */
 
-import { atom, RecoilState } from "recoil";
-import { useRecoilQueryString, useRecoilQueryStringSyncher } from "../utils/query-string";
-import { getDefault } from "./utils";
+import { atom, RecoilState } from 'recoil';
+import {
+  useRecoilQueryString,
+  useRecoilQueryStringSyncher,
+} from '../utils/query-string';
+import { getDefault } from './utils';
 
-export const showVariantsSettingsState = atom({
+export const showVariantsSettingsState: RecoilState<boolean> = atom<boolean>({
   key: 'showVariantsSettings',
+  default: false,
+});
+
+export const showEnhancerRegionsSettingsState: RecoilState<boolean> = atom<
+  boolean
+>({
+  key: 'showEnhancerRegionsSettings',
   default: false,
 });
 
@@ -24,9 +34,14 @@ export const enum WelcomeIntroState {
 
 export const showWelcomeState: RecoilState<WelcomeIntroState> = atom({
   key: 'showWelcome',
-  default: getDefault('w', WelcomeIntroState.SHOW_OVERVIEW, (x) => parseInt(x, 10) as WelcomeIntroState),
+  default: getDefault(
+    'w',
+    WelcomeIntroState.SHOW_OVERVIEW,
+    (x) => parseInt(x, 10) as WelcomeIntroState
+  ),
 });
 
-export const useShowWelcome = () => useRecoilQueryString('w', showWelcomeState, (x) => x.toString());
+export const useShowWelcome = () =>
+  useRecoilQueryString('w', showWelcomeState, (x) => x.toString());
 export const useShowWelcomeSyncher = () =>
   useRecoilQueryStringSyncher('w', showWelcomeState, (x) => x.toString());

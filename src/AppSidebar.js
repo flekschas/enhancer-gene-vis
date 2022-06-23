@@ -17,6 +17,7 @@ import SettingsIcon from '@material-ui/icons/Settings';
 import CheckboxList from './CheckboxList';
 import Logo from './Logo';
 import VariantsSettings from './components/track-settings/VariantsSettings';
+import EnhancerRegionSettings from './components/track-settings/EnhancerRegionSettings';
 import Welcome from './Welcome';
 import { useChromInfo } from './ChromInfoProvider';
 import { useShowModal } from './ModalProvider';
@@ -34,7 +35,9 @@ import { enhancerGenesSvgState } from './state/enhancer-gene-track-state';
 import {
   useShowWelcome,
   showVariantsSettingsState,
-  WelcomeIntroState,} from './state/app-settings-state';
+  showEnhancerRegionsSettingsState,
+  WelcomeIntroState,
+} from './state/app-settings-state';
 
 import { download, stringifySvg } from './utils';
 
@@ -172,6 +175,10 @@ const AppSidebar = React.memo(function AppSidebar() {
   const [showVariantsSettings, setShowVariantsSettings] = useRecoilState(
     showVariantsSettingsState
   );
+  const [
+    showEnhancerRegionsSettings,
+    setShowEnhancerRegionsSettings,
+  ] = useRecoilState(showEnhancerRegionsSettingsState);
 
   const higlassEnhancerRegions = useRecoilValue(higlassEnhancerRegionsState);
   const higlassDnaAccess = useRecoilValue(higlassDnaAccessState);
@@ -274,9 +281,13 @@ const AppSidebar = React.memo(function AppSidebar() {
     setShowVariantsSettings(true);
   }, [setShowVariantsSettings]);
 
-  const openEnhancerRegionSettings = useCallback(() => {
-    
-  })
+  const closeEnhancerRegionsSettings = useCallback(() => {
+    setShowEnhancerRegionsSettings(false);
+  }, [setShowEnhancerRegionsSettings]);
+
+  const openEnhancerRegionsSettings = useCallback(() => {
+    setShowEnhancerRegionsSettings(true);
+  }, [setShowEnhancerRegionsSettings]);
 
   useEffect(() => {
     if (showVariantsSettings) {
@@ -285,6 +296,14 @@ const AppSidebar = React.memo(function AppSidebar() {
       showModal();
     }
   }, [showWelcome, showVariantsSettings, showModal, closeVariantsSettings]);
+
+  useEffect(() => {
+    if (showEnhancerRegionsSettings) {
+      showModal(EnhancerRegionSettings, closeEnhancerRegionsSettings);
+    } else if (!showWelcome) {
+      showModal();
+    }
+  }, [showWelcome, showEnhancerRegionsSettings, showModal, closeEnhancerRegionsSettings]);
 
   const mergeSvgs = (enhancerSvg, dnaAccessSvg, enhancerGeneSvg) => {
     const {
@@ -449,7 +468,7 @@ const AppSidebar = React.memo(function AppSidebar() {
                 disableElevation
                 size="small"
                 startIcon={<SettingsIcon />}
-                onClick={openEnhancerRegionSettings}
+                onClick={openEnhancerRegionsSettings}
               >
                 Edit Enhancer Regions
               </Button>

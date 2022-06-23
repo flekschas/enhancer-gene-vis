@@ -420,10 +420,10 @@ const VariantsSettings = React.memo(function VariantsSettings({
         noWrap
         className={classes.title}
       >
-        Variant Track
+        Enhancer Region Track
       </Typography>
       <p id="description">
-        Variants can be loaded from a remote{' '}
+        Enhancer regions can be loaded from a remote{' '}
         <code>
           <a
             href="https://docs.higlass.io/data_preparation.html#bed-files"

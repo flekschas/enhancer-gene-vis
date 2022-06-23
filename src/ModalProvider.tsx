@@ -4,7 +4,13 @@ import Fade from '@material-ui/core/Fade';
 import Modal from '@material-ui/core/Modal';
 import { makeStyles } from '@material-ui/core/styles';
 
-const ModalContext = createContext();
+type ModalFunction = (
+  newComponent?: any,
+  newCustomCloseHandler?: any,
+  newCustomProps?: any
+) => void;
+
+const ModalContext = createContext<ModalFunction | undefined>(undefined);
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -25,10 +31,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function ModalProvider({ children }) {
-  const [Component, setComponent] = useState(null);
-  const [customCloseHandler, setCustomCloseHandler] = useState(null);
-  const [customProps, setCustomProps] = useState(null);
+type ModalProviderProps = {
+  children: React.ReactNode[] | React.ReactNode;
+};
+export default function ModalProvider({ children }: ModalProviderProps) {
+  const [Component, setComponent] = useState<React.ElementType | null>(null);
+  const [customCloseHandler, setCustomCloseHandler] = useState<
+    (() => void) | null
+  >(null);
+  const [customProps, setCustomProps] = useState<{ [key: string]: any } | null>(
+    null
+  );
 
   const showModal = useCallback(
     (
@@ -69,7 +82,7 @@ export default function ModalProvider({ children }) {
       >
         <Fade in={open}>
           <div className={classes.paper}>
-            {open && (
+            {Component && (
               <Component
                 {...customProps}
                 closeHandler={customCloseHandler || closeHandler}
@@ -82,7 +95,7 @@ export default function ModalProvider({ children }) {
   );
 }
 
-function useShowModal() {
+function useShowModal(): ModalFunction {
   const context = React.useContext(ModalContext);
   if (context === undefined) {
     throw new Error('useShowModal must be used within a ModalContext');

@@ -8,7 +8,10 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import Logo from './Logo';
 
-import { showWelcomeState, WelcomeIntroState } from './state/app-settings-state';
+import {
+  showWelcomeState,
+  WelcomeIntroState,
+} from './state/app-settings-state';
 
 import imgEnhancerView1 from './images/enhancer-view-1.png';
 import imgEnhancerView2 from './images/enhancer-view-2.png';
@@ -89,10 +92,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 type WelcomeProps = {
-  closeHandler: (e: React.MouseEvent<HTMLButtonElement>) => void,
-  openIntroHandler: (e: React.MouseEvent<HTMLButtonElement>) => void,
-  closeIntroHandler: (e: React.MouseEvent<HTMLButtonElement>) => void,
-}
+  closeHandler: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  openIntroHandler: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  closeIntroHandler: (e: React.MouseEvent<HTMLButtonElement>) => void;
+};
 const Welcome = React.memo(function Welcome({
   closeHandler,
   openIntroHandler,
