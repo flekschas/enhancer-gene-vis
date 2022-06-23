@@ -37,6 +37,12 @@
         "props": false
       }
     ],
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ],
     "no-underscore-dangle": 0
   }
 }

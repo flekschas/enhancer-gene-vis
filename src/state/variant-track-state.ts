@@ -12,13 +12,14 @@ import {
   SERVER_URL_TO_TRACK_SOURCE_ABBR,
 } from './utils';
 
-type VariantTrack = {
+export type VariantTrack = {
   server: string;
   tilesetUid: string;
   columnPvalue: number;
   columnPosteriorProbability: number;
   markColor: string;
   label: string;
+  file?: File;
 };
 
 const DEFAULT_VARIANT_TRACK_SERVER_ABBR = TrackSourceAbbr.RG;
