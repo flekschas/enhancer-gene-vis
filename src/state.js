@@ -10,7 +10,6 @@ import {
 
 import {
   booleanQueryStringDecoder,
-  customBooleanQueryStringDecoder,
   toAbsPosition,
   isChrRange,
   chrPosUrlDecoder,
@@ -32,8 +31,6 @@ const getDefault = (key, initialValue, decoder) => {
   const qVal = getQueryStringValue(key, decoder);
   return qVal === undefined ? initialValue : qVal;
 };
-
-const showWelcomeDecoder = customBooleanQueryStringDecoder(['intro']);
 
 // Atoms
 export const sampleFilterState = atom({
@@ -82,16 +79,6 @@ export const sampleGroupSelectionSizesState = selector({
       sizes[group.name] = get(sampleGroupWithGroup(group)).n;
       return sizes;
     }, {}),
-});
-
-export const showVariantsSettingsState = atom({
-  key: 'showVariantsSettings',
-  default: false,
-});
-
-export const showWelcomeState = atom({
-  key: 'showWelcome',
-  default: getDefault('w', true, showWelcomeDecoder),
 });
 
 export const dnaAccessLabelStyleState = atom({
@@ -356,10 +343,6 @@ export const dnaAccessXDomainWithAssembly = memoize(
 /*
  Predefined Hooks
  */
-
-export const useShowWelcome = () => useRecoilQueryString('w', showWelcomeState);
-export const useShowWelcomeSyncher = () =>
-  useRecoilQueryStringSyncher('w', showWelcomeState);
 
 export const useFocusGene = () => useRecoilQueryString('g', focusGeneState);
 export const useFocusGeneSyncher = () =>
