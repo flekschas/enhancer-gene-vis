@@ -17,6 +17,7 @@ import SettingsIcon from '@material-ui/icons/Settings';
 import CheckboxList from './CheckboxList';
 import Logo from './Logo';
 import VariantsSettings from './components/track-settings/VariantsSettings';
+import EnhancerRegionSettings from './components/track-settings/EnhancerRegionSettings';
 import Welcome from './Welcome';
 import { useChromInfo } from './ChromInfoProvider';
 import { useShowModal } from './ModalProvider';
@@ -27,12 +28,16 @@ import {
   sampleFilterState,
   sampleWithName,
   sampleGroupWithGroup,
-  showVariantsSettingsState,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
-  useShowWelcome,
 } from './state';
 import { enhancerGenesSvgState } from './state/enhancer-gene-track-state';
+import {
+  useShowWelcome,
+  showVariantsSettingsState,
+  showEnhancerRegionsSettingsState,
+  WelcomeIntroState,
+} from './state/app-settings-state';
 
 import { download, stringifySvg } from './utils';
 
@@ -170,6 +175,10 @@ const AppSidebar = React.memo(function AppSidebar() {
   const [showVariantsSettings, setShowVariantsSettings] = useRecoilState(
     showVariantsSettingsState
   );
+  const [
+    showEnhancerRegionsSettings,
+    setShowEnhancerRegionsSettings,
+  ] = useRecoilState(showEnhancerRegionsSettingsState);
 
   const higlassEnhancerRegions = useRecoilValue(higlassEnhancerRegionsState);
   const higlassDnaAccess = useRecoilValue(higlassDnaAccessState);
@@ -244,19 +253,19 @@ const AppSidebar = React.memo(function AppSidebar() {
   };
 
   const closeWelcome = useCallback(() => {
-    setShowWelcome(false);
+    setShowWelcome(WelcomeIntroState.NO_SHOW);
   }, [setShowWelcome]);
 
   const openWelcome = useCallback(() => {
-    setShowWelcome(true);
+    setShowWelcome(WelcomeIntroState.SHOW_OVERVIEW);
   }, [setShowWelcome]);
 
   const openWelcomeIntro = useCallback(() => {
-    setShowWelcome('intro');
+    setShowWelcome(WelcomeIntroState.SHOW_DETAILED);
   }, [setShowWelcome]);
 
   useEffect(() => {
-    if (showWelcome)
+    if (showWelcome !== WelcomeIntroState.NO_SHOW)
       showModal(Welcome, closeWelcome, {
         openIntroHandler: openWelcomeIntro,
         closeIntroHandler: openWelcome,
@@ -272,6 +281,14 @@ const AppSidebar = React.memo(function AppSidebar() {
     setShowVariantsSettings(true);
   }, [setShowVariantsSettings]);
 
+  const closeEnhancerRegionsSettings = useCallback(() => {
+    setShowEnhancerRegionsSettings(false);
+  }, [setShowEnhancerRegionsSettings]);
+
+  const openEnhancerRegionsSettings = useCallback(() => {
+    setShowEnhancerRegionsSettings(true);
+  }, [setShowEnhancerRegionsSettings]);
+
   useEffect(() => {
     if (showVariantsSettings) {
       showModal(VariantsSettings, closeVariantsSettings);
@@ -279,6 +296,14 @@ const AppSidebar = React.memo(function AppSidebar() {
       showModal();
     }
   }, [showWelcome, showVariantsSettings, showModal, closeVariantsSettings]);
+
+  useEffect(() => {
+    if (showEnhancerRegionsSettings) {
+      showModal(EnhancerRegionSettings, closeEnhancerRegionsSettings);
+    } else if (!showWelcome) {
+      showModal();
+    }
+  }, [showWelcome, showEnhancerRegionsSettings, showModal, closeEnhancerRegionsSettings]);
 
   const mergeSvgs = (enhancerSvg, dnaAccessSvg, enhancerGeneSvg) => {
     const {
@@ -433,6 +458,19 @@ const AppSidebar = React.memo(function AppSidebar() {
                 onClick={openVariantsSettings}
               >
                 Edit Variants
+              </Button>
+            </Box>
+            <Box m={1}>
+              <Button
+                variant="contained"
+                margin="dense"
+                fullWidth
+                disableElevation
+                size="small"
+                startIcon={<SettingsIcon />}
+                onClick={openEnhancerRegionsSettings}
+              >
+                Edit Enhancer Regions
               </Button>
             </Box>
             <Divider />
