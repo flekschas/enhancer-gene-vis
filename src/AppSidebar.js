@@ -16,7 +16,7 @@ import SettingsIcon from '@material-ui/icons/Settings';
 
 import CheckboxList from './CheckboxList';
 import Logo from './Logo';
-import VariantsSettings from './VariantsSettings';
+import VariantsSettings from './components/track-settings/VariantsSettings';
 import Welcome from './Welcome';
 import { useChromInfo } from './ChromInfoProvider';
 import { useShowModal } from './ModalProvider';

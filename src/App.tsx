@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RecoilRoot } from 'recoil';
-import { ChromosomeInfo } from 'higlass';
+import { ChromosomeInfo, ChromosomeInfoResult } from 'higlass';
 import { pipe } from '@flekschas/utils';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 
@@ -24,7 +24,9 @@ const theme = createMuiTheme({
 });
 
 const App = () => {
-  const [chromInfo, setChromInfo] = useState(null);
+  const [chromInfo, setChromInfo] = useState<
+    ChromosomeInfoResult | boolean | null
+  >(null);
 
   useEffect(() => {
     ChromosomeInfo('https://s3.amazonaws.com/pkerp/data/hg19/chromSizes.tsv')
@@ -42,7 +44,7 @@ const App = () => {
       });
   }, []);
 
-  const Main = pipe(
+  const Main = pipe<React.NamedExoticComponent>(
     withEither(() => chromInfo === null, AppInitializing),
     withEither(() => chromInfo === false, AppError)
   )(AppMain);

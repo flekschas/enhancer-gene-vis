@@ -1,11 +1,27 @@
-import React, { useCallback, useState } from 'react';
+import React, { ChangeEventHandler, useCallback, useState } from 'react';
 import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import ClearIcon from '@material-ui/icons/Clear';
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
+import { OverridableComponent } from '@material-ui/core/OverridableComponent';
+import { PropTypes, SvgIconTypeMap } from '@material-ui/core';
+
+type FileInputProps = {
+  onChange?: (file: File, event: React.ChangeEvent<HTMLInputElement>) => void;
+  onClear?: () => void;
+  className?: string;
+  label?: string;
+  accept?: string;
+  color?: PropTypes.Color;
+  Icon?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
+  file?: File;
+};
 
 const FileInput = React.memo(
-  React.forwardRef(function FileInput(props, ref) {
+  React.forwardRef(function FileInput(
+    props: FileInputProps,
+    ref: React.ForwardedRef<HTMLInputElement>
+  ) {
     const {
       onChange: changeHandler,
       onClear: clearHandler,
@@ -18,7 +34,7 @@ const FileInput = React.memo(
 
     // We will spread any other props onto the root component. However, some
     // props can mess things up so we will remove them in the following lines
-    const otherProps = { ...props };
+    const otherProps: { [key: string]: any } = { ...props };
     delete otherProps.onChange;
     delete otherProps.onClear;
     delete otherProps.className;
@@ -30,11 +46,16 @@ const FileInput = React.memo(
 
     const [file, setFile] = useState(props.file || null);
 
-    const localChangeHandler = useCallback(
-      (event) => {
+    const localChangeHandler: ChangeEventHandler<HTMLInputElement> = useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
         const fileList = event.target.files;
-        setFile(fileList[0]);
-        if (changeHandler) changeHandler(fileList[0], event);
+        if (fileList && fileList.length > 0) {
+          const file = fileList[0];
+          setFile(file);
+          if (changeHandler) {
+            changeHandler(file, event);
+          }
+        }
       },
       [changeHandler]
     );
