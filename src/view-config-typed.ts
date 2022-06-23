@@ -11,12 +11,7 @@ import {
   EnhancerGeneTrackInfo,
 } from './state/enhancer-region-state';
 import { DEFAULT_VARIANT_TRACK_DEF } from './state/variant-track-state';
-import {
-  ViewConfig,
-  TrackType,
-  Track,
-  CombinedTrack,
-} from './view-config-types';
+import { ViewConfig, TrackType, Track } from './view-config-types';
 
 /**
  * Should only contain UIDs for "constant" tracks such as combined type tracks.
@@ -283,11 +278,10 @@ export const updateViewConfigEnhancerRegionTracks = (
     CombinedTrackUid.ARCS_AND_BARS
   );
   if (combinedTrack.type === TrackType.COMBINED) {
-    const contents = combinedTrack.contents;
+    const { contents } = combinedTrack;
     const updatedTrack = getUpdatedEnhancerGeneTrack(trackConfig);
     replaceTrackByType(contents, TrackType.ARCS_1D, updatedTrack);
   }
-
   return viewConfig;
 };
 
@@ -298,8 +292,8 @@ export function getUpdatedEnhancerGeneTrack(
   enhancerGeneArcTrack.server = trackConfig.server;
   enhancerGeneArcTrack.tilesetUid = trackConfig.tilesetUid;
   enhancerGeneArcTrack.uid = `arcs-${trackConfig.tilesetUid}`;
-  enhancerGeneArcTrack.options.startField = trackConfig.startField;
-  enhancerGeneArcTrack.options.endField = trackConfig.endField;
+  enhancerGeneArcTrack.options.startField = trackConfig.enhancerStartField;
+  enhancerGeneArcTrack.options.endField = trackConfig.tssStartField;
   return enhancerGeneArcTrack;
 }
 
@@ -308,11 +302,11 @@ export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
   if (!topTracks) {
     throw new Error('No tracks found in top track layout');
   }
-  const track = topTracks.find((track) => track.uid === uid);
-  if (!track) {
+  const trackCandidate = topTracks.find((track) => track.uid === uid);
+  if (!trackCandidate) {
     throw new Error(`No track found with uid: ${uid}`);
   }
-  return track;
+  return trackCandidate;
 }
 
 export function replaceTrackByType(
