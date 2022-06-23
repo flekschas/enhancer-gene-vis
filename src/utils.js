@@ -172,11 +172,9 @@ export const booleanQueryStringDecoder = (v) =>
   v === undefined ? undefined : v === 'true';
 
 export const customBooleanQueryStringDecoder = (excluded = []) => {
-  const s = excluded.reduce((_s, v) => {
-    _s.add(v);
-    return _s;
-  }, new Set());
+  const s = new Set(excluded)
   return (v) => {
+    console.log(v);
     if (v === undefined || s.has(v)) return v;
     return v === 'true';
   };

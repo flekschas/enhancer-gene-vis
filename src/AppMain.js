@@ -20,7 +20,6 @@ import {
   focusRegionOptionState,
   useFocusGene,
   useFocusRegion,
-  useShowWelcomeSyncher,
   useFocusGeneSyncher,
   useFocusRegionSyncher,
   useDnaAccessLabelStyleSyncher,
@@ -30,6 +29,8 @@ import {
   useXDomainEndWithAssemblySyncher,
   useVariantYScaleSyncher,
 } from './state';
+import {
+  useShowWelcomeSyncher,} from './state/app-settings-state';
 import { useVariantTracksSyncher } from './state/variant-track-state';
 import {
   useEnhancerRegionsShowInfosSyncher,

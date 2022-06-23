@@ -27,12 +27,14 @@ import {
   sampleFilterState,
   sampleWithName,
   sampleGroupWithGroup,
-  showVariantsSettingsState,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
-  useShowWelcome,
 } from './state';
 import { enhancerGenesSvgState } from './state/enhancer-gene-track-state';
+import {
+  useShowWelcome,
+  showVariantsSettingsState,
+  WelcomeIntroState,} from './state/app-settings-state';
 
 import { download, stringifySvg } from './utils';
 
@@ -244,19 +246,19 @@ const AppSidebar = React.memo(function AppSidebar() {
   };
 
   const closeWelcome = useCallback(() => {
-    setShowWelcome(false);
+    setShowWelcome(WelcomeIntroState.NO_SHOW);
   }, [setShowWelcome]);
 
   const openWelcome = useCallback(() => {
-    setShowWelcome(true);
+    setShowWelcome(WelcomeIntroState.SHOW_OVERVIEW);
   }, [setShowWelcome]);
 
   const openWelcomeIntro = useCallback(() => {
-    setShowWelcome('intro');
+    setShowWelcome(WelcomeIntroState.SHOW_DETAILED);
   }, [setShowWelcome]);
 
   useEffect(() => {
-    if (showWelcome)
+    if (showWelcome !== WelcomeIntroState.NO_SHOW)
       showModal(Welcome, closeWelcome, {
         openIntroHandler: openWelcomeIntro,
         closeIntroHandler: openWelcome,
@@ -271,6 +273,10 @@ const AppSidebar = React.memo(function AppSidebar() {
   const openVariantsSettings = useCallback(() => {
     setShowVariantsSettings(true);
   }, [setShowVariantsSettings]);
+
+  const openEnhancerRegionSettings = useCallback(() => {
+    
+  })
 
   useEffect(() => {
     if (showVariantsSettings) {
@@ -433,6 +439,19 @@ const AppSidebar = React.memo(function AppSidebar() {
                 onClick={openVariantsSettings}
               >
                 Edit Variants
+              </Button>
+            </Box>
+            <Box m={1}>
+              <Button
+                variant="contained"
+                margin="dense"
+                fullWidth
+                disableElevation
+                size="small"
+                startIcon={<SettingsIcon />}
+                onClick={openEnhancerRegionSettings}
+              >
+                Edit Enhancer Regions
               </Button>
             </Box>
             <Divider />
