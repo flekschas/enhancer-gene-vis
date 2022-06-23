@@ -38,7 +38,8 @@ import {
 import {
   enhancerRegionsColorEncodingState,
   enhancerRegionsHideUnfocusedState,
-  useEnhancerRegionsShowInfos,enhancerRegionsTrackState
+  useEnhancerRegionsShowInfos,
+  enhancerRegionsTrackState,
 } from '../../state/enhancer-region-state';
 import { variantTracksState } from '../../state/variant-track-state';
 
@@ -182,7 +183,6 @@ const EnhancerRegion = React.memo((_props) => {
 
   const variantTracks = useRecoilValue(variantTracksState);
   const enhancerTrackConfig = useRecoilValue(enhancerRegionsTrackState);
-  console.log(enhancerTrackConfig);
   const hideUnfocused = useRecoilValue(enhancerRegionsHideUnfocusedState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const colorEncoding = useRecoilValue(enhancerRegionsColorEncodingState);
