@@ -38,10 +38,9 @@ import {
 import {
   enhancerRegionsColorEncodingState,
   enhancerRegionsHideUnfocusedState,
-  useEnhancerRegionsShowInfos,
+  useEnhancerRegionsShowInfos,enhancerRegionsTrackState
 } from '../../state/enhancer-region-state';
 import { variantTracksState } from '../../state/variant-track-state';
-import { enhancerRegionsTrackState } from '../../state/enhancer-region-state';
 
 import {
   updateViewConfigFocusGene,
@@ -167,7 +166,7 @@ const updateViewConfigMatrixHeight = (numSamples) => (viewConfig) => {
   return viewConfig;
 };
 
-const EnhancerRegion = React.memo((props) => {
+const EnhancerRegion = React.memo((_props) => {
   const chromInfo = useChromInfo();
 
   const [focusGeneOption, setFocusGeneOption] = useRecoilState(
@@ -183,6 +182,7 @@ const EnhancerRegion = React.memo((props) => {
 
   const variantTracks = useRecoilValue(variantTracksState);
   const enhancerTrackConfig = useRecoilValue(enhancerRegionsTrackState);
+  console.log(enhancerTrackConfig);
   const hideUnfocused = useRecoilValue(enhancerRegionsHideUnfocusedState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const colorEncoding = useRecoilValue(enhancerRegionsColorEncodingState);
