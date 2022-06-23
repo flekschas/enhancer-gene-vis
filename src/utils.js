@@ -171,15 +171,6 @@ export const stringifySvg = (svg) =>
 export const booleanQueryStringDecoder = (v) =>
   v === undefined ? undefined : v === 'true';
 
-export const customBooleanQueryStringDecoder = (excluded = []) => {
-  const s = new Set(excluded);
-  return (v) => {
-    console.log(v);
-    if (v === undefined || s.has(v)) return v;
-    return v === 'true';
-  };
-};
-
 export const isChrRange = (chrRange) =>
   chrRange.match(/^chr(\d+)[:.](\d+)(([-~+])(\d+))?(-chr(\d+)[:.](\d+))?$/);
 

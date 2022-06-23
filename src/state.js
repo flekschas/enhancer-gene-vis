@@ -10,7 +10,6 @@ import {
 
 import {
   booleanQueryStringDecoder,
-  customBooleanQueryStringDecoder,
   toAbsPosition,
   isChrRange,
   chrPosUrlDecoder,
