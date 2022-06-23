@@ -7,19 +7,19 @@ import { ChromosomeInfoResult } from 'higlass';
 // TODO: Find a better location for this?
 export type TilesetInfo = {
   zoom_step: number;
-    max_length: number;
-    assembly: string;
-    chrom_names: string;
-    chrom_sizes: string;
-    tile_size: number;
-    max_zoom: number;
-    max_width: number;
-    min_pos: number[];
-    max_pos: number[];
-    header: string;
-    version: number;
-    coordSystem: string;
-}
+  max_length: number;
+  assembly: string;
+  chrom_names: string;
+  chrom_sizes: string;
+  tile_size: number;
+  max_zoom: number;
+  max_width: number;
+  min_pos: number[];
+  max_pos: number[];
+  header: string;
+  version: number;
+  coordSystem: string;
+};
 
 async function loadFile(
   file: File,

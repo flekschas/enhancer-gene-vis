@@ -1,13 +1,18 @@
 import { ChromosomeInfoResult } from 'higlass';
 import React, { createContext } from 'react';
 
-const ChromInfoContext = createContext<ChromosomeInfoResult | boolean | null | undefined>(undefined);
+const ChromInfoContext = createContext<
+  ChromosomeInfoResult | boolean | null | undefined
+>(undefined);
 
 type ChromInfoProviderProps = {
   children: React.ReactNode[] | React.ReactNode;
   chromInfo: ChromosomeInfoResult | boolean | null;
-}
-export default function ChromInfoProvider({ children, chromInfo }: ChromInfoProviderProps): JSX.Element {
+};
+export default function ChromInfoProvider({
+  children,
+  chromInfo,
+}: ChromInfoProviderProps): JSX.Element {
   return (
     <ChromInfoContext.Provider value={chromInfo}>
       {children}

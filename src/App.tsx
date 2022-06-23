@@ -24,7 +24,9 @@ const theme = createMuiTheme({
 });
 
 const App = () => {
-  const [chromInfo, setChromInfo] = useState<ChromosomeInfoResult | boolean | null>(null);
+  const [chromInfo, setChromInfo] = useState<
+    ChromosomeInfoResult | boolean | null
+  >(null);
 
   useEffect(() => {
     ChromosomeInfo('https://s3.amazonaws.com/pkerp/data/hg19/chromSizes.tsv')

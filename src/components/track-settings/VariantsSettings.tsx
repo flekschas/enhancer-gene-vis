@@ -13,7 +13,10 @@ import { useChromInfo } from '../../ChromInfoProvider';
 import createLocalBedDataServer from '../../local-data-handlers/local-bed-data-server';
 
 import { focusRegionOptionState, useFocusRegion } from '../../state';
-import { useVariantTracks, VariantTrack } from '../../state/variant-track-state';
+import {
+  useVariantTracks,
+  VariantTrack,
+} from '../../state/variant-track-state';
 
 import { LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
 
@@ -251,7 +254,7 @@ const TrackConfig = React.memo(function TrackConfig({
           size="small"
           type="number"
           // min="1"
-          InputProps={{inputProps: {min: "1", step: "1"}}}
+          InputProps={{ inputProps: { min: '1', step: '1' } }}
           // step="1"
           value={state.columnPvalue || 7}
           onChange={propertyChangeHandler('columnPvalue')}
@@ -264,7 +267,7 @@ const TrackConfig = React.memo(function TrackConfig({
           size="small"
           type="number"
           // min="1"
-          InputProps={{inputProps: {min: "1", step: "1"}}}
+          InputProps={{ inputProps: { min: '1', step: '1' } }}
           // step="1"
           value={state.columnPosteriorProbability || 8}
           onChange={propertyChangeHandler('columnPosteriorProbability')}
@@ -277,7 +280,7 @@ const TrackConfig = React.memo(function TrackConfig({
 
 type VariantsSettingsProps = {
   closeHandler: () => void;
-}
+};
 const VariantsSettings = React.memo(function VariantsSettings({
   closeHandler,
 }: VariantsSettingsProps) {
