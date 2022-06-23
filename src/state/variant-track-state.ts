@@ -19,6 +19,7 @@ export type VariantTrack = {
   columnPosteriorProbability: number;
   markColor: string;
   label: string;
+  file?: File;
 };
 
 const DEFAULT_VARIANT_TRACK_SERVER_ABBR = TrackSourceAbbr.RG;

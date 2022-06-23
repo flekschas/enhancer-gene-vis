@@ -10,7 +10,9 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import FileInput from '../FileInput';
 import { useChromInfo } from '../../ChromInfoProvider';
-import createLocalBedDataServer from '../../local-data-handlers/local-bed-data-server';
+import createLocalBedDataServer, {
+  LocalBedDataServer,
+} from '../../local-data-handlers/local-bed-data-server';
 
 import { focusRegionOptionState, useFocusRegion } from '../../state';
 import {
@@ -21,7 +23,6 @@ import {
 import { LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
 
 import { chrRangePosEncoder } from '../../utils';
-import { Server } from 'node:http';
 
 type VariantTrackSettingsState = {
   server?: string;
@@ -297,7 +298,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
     deepClone(variantTracks)
   );
   const [changed, setChanged] = useState(false);
-  const variantTrackServers = useRef<Server[]>([]);
+  const variantTrackServers = useRef<LocalBedDataServer[]>([]);
   const currVariantTracks = useRef(variantTracks);
 
   useEffect(() => {
@@ -305,10 +306,10 @@ const VariantsSettings = React.memo(function VariantsSettings({
   }, [variantTracks]);
 
   const changeTmpVariantTracks = useCallback(
-    (i) => (newTrackConfig: VariantTrack) => {
+    (i) => (newTrackConfig: VariantTrackSettingsState) => {
       setTmpVariantTracks((currTmpVariantTracks) => {
         const newTmpVariantTracks = [...currTmpVariantTracks];
-        newTmpVariantTracks[i] = newTrackConfig;
+        newTmpVariantTracks[i] = newTrackConfig as VariantTrack;
         return newTmpVariantTracks;
       });
       setChanged(true);
@@ -324,9 +325,13 @@ const VariantsSettings = React.memo(function VariantsSettings({
       server.destroy();
     });
 
+    if (chromInfo === null || typeof chromInfo === 'boolean') {
+      throw new Error('No chrom info!');
+    }
+
     // Create new servers
     variantTrackServers.current = newVariantTracks.reduce(
-      (servers, trackConfig) => {
+      (servers: LocalBedDataServer[], trackConfig: VariantTrack) => {
         if (trackConfig.file) {
           const tilesetInfo = {
             ...LOCAL_BED_TILESET_INFO_HG19,
@@ -364,7 +369,8 @@ const VariantsSettings = React.memo(function VariantsSettings({
           newTrackConfig.file !== currVariantTracks.current[i].file
       )
     ) {
-      setFocusRegion((currFocusRegion) => {
+      // TODO: Correct this when focus region state is typed
+      setFocusRegion((currFocusRegion: string) => {
         if (isString(currFocusRegion)) {
           return [
             `${focusRegionOption.chrStart}:${focusRegionOption.txStart}`,
@@ -373,7 +379,8 @@ const VariantsSettings = React.memo(function VariantsSettings({
         }
         return currFocusRegion;
       });
-      setFocusRegionOption((currFocusRegionOption) => {
+      // TODO: Type this when focus region state is typed
+      setFocusRegionOption((currFocusRegionOption: any) => {
         if (currFocusRegionOption.chr) {
           return {
             chrStart: currFocusRegionOption.chr,

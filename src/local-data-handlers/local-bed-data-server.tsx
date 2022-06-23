@@ -21,19 +21,38 @@ export type TilesetInfo = {
   coordSystem: string;
 };
 
+type LoadFileOptions = {
+  header?: boolean;
+  columnImportance?: number;
+};
+type BedFileIntervalTreeValue = {
+  chrOffset: number;
+  xStart: number;
+  xEnd: number;
+  importance: number;
+  uid: string;
+  name: string;
+  fields: string[];
+};
 async function loadFile(
   file: File,
   chromInfo: ChromosomeInfoResult,
-  { header = true, columnImportance = 7 } = {}
+  { header = true, columnImportance = 7 }: LoadFileOptions = {}
 ) {
-  const tree = new IntervalTree();
+  const tree = new IntervalTree<BedFileIntervalTreeValue>();
   const text = await file.text();
   const lines = text.split(/\r\n|\n/);
   for (let i = +header; i < lines.length; i++) {
     const fields = lines[i].split('\t');
-    const chromOffset = toAbsPosition(`${fields[0]}:0`, chromInfo);
-    const startAbs = toAbsPosition(`${fields[0]}:${fields[1]}`, chromInfo);
-    const endAbs = toAbsPosition(`${fields[0]}:${fields[2]}`, chromInfo);
+    const chromOffset: number = toAbsPosition(`${fields[0]}:0`, chromInfo);
+    const startAbs: number = toAbsPosition(
+      `${fields[0]}:${fields[1]}`,
+      chromInfo
+    );
+    const endAbs: number = toAbsPosition(
+      `${fields[0]}:${fields[2]}`,
+      chromInfo
+    );
     tree.insert([startAbs, endAbs], {
       chrOffset: chromOffset,
       xStart: startAbs,
@@ -47,16 +66,37 @@ async function loadFile(
   return tree;
 }
 
+type RequestTileHandlerArgs = {
+  fileId: string;
+  z: number;
+  x: number;
+  requestId: string;
+};
+
+type RequestTilesetInfoHandlerArgs = {
+  fileId: string;
+  requestId: string;
+};
+
+export type LocalBedDataServer = {
+  destroy: () => void;
+};
+
 const createLocalBedDataServer = (
   file: File,
   id: string,
   chromInfo: ChromosomeInfoResult,
   tilesetInfo: TilesetInfo,
-  options
-) => {
+  options: LoadFileOptions
+): LocalBedDataServer => {
   const whenIndex = loadFile(file, chromInfo, options);
 
-  const requestTileHandler = ({ fileId, z, x, requestId }) => {
+  const requestTileHandler = ({
+    fileId,
+    z,
+    x,
+    requestId,
+  }: RequestTileHandlerArgs) => {
     if (fileId !== id) return;
     whenIndex.then((index) => {
       const tileWidth = tilesetInfo.max_width / 2 ** z;
@@ -67,7 +107,10 @@ const createLocalBedDataServer = (
     });
   };
 
-  const requestTilesetInfoHandler = ({ fileId, requestId }) => {
+  const requestTilesetInfoHandler = ({
+    fileId,
+    requestId,
+  }: RequestTilesetInfoHandlerArgs) => {
     if (fileId !== id) return;
     globalPubSub.publish(`localBed:tilesetInfo:${requestId}`, tilesetInfo);
   };
