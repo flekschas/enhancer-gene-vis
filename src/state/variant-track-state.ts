@@ -116,8 +116,6 @@ export function variantTracksEncoder(v: VariantTrack[]): string {
  * @returns An array containing a single variant track
  */
 function variantTracksDecoder(v?: string): VariantTrack[] {
-  console.log('Decoding');
-  console.log(v);
   if (!v) throw new Error(`No string provided to variant track decoder`);
 
   // Example: tilesetId:rg:7:8
