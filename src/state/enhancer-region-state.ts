@@ -26,8 +26,9 @@ export type EnhancerGeneTrackInfo = {
   server: string;
   tilesetUid: string;
   offsetField: number;
-  startField: number;
-  endField: number;
+  enhancerStartField: number;
+  tssStartField: number;
+  tssEndField: number;
   importanceField: number;
   label: string;
 };
@@ -54,9 +55,10 @@ export const TSS_END_COLUMN: number = EG_TILE_V3 ? 4 : 5;
 export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
   server: 'https://resgen.io/api/v1',
   tilesetUid: EG_TILE_UID,
+  enhancerStartField: ENHANCER_START_COLUMN,
   offsetField: TSS_CHROM_COLUMN,
-  startField: TSS_START_COLUMN,
-  endField: TSS_END_COLUMN,
+  tssStartField: TSS_START_COLUMN,
+  tssEndField: TSS_END_COLUMN,
   importanceField: ABC_SCORE_COLUMN,
   label: 'Enhancer regions',
 };
@@ -137,8 +139,8 @@ export function enhancerRegionTrackEncoder(
   return [
     track.tilesetUid,
     serverAbbr,
-    track.startField,
-    track.endField,
+    track.tssStartField,
+    track.tssEndField,
     track.offsetField,
     track.importanceField,
     track.label,
@@ -172,8 +174,8 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
   return {
     server,
     tilesetUid,
-    startField: parseInt(startField.toString(), 10),
-    endField: parseInt(endField.toString(), 10),
+    tssStartField: parseInt(startField.toString(), 10),
+    tssEndField: parseInt(endField.toString(), 10),
     offsetField: parseInt(offsetField.toString(), 10),
     importanceField: parseInt(importanceField.toString(), 10),
     label,

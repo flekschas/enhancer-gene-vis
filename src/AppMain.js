@@ -35,6 +35,7 @@ import {
   useEnhancerRegionsShowInfosSyncher,
   useEnhancerRegionsHideUnfocusedSyncher,
   useEnhancerRegionsColorEncodingSyncher,
+  useEnhancerRegionsTrackSyncher,
 } from './state/enhancer-region-state';
 import {
   useEnhancerGenesShowInfosSyncher,
@@ -103,6 +104,7 @@ const AppMain = React.memo(function AppMain() {
 
   // Initialize query strings
   useVariantTracksSyncher();
+  useEnhancerRegionsTrackSyncher();
   useShowWelcomeSyncher();
   useFocusGeneSyncher();
   useFocusRegionSyncher();
