@@ -246,12 +246,6 @@ const VariantsSettings = React.memo(function VariantsSettings({
       </p>
       <div className={classes.trackList}>
         {tmpVariantTracks.map((variantTrackConfig, i) => (
-          // <VariantTrackConfig
-          //   key={i}
-          //   config={variantTrackConfig}
-          //   onChange={changeTmpVariantTracks(i)}
-          // />
-
           <TrackSettingsFieldSet
             config={variantTrackConfig}
             onChange={changeTmpVariantTracks(i)}
