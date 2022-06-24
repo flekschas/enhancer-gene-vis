@@ -2,13 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { deepClone, isString } from '@flekschas/utils';
 import Button from '@material-ui/core/Button';
-import Grid from '@material-ui/core/Grid';
-import TextField from '@material-ui/core/TextField';
-import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import FileInput from '../FileInput';
 import { useChromInfo } from '../../ChromInfoProvider';
 import createLocalBedDataServer, {
   LocalBedDataServer,
@@ -20,17 +16,57 @@ import {
   VariantTrack,
 } from '../../state/variant-track-state';
 
-import { LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
+import { ABC_SCORE_COLUMN, LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
 
 import { chrRangePosEncoder } from '../../utils';
+import {
+  TrackSettingsFieldSet,
+  TrackSettingsState,
+} from './TrackSettingsFieldSet';
+import {
+  ENHANCER_START_COLUMN,
+  TSS_CHROM_COLUMN,
+  TSS_START_COLUMN,
+  TSS_END_COLUMN,
+} from '../../state/enhancer-region-state';
 
-type VariantTrackSettingsState = {
-  server?: string;
-  file?: File;
-  tilesetUid?: string;
-  label?: string;
-  columnPvalue?: number;
-  columnPosteriorProbability?: number;
+const enum EnhancerRegionTrackSettingsStateProperty {
+  ENHANCER_START_FIELD = 'enhancerStartField',
+  OFFSET_FIELD = 'offsetField',
+  TSS_START_FIELD = 'tssStartField',
+  TSS_END_FIELD = 'tssEndField',
+  IMPORTANCE_FIELD = 'importanceField',
+}
+
+type EnhancerRegionTrackSettingsState = TrackSettingsState & {
+  [EnhancerRegionTrackSettingsStateProperty.ENHANCER_START_FIELD]?: number;
+  [EnhancerRegionTrackSettingsStateProperty.OFFSET_FIELD]?: number;
+  [EnhancerRegionTrackSettingsStateProperty.TSS_START_FIELD]?: number;
+  [EnhancerRegionTrackSettingsStateProperty.TSS_END_FIELD]?: number;
+  [EnhancerRegionTrackSettingsStateProperty.IMPORTANCE_FIELD]?: number;
+};
+
+const additionalTrackFields = {
+  [EnhancerRegionTrackSettingsStateProperty.ENHANCER_START_FIELD]: {
+    label: 'Enhancer Start Field',
+    default: ENHANCER_START_COLUMN,
+  },
+  [EnhancerRegionTrackSettingsStateProperty.OFFSET_FIELD]: {
+    label: 'Chrom. Offfset Field',
+    default: TSS_CHROM_COLUMN,
+  },
+  [EnhancerRegionTrackSettingsStateProperty.TSS_START_FIELD]: {
+    label: 'TSS Start Field',
+    default: TSS_START_COLUMN,
+  },
+  [EnhancerRegionTrackSettingsStateProperty.TSS_END_FIELD]: {
+    label: 'TSS End Field',
+    default: TSS_END_COLUMN,
+  },
+  [EnhancerRegionTrackSettingsStateProperty.IMPORTANCE_FIELD]: {
+    label: 'Importance Field',
+    default: ABC_SCORE_COLUMN,
+  },
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -66,219 +102,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const useStylesTrackConfig = makeStyles((theme) => ({
-  icon: {
-    color: theme.palette.grey['400'],
-    '&:hover': {
-      color: 'black',
-    },
-  },
-  grow: {
-    flex: 1,
-  },
-  separator: {
-    padding: '0 8px',
-  },
-  server: {
-    flex: 1,
-    marginRight: '2px',
-  },
-  tilesetUid: {
-    flex: 1,
-    marginLeft: '2px',
-  },
-  propInput: {
-    flex: 1,
-    marginLeft: '2px',
-    marginRight: '2px',
-    '&:first-child': {
-      marginLeft: 0,
-    },
-    '&:last-child': {
-      marginRight: 0,
-    },
-  },
-}));
-
-const useStylesTooltipVisible = makeStyles((_theme) => ({
-  arrow: {
-    color: 'black',
-  },
-  tooltip: {
-    backgroundColor: 'black',
-  },
-}));
-
-const useStylesTooltipHidden = makeStyles((_theme) => ({
-  tooltip: {
-    display: 'none',
-  },
-}));
-
-type TrackConfigProps = {
-  config: VariantTrackSettingsState;
-  onChange: (config: VariantTrackSettingsState) => void;
-};
-const TrackConfig = React.memo(function TrackConfig({
-  config,
-  onChange,
-}: TrackConfigProps) {
-  const [state, setState] = useState(config);
-
-  const propertyChangeHandler = (property: string) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    // eslint-disable-next-line prefer-destructuring
-    const value = event.target.value;
-    setState((currState) => ({
-      ...currState,
-      [property]: value,
-    }));
-  };
-
-  const serverChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const server = event.target.value;
-    setState((currState) => ({
-      ...currState,
-      server,
-      file: undefined,
-    }));
-  };
-
-  const tilesetUidChangeHandler = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const tilesetUid = event.target.value;
-    setState((currState) => ({
-      ...currState,
-      tilesetUid,
-      file: undefined,
-    }));
-  };
-
-  const fileChangeHandler = (file: File) => {
-    setState((currState) => ({
-      ...currState,
-      file,
-      server: undefined,
-      tilesetUid: undefined,
-    }));
-  };
-
-  const fileClearHandler = () => {
-    setState((currState) => ({
-      ...currState,
-      file: undefined,
-    }));
-  };
-
-  useEffect(() => {
-    if (state !== config) onChange(state);
-  }, [onChange, state, config]);
-
-  const isRemote = Boolean(state.server || state.tilesetUid);
-  const isLocal = !isRemote;
-
-  const classes = useStylesTrackConfig();
-  const classesTooltipVisible = useStylesTooltipVisible();
-  const classesTooltipHidden = useStylesTooltipHidden();
-
-  return (
-    <>
-      <Grid alignItems="center" container>
-        <Grid className={classes.grow} item>
-          <Grid alignItems="center" container>
-            <Tooltip
-              classes={isLocal ? classesTooltipVisible : classesTooltipHidden}
-              title="Setting a server will clear the file!"
-              placement="top"
-              arrow
-            >
-              <TextField
-                label="Server URL"
-                variant="outlined"
-                size="small"
-                value={state.server || ''}
-                onChange={serverChangeHandler}
-                className={classes.server}
-              />
-            </Tooltip>
-            <Tooltip
-              classes={isLocal ? classesTooltipVisible : classesTooltipHidden}
-              title="Setting a tileset ID will clear the file!"
-              placement="top"
-              arrow
-            >
-              <TextField
-                label="Tileset ID"
-                variant="outlined"
-                size="small"
-                value={state.tilesetUid || ''}
-                onChange={tilesetUidChangeHandler}
-                className={classes.tilesetUid}
-              />
-            </Tooltip>
-          </Grid>
-        </Grid>
-        <Grid item>
-          <Typography className={classes.separator}>or</Typography>
-        </Grid>
-        <Grid item>
-          <Tooltip
-            classes={isRemote ? classesTooltipVisible : classesTooltipHidden}
-            title="Selecting a file will clear the server and tileset ID!"
-            placement="top"
-            arrow
-          >
-            <FileInput
-              file={state.file}
-              onChange={fileChangeHandler}
-              onClear={fileClearHandler}
-            />
-          </Tooltip>
-        </Grid>
-      </Grid>
-      <Grid alignItems="center" container>
-        <TextField
-          label="Name"
-          variant="outlined"
-          margin="normal"
-          size="small"
-          value={state.label || ''}
-          onChange={propertyChangeHandler('label')}
-          className={classes.propInput}
-        />
-        <TextField
-          label="Column P-Value"
-          variant="outlined"
-          margin="normal"
-          size="small"
-          type="number"
-          // min="1"
-          InputProps={{ inputProps: { min: '1', step: '1' } }}
-          // step="1"
-          value={state.columnPvalue || 7}
-          onChange={propertyChangeHandler('columnPvalue')}
-          className={classes.propInput}
-        />
-        <TextField
-          label="Column Post. Prob"
-          variant="outlined"
-          margin="normal"
-          size="small"
-          type="number"
-          // min="1"
-          InputProps={{ inputProps: { min: '1', step: '1' } }}
-          // step="1"
-          value={state.columnPosteriorProbability || 8}
-          onChange={propertyChangeHandler('columnPosteriorProbability')}
-          className={classes.propInput}
-        />
-      </Grid>
-    </>
-  );
-});
-
 type VariantsSettingsProps = {
   closeHandler: () => void;
 };
@@ -306,7 +129,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
   }, [variantTracks]);
 
   const changeTmpVariantTracks = useCallback(
-    (i) => (newTrackConfig: VariantTrackSettingsState) => {
+    (i) => (newTrackConfig: EnhancerRegionTrackSettingsState) => {
       setTmpVariantTracks((currTmpVariantTracks) => {
         const newTmpVariantTracks = [...currTmpVariantTracks];
         newTmpVariantTracks[i] = newTrackConfig as VariantTrack;
@@ -447,8 +270,8 @@ const VariantsSettings = React.memo(function VariantsSettings({
       </p>
       <div className={classes.trackList}>
         {tmpVariantTracks.map((variantTrackConfig, i) => (
-          <TrackConfig
-            key={i}
+          <TrackSettingsFieldSet
+            additionalFields={additionalTrackFields}
             config={variantTrackConfig}
             onChange={changeTmpVariantTracks(i)}
           />
