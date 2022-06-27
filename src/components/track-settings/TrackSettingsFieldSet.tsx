@@ -1,3 +1,21 @@
+/**
+ * @fileoverview
+ * Provides a component for gathering information about a new track to create.
+ * 
+ * By default, the first row will gather the following information:
+ *  - If remote:
+ *    - URL of the HiGlass/Resgen server
+ *    - Tileset ID
+ *  - If local:
+ *    - File upload path
+ * 
+ * The second row will gather the following information:
+ *  - Name of the track
+ *  - Additional information specific to the track type (customizable)
+ * 
+ * To add extra information in the second row, the `TrackSettingsState` type
+ * should be extended to indicate the combined fieldset.
+ */
 import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Grid, Tooltip, TextField, Typography } from '@material-ui/core';
