@@ -25,7 +25,6 @@ import {
   focusRegionOptionState,
   focusRegionAbsWithAssembly,
   higlassEnhancerRegionsState,
-  sampleGroupSelectionSizesState,
   selectedSamplesState,
   useFocusGene,
   useFocusRegion,
@@ -35,6 +34,7 @@ import {
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
 } from '../../state';
+import { sampleGroupSelectionSizesState } from '../../state/stratification-state';
 import {
   enhancerRegionsColorEncodingState,
   enhancerRegionsHideUnfocusedState,

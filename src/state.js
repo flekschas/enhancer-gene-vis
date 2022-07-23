@@ -19,7 +19,11 @@ import {
   chrRangePosEncoder,
 } from './utils';
 
-import { GROUPED_SAMPLE_OPTIONS, SAMPLES } from './constants';
+import {
+  groupedSampleOptions,
+  samples,
+  stratificationState,
+} from './state/stratification-state';
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
@@ -40,12 +44,18 @@ export const sampleFilterState = atom({
 
 export const sampleSelectionState = selector({
   key: 'sampleSelection',
-  get: ({ get }) => SAMPLES.map((name) => get(sampleWithName(name)).checked),
+  get: ({ get }) =>
+    samples(get(stratificationState)).map(
+      (name) => get(sampleWithName(name)).checked
+    ),
 });
 
 export const selectedSamplesState = selector({
   key: 'selectedSamples',
-  get: ({ get }) => SAMPLES.filter((name) => get(sampleWithName(name)).checked),
+  get: ({ get }) =>
+    samples(get(stratificationState)).filter(
+      (name) => get(sampleWithName(name)).checked
+    ),
 });
 
 export const sampleWithName = memoize((name) =>
@@ -57,29 +67,6 @@ export const sampleWithName = memoize((name) =>
     },
   })
 );
-
-export const sampleGroupWithGroup = memoize(
-  (group) =>
-    atom({
-      key: `sampleGroup-${group.name}`,
-      default: {
-        checked: true,
-        visible: true,
-        n: group.options.length,
-        N: group.options.length,
-      },
-    }),
-  (group) => group.name
-);
-
-export const sampleGroupSelectionSizesState = selector({
-  key: 'sampleGroupSelectionSizes',
-  get: ({ get }) =>
-    GROUPED_SAMPLE_OPTIONS.reduce((sizes, group) => {
-      sizes[group.name] = get(sampleGroupWithGroup(group)).n;
-      return sizes;
-    }, {}),
-});
 
 export const dnaAccessLabelStyleState = atom({
   key: 'dnaAccessLabelStyle',

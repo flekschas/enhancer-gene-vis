@@ -27,7 +27,6 @@ import {
   higlassDnaAccessState,
   sampleFilterState,
   sampleWithName,
-  sampleGroupWithGroup,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
 } from './state';
@@ -44,12 +43,16 @@ import { download, stringifySvg } from './utils';
 import {
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP,
-  DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
   SVG_SKELETON,
   DRAWER_WIDTH,
-  GROUPED_SAMPLE_OPTIONS,
-  SAMPLE_TO_GROUP,
 } from './constants';
+import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from './constants-dna-accessibility';
+import {
+  groupedSampleOptions,
+  sampleToGroup,
+  sampleGroupWithGroup,
+  stratificationState,
+} from './state/stratification-state';
 import { DEFAULT_VIEW_CONFIG_ENHANCER } from './view-config-typed';
 
 const useStyles = makeStyles((theme) => ({
@@ -179,6 +182,10 @@ const AppSidebar = React.memo(function AppSidebar() {
     showEnhancerRegionsSettings,
     setShowEnhancerRegionsSettings,
   ] = useRecoilState(showEnhancerRegionsSettingsState);
+  const stratification = useRecoilValue(stratificationState);
+  console.log('=============================');
+  console.log(stratification);
+  console.log('=============================');
 
   const higlassEnhancerRegions = useRecoilValue(higlassEnhancerRegionsState);
   const higlassDnaAccess = useRecoilValue(higlassDnaAccessState);
@@ -483,8 +490,8 @@ const AppSidebar = React.memo(function AppSidebar() {
                   filterLabel="Filter Samples"
                   optionWithName={sampleWithName}
                   optionGroupWithGroup={sampleGroupWithGroup}
-                  groupedOptions={GROUPED_SAMPLE_OPTIONS}
-                  optionToGroup={SAMPLE_TO_GROUP}
+                  groupedOptions={groupedSampleOptions(stratification)}
+                  optionToGroup={sampleToGroup(stratification)}
                   groupColors={DEFAULT_COLOR_MAP}
                   groupColorsDark={DEFAULT_COLOR_MAP_DARK}
                 />
