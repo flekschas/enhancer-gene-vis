@@ -183,9 +183,6 @@ const AppSidebar = React.memo(function AppSidebar() {
     setShowEnhancerRegionsSettings,
   ] = useRecoilState(showEnhancerRegionsSettingsState);
   const stratification = useRecoilValue(stratificationState);
-  console.log('=============================');
-  console.log(stratification);
-  console.log('=============================');
 
   const higlassEnhancerRegions = useRecoilValue(higlassEnhancerRegionsState);
   const higlassDnaAccess = useRecoilValue(higlassDnaAccessState);

@@ -859,7 +859,6 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   const relPosition = useRecoilValue(focusRegionRelState);
   const strPosition = useRecoilValue(focusRegionStrState);
   const genePadding = useRecoilValue(enhancerGenesPaddingState);
-  // Subscribe to updates, but doesn't use directly for now
   const stratification = useRecoilValue(stratificationState);
 
   const [plotEl, setPlotEl] = useRecoilState(enhancerGenesSvgState);
@@ -953,7 +952,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
         const sample = entry.fields[BIOSAMPLE_COLUMN];
 
         // Exclude samples that have been deselected
-        if (!sampleSelection[sampleIdx()[sample]]) return;
+        if (!sampleSelection[sampleIdx(stratification)[sample]]) return;
 
         const geneName = entry.fields[GENE_NAME_COLUMN];
 

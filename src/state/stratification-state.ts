@@ -245,18 +245,6 @@ export function groupedSampleOptions(
 export function sampleToGroup(
   stratification: Stratification
 ): { [key: string]: string } {
-  console.log('akjsdlfajdslkfjalkdsf');
-  console.log(
-    groupedSampleOptions(stratification).reduce(
-      (sampleToGroupObj: { [key: string]: string }, group) => {
-        group.options.forEach((option) => {
-          sampleToGroupObj[option] = group.name;
-        });
-        return sampleToGroupObj;
-      },
-      {}
-    )
-  );
   return groupedSampleOptions(stratification).reduce(
     (sampleToGroupObj: { [key: string]: string }, group) => {
       group.options.forEach((option) => {
