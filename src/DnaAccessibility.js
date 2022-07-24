@@ -27,7 +27,7 @@ import { variantTracksState } from './state/variant-track-state';
 import {
   DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,
   DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
-} from './constants';
+} from './constants-dna-accessibility';
 import useDebounce from './hooks/use-debounce';
 
 import {
