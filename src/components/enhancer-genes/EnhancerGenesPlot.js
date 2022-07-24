@@ -15,6 +15,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import { useChromInfo } from '../../ChromInfoProvider';
 import { useShowTooltip } from '../../TooltipProvider';
+import { getCategories, getSamples } from './enhancer-gene-plot-helper';
 
 import {
   focusRegionAbsWithAssembly,
@@ -22,22 +23,24 @@ import {
   focusRegionState,
   focusRegionStrState,
   sampleSelectionState,
-  sampleGroupSelectionSizesState,
 } from '../../state';
 import {
   enhancerGenesCellEncodingState,
   enhancerGenesPaddingState,
   enhancerGenesSvgState,
 } from '../../state/enhancer-gene-track-state';
+import {
+  stratificationState,
+  sampleIdx,
+  sampleGroupSelectionSizesState,
+} from '../../state/stratification-state';
 
 import {
   DEFAULT_COLOR_MAP,
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP_LIGHT,
-  DEFAULT_STRATIFICATION,
   BIOSAMPLE_COLUMN,
   GENE_NAME_COLUMN,
-  SAMPLE_IDX,
 } from '../../constants';
 import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
 import { scaleBand } from '../../utils';
@@ -90,24 +93,6 @@ const fetchTiles = async (tileIds) => {
   );
   return response.json();
 };
-
-const categories = {};
-const samples = {};
-
-DEFAULT_STRATIFICATION.groups.forEach((group, i) => {
-  categories[group.label] = {
-    name: group.label,
-    size: group.categories.length,
-    index: i,
-  };
-
-  group.categories.forEach((category, j) => {
-    samples[category] = {
-      category: categories[group.label],
-      index: j,
-    };
-  });
-});
 
 const getMinTileSize = (tilesetInfo) =>
   tilesetInfo.max_width / 2 ** tilesetInfo.max_zoom;
@@ -170,6 +155,7 @@ const plotEnhancerGeneConnections = (
   node,
   width,
   data,
+  stratification,
   {
     geneCellEncoding = 'distribution',
     prevGeneCellEncoding,
@@ -183,6 +169,8 @@ const plotEnhancerGeneConnections = (
   if (!width || !data) return;
 
   const svg = select(node);
+  const categories = getCategories(stratification);
+  const samples = getSamples(stratification);
 
   const paddingTop = 60;
   const paddingBottom = 60;
@@ -871,6 +859,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   const relPosition = useRecoilValue(focusRegionRelState);
   const strPosition = useRecoilValue(focusRegionStrState);
   const genePadding = useRecoilValue(enhancerGenesPaddingState);
+  const stratification = useRecoilValue(stratificationState);
 
   const [plotEl, setPlotEl] = useRecoilState(enhancerGenesSvgState);
 
@@ -880,6 +869,9 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   const [width, setWidth] = useState(null);
   const prevWidth = usePrevious(width);
   const prevGeneCellEncoding = usePrevious(geneCellEncoding);
+
+  const categories = getCategories(stratification);
+  const samples = getSamples(stratification);
 
   useEffect(() => {
     // Determine highest resolution tiles
@@ -960,7 +952,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
         const sample = entry.fields[BIOSAMPLE_COLUMN];
 
         // Exclude samples that have been deselected
-        if (!sampleSelection[SAMPLE_IDX[sample]]) return;
+        if (!sampleSelection[sampleIdx(stratification)[sample]]) return;
 
         const geneName = entry.fields[GENE_NAME_COLUMN];
 
@@ -1101,7 +1093,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
 
   useEffect(
     () => {
-      plotEnhancerGeneConnections(plotEl, width, data, {
+      plotEnhancerGeneConnections(plotEl, width, data, stratification, {
         geneCellEncoding,
         prevGeneCellEncoding,
         genePadding,

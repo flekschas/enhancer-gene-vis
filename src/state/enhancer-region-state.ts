@@ -3,10 +3,8 @@ import { atom, RecoilState } from 'recoil';
 import {
   ABC_SCORE_COLUMN,
   BIOSAMPLE_COLUMN,
-  DEFAULT_STRATIFICATION,
   EG_TILE_UID,
   EG_TILE_V3,
-  SAMPLES,
 } from '../constants';
 import {
   booleanQueryStringDecoder,
@@ -15,6 +13,7 @@ import {
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
 import { OneDimensionalArcTrack, Track, TrackType } from '../view-config-types';
+import { DEFAULT_STRATIFICATION, samples } from './stratification-state';
 import {
   getDefault,
   SERVER_URL_TO_TRACK_SOURCE_ABBR,
@@ -77,7 +76,7 @@ export const DEFAULT_ENHANCER_GENE_ARC_TRACK: OneDimensionalArcTrack = {
     startField: ENHANCER_START_COLUMN,
     endField: TSS_START_COLUMN,
     filter: {
-      set: SAMPLES,
+      set: samples(DEFAULT_STRATIFICATION),
       field: BIOSAMPLE_COLUMN,
     },
   },

@@ -1,10 +1,6 @@
 import { deepClone } from '@flekschas/utils';
-import {
-  EG_TILE_UID,
-  ABC_SCORE_COLUMN,
-  DEFAULT_STRATIFICATION,
-  GENE_NAME_COLUMN,
-} from './constants';
+import { EG_TILE_UID, ABC_SCORE_COLUMN, GENE_NAME_COLUMN } from './constants';
+import { DEFAULT_STRATIFICATION } from './state/stratification-state';
 import {
   DEFAULT_ENHANCER_GENE_ARC_TRACK,
   DEFAULT_ENHANCER_GENE_STACKED_BAR_TRACK,
