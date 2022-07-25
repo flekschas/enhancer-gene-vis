@@ -217,6 +217,7 @@ export function TrackSettingsFieldSet<T extends TrackSettingsState>({
           const value = pair[1];
           return (
             <TextField
+              key={key.toString()}
               label={value.label}
               variant="outlined"
               margin="normal"
