@@ -278,6 +278,10 @@ export type StackedBarTrackOptions = {
   showMousePosition: boolean;
   showGlobalMousePosition: boolean;
   mousePositionColor: string;
+  filter?: {
+    set: string[];
+    field: number;
+  };
 };
 
 export type Stratification = {
@@ -311,6 +315,8 @@ export type StratifiedBedTrackOptions = {
   arcStyle: 'indicator';
   // TODO: Add union of options when found
   indicatorStyle: 'category-rect';
+  focusStyle?: FocusStyle;
+  opacityEncoding?: OpacityEncoding;
   labelColor: string;
   geneField: number;
   importanceField: number;
@@ -321,7 +327,22 @@ export type StratifiedBedTrackOptions = {
   showMousePosition: boolean;
   showGlobalMousePosition: boolean;
   mousePositionColor: string;
+  filter?: {
+    set: string[];
+    field: number;
+  };
 };
+
+export enum FocusStyle {
+  FILTERING = 'filtering',
+  HIGHLIGHTING = 'highlighting',
+}
+
+export enum OpacityEncoding {
+  SOLID = 'solid',
+  HIGHEST_IMPORTANCE = 'highestImportance',
+  CLOSEST_IMPORTANCE = 'closestImportance',
+}
 
 export type Overlay = {
   uid: string;

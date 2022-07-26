@@ -5,8 +5,18 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
-import { HiGlassComponent } from 'higlass';
+import {
+  useRecoilValue,
+  useSetRecoilState,
+  useRecoilState,
+  RecoilState,
+} from 'recoil';
+import {
+  HiGlassApi,
+  HiGlassApiLocationEventData,
+  HiGlassApiRangeSelectionEventData,
+  HiGlassComponent,
+} from 'higlass';
 import { debounce, deepClone, isParentOf, pipe, sum } from '@flekschas/utils';
 
 import Typography from '@material-ui/core/Typography';
@@ -58,7 +68,9 @@ import {
   IGNORED_FOCUS_ELEMENTS,
 } from '../../constants';
 import {
+  CombinedTrackUid,
   DEFAULT_VIEW_CONFIG_ENHANCER,
+  getTrackByUid,
   updateViewConfigEnhancerRegionTracks,
 } from '../../view-config-typed';
 
@@ -67,6 +79,15 @@ import { chrRangePosEncoder } from '../../utils';
 import 'higlass/dist/hglib.css';
 
 import './EnhancerRegions.css';
+import {
+  FocusStyle,
+  OneDimensionalArcTrack,
+  OpacityEncoding,
+  StackedBarTrack,
+  StratifiedBedTrack,
+  ViewConfig,
+} from '../../view-config-types';
+import { SubscribeFnResult } from 'pub-sub-es';
 
 const useStyles = makeStyles((theme) => ({
   grow: {
@@ -131,39 +152,64 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const updateViewConfigFocusStyle = (hideUnfocused) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[4].options.focusStyle = hideUnfocused
-    ? 'filtering'
-    : 'highlighting';
-  viewConfig.views[0].tracks.top[4].options.stratification.axisNoGroupColor = !hideUnfocused;
-
+const updateViewConfigFocusStyle = (hideUnfocused: boolean) => (
+  viewConfig: ViewConfig
+) => {
+  const track = getTrackByUid(
+    viewConfig,
+    'indicatorByCellTypes'
+  ) as StratifiedBedTrack;
+  track.options.focusStyle = hideUnfocused
+    ? FocusStyle.FILTERING
+    : FocusStyle.HIGHLIGHTING;
+  track.options.stratification.axisNoGroupColor = !hideUnfocused;
   return viewConfig;
 };
 
-const updateViewConfigColorEncoding = (coloring) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[4].options.opacityEncoding = coloring;
+const updateViewConfigColorEncoding = (coloring: OpacityEncoding) => (
+  viewConfig: ViewConfig
+) => {
+  const track = getTrackByUid(
+    viewConfig,
+    'indicatorByCellTypes'
+  ) as StratifiedBedTrack;
+  track.options.opacityEncoding = coloring;
   return viewConfig;
 };
 
-const updateViewConfigFilter = (selectedSamples) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[3].contents[0].options.filter = {
+const updateViewConfigFilter = (selectedSamples: string[]) => (
+  viewConfig: ViewConfig
+) => {
+  const arcTrack = getTrackByUid(viewConfig, 'arcs') as OneDimensionalArcTrack;
+  arcTrack.options.filter = {
     set: selectedSamples,
     field: BIOSAMPLE_COLUMN,
   };
-  viewConfig.views[0].tracks.top[3].contents[1].options.filter = {
+  const barTrack = getTrackByUid(viewConfig, 'stacked-bars') as StackedBarTrack;
+  barTrack.options.filter = {
     set: selectedSamples,
     field: BIOSAMPLE_COLUMN,
   };
-  viewConfig.views[0].tracks.top[4].options.filter = {
+  const stratifiedBedTrack = getTrackByUid(
+    viewConfig,
+    'indicatorByCellTypes'
+  ) as StratifiedBedTrack;
+  stratifiedBedTrack.options.filter = {
     set: selectedSamples,
     field: BIOSAMPLE_COLUMN,
   };
   return viewConfig;
 };
 
-const updateViewConfigMatrixHeight = (numSamples) => (viewConfig) => {
-  const matrixTrack = viewConfig.views[0].tracks.top[4];
-  matrixTrack.height = numSamples * matrixTrack.options.markHeight + 14;
+const updateViewConfigMatrixHeight = (numSamples: number) => (
+  viewConfig: ViewConfig
+) => {
+  const track = getTrackByUid(
+    viewConfig,
+    'indicatorByCellTypes'
+  ) as StratifiedBedTrack;
+  // TODO: come back to this number -- is it sufficient?
+  track.height = numSamples * track.options.markHeight + 14;
   return viewConfig;
 };
 
@@ -179,7 +225,9 @@ const EnhancerRegion = React.memo((_props) => {
   const setXDomainStart = useXDomainStartWithAssembly(chromInfo)[1];
   const setXDomainEnd = useXDomainEndWithAssembly(chromInfo)[1];
   const setFocusRegionOption = useSetRecoilState(focusRegionOptionState);
-  const setHiglass = useSetRecoilState(higlassEnhancerRegionsState);
+  const setHiglass = useSetRecoilState(
+    higlassEnhancerRegionsState as RecoilState<HiGlassApi | null>
+  );
 
   const variantTracks = useRecoilValue(variantTracksState);
   const enhancerTrackConfig = useRecoilValue(enhancerRegionsTrackState);
@@ -200,11 +248,11 @@ const EnhancerRegion = React.memo((_props) => {
 
   const [higlassMouseOver, setHiglassMouseOver] = useState(false);
   const [higlassFocus, setHiglassFocus] = useState(false);
-  const higlassApi = useRef(null);
-  const higlassRangeSelection = useRef(null);
-  const higlassListeners = useRef([]);
-  const higlassContainerRef = useRef(null);
-  const higlassEnhancerClickSelection = useRef(null);
+  const higlassApi = useRef<HiGlassApi | null>(null);
+  const higlassRangeSelection = useRef<[number, number] | null>(null);
+  const higlassListeners = useRef<SubscribeFnResult[]>([]);
+  const higlassContainerRef = useRef<HTMLDivElement>(null);
+  const higlassEnhancerClickSelection = useRef<boolean>();
   const higlassMouseDown = useRef(false);
   const higlassNumMouseOver = useRef(0);
   const higlassNumFocus = useRef(0);
@@ -223,17 +271,22 @@ const EnhancerRegion = React.memo((_props) => {
     [sampleGroupSelectionSizes]
   );
 
+  // On change in higlass mouseover, add one if true
   useEffect(() => {
-    higlassNumMouseOver.current += higlassMouseOver;
+    higlassNumMouseOver.current += higlassMouseOver ? 1 : 0;
   }, [higlassMouseOver]);
 
   useEffect(() => {
-    higlassNumFocus.current += higlassFocus;
+    higlassNumFocus.current += higlassFocus ? 1 : 0;
   }, [higlassFocus]);
 
   useEffect(() => {
-    if (higlassFocus) higlassNumFocusMouseOut.current += !higlassMouseOver;
-    else higlassNumFocusMouseOut.current = 0;
+    if (higlassFocus) {
+      // higlass mouseover=false counts the "mouseout" event
+      higlassNumFocusMouseOut.current += higlassMouseOver ? 0 : 1;
+    } else {
+      higlassNumFocusMouseOut.current = 0;
+    }
   }, [higlassFocus, higlassMouseOver]);
 
   const viewConfig = useMemo(
@@ -325,7 +378,10 @@ const EnhancerRegion = React.memo((_props) => {
     }
   };
 
-  const higlassLocationChangeHandler = (event) => {
+  const higlassLocationChangeHandler = (event: HiGlassApiLocationEventData) => {
+    if (chromInfo === null || typeof chromInfo === 'boolean') {
+      throw new Error();
+    }
     const [newXDomainStart, newXDomainEnd] = event.xDomain.map((absPos) =>
       chromInfo.absToChr(absPos).slice(0, 2).join(':')
     );
@@ -337,12 +393,15 @@ const EnhancerRegion = React.memo((_props) => {
     250
   );
 
-  const higlassRangeSelectionHandler = (event) => {
+  const higlassRangeSelectionHandler = (
+    event: HiGlassApiRangeSelectionEventData
+  ) => {
     if (event.dataRange[0]) [higlassRangeSelection.current] = event.dataRange;
   };
 
   const windowMouseDownClearHandler = useCallback((e) => {
-    if (!isParentOf(e.target, higlassContainerRef.current)) {
+    const higlassContainer = higlassContainerRef.current;
+    if (!higlassContainer || !isParentOf(e.target, higlassContainer)) {
       setHiglassFocus(false);
     }
   }, []);
@@ -367,7 +426,7 @@ const EnhancerRegion = React.memo((_props) => {
   }, []);
 
   const higlassInitHandler = useCallback(
-    (higlassInstance) => {
+    (higlassInstance: HiGlassComponent) => {
       if (higlassInstance !== null) {
         setHiglass(higlassInstance.api);
         higlassApi.current = higlassInstance.api;
