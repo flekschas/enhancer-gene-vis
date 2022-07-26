@@ -23,6 +23,7 @@ import {
   TrackSettingsFieldSet,
   TrackSettingsState,
 } from './TrackSettingsFieldSet';
+import StratificationSubsettings from './stratification-subsettings';
 import {
   ENHANCER_START_COLUMN,
   TSS_CHROM_COLUMN,
@@ -278,6 +279,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
           />
         ))}
       </div>
+      <StratificationSubsettings />
       <Typography align="center">
         <Button
           className={classes.buttonNormal}
