@@ -23,14 +23,13 @@ import {
   TrackSettingsFieldSet,
   TrackSettingsState,
 } from './TrackSettingsFieldSet';
-import StratificationSubsettings from './stratification-subsettings'
+import StratificationSubsettings from './stratification-subsettings';
 import {
   ENHANCER_START_COLUMN,
   TSS_CHROM_COLUMN,
   TSS_START_COLUMN,
   TSS_END_COLUMN,
 } from '../../state/enhancer-region-state';
-// import FileInput from '../FileInput';
 
 const enum EnhancerRegionTrackSettingsStateProperty {
   ENHANCER_START_FIELD = 'enhancerStartField',
@@ -114,7 +113,6 @@ const VariantsSettings = React.memo(function VariantsSettings({
 
   const setFocusRegion = useFocusRegion()[1];
   const [variantTracks, setVariantTracks] = useVariantTracks();
-  // const [stratificationConfig, setStratificationConfig] = useState<File>();
 
   const [focusRegionOption, setFocusRegionOption] = useRecoilState(
     focusRegionOptionState
