@@ -2,7 +2,7 @@ import { memoize } from 'lodash-es';
 import { atom, RecoilState, selector } from 'recoil';
 import { BIOSAMPLE_COLUMN } from '../constants';
 
-type Stratification = {
+export type Stratification = {
   categoryField: number;
   axisShowGroupSeparator: boolean;
   axisNoGroupColor: boolean;
