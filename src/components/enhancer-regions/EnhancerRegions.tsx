@@ -12,8 +12,10 @@ import {
   RecoilState,
 } from 'recoil';
 import {
+  ChromosomeInfoResult,
   HiGlassApi,
   HiGlassApiLocationEventData,
+  HiGlassApiMouseTool,
   HiGlassApiRangeSelectionEventData,
   HiGlassComponent,
 } from 'higlass';
@@ -289,9 +291,9 @@ const EnhancerRegion = React.memo((_props) => {
     }
   }, [higlassFocus, higlassMouseOver]);
 
-  const viewConfig = useMemo(
+  const viewConfig = useMemo<ViewConfig>(
     () =>
-      pipe(
+      pipe<ViewConfig>(
         updateViewConfigVariantTracks(variantTracks),
         updateViewConfigFocusGene(
           focusGeneOption ? focusGeneOption.geneName : null,
@@ -328,7 +330,7 @@ const EnhancerRegion = React.memo((_props) => {
 
   const viewConfigHeight = useMemo(
     () =>
-      viewConfig.views[0].tracks.top.reduce(
+      viewConfig.views?.[0]?.tracks.top?.reduce(
         (height, track) => height + track.height,
         0
       ),
@@ -479,32 +481,25 @@ const EnhancerRegion = React.memo((_props) => {
   // On init only
   useEffect(
     () => {
-      function keydownHandler(event) {
-        if (
-          IGNORED_FOCUS_ELEMENTS.has(
-            document.activeElement.tagName.toLowerCase()
-          )
-        )
-          return;
+      function keydownHandler(event: KeyboardEvent) {
+        const activeTag = document.activeElement?.tagName.toLowerCase();
+        if (activeTag && IGNORED_FOCUS_ELEMENTS.has(activeTag)) return;
 
         event.preventDefault();
 
-        if (event.altKey) higlassApi.current.activateTool(HIGLASS_SELECT);
+        if (higlassApi.current && event.altKey)
+          higlassApi.current.activateTool(HiGlassApiMouseTool.SELECT);
       }
 
-      function keyupHandler(event) {
-        if (
-          IGNORED_FOCUS_ELEMENTS.has(
-            document.activeElement.tagName.toLowerCase()
-          )
-        )
-          return;
+      function keyupHandler(event: KeyboardEvent) {
+        const activeTag = document.activeElement?.tagName.toLowerCase();
+        if (activeTag && IGNORED_FOCUS_ELEMENTS.has(activeTag)) return;
 
         event.preventDefault();
 
         if (higlassRangeSelection.current) {
           const chrRange = higlassRangeSelection.current.map(
-            chromInfo.absToChr
+            (chromInfo as ChromosomeInfoResult).absToChr
           );
           const [chrStart, txStart] = chrRange[0];
           const [chrEnd, txEnd] = chrRange[1];
@@ -523,7 +518,7 @@ const EnhancerRegion = React.memo((_props) => {
         }
 
         higlassRangeSelection.current = null;
-        higlassApi.current.activateTool(HIGLASS_PAN_ZOOM);
+        higlassApi.current?.activateTool(HiGlassApiMouseTool.PAN_ZOOM);
       }
 
       document.addEventListener('keydown', keydownHandler);
@@ -544,7 +539,7 @@ const EnhancerRegion = React.memo((_props) => {
     () => () => {
       if (higlassApi.current) {
         higlassListeners.current.forEach(({ event, handler }) => {
-          higlassApi.current.off(event, handler);
+          higlassApi.current?.off(event, handler);
         });
         higlassApi.current
           .getComponent()
@@ -561,7 +556,7 @@ const EnhancerRegion = React.memo((_props) => {
   const classes = useStyles();
 
   return (
-    <div className={classes.root}>
+    <div>
       <TitleBar
         id="enhancer-regions"
         title="Enhancer Regions"
@@ -632,7 +627,7 @@ const EnhancerRegion = React.memo((_props) => {
           onMouseDown={higlassMouseDownHandler}
           onFocus={higlassFocusHandler}
           onBlur={higlassBlurHandler}
-          tabIndex="0"
+          tabIndex={0}
         />
         <HiGlassComponent
           ref={higlassInitHandler}

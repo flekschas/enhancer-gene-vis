@@ -51,6 +51,12 @@ declare module 'higlass' {
   };
   // Warning! Copied from `pub-sub-es.d.ts` because not sure how to import from sibling declaration file
   type PubSubSubscribeFnResult = { event: string; handler: Function };
+  enum HiGlassApiMouseTool {
+    /** Defaults to pan&zoom */
+    DEFAULT = 'default',
+    SELECT = 'select',
+    PAN_ZOOM = 'panZoom',
+  }
   class HiGlassApi {
     /**
      * Force integer range selections.
@@ -62,6 +68,48 @@ declare module 'higlass' {
     setRangeSelectionToInt(): void;
 
     getComponent(): HiGlassComponent;
+
+    /**
+     * Some tools needs conflicting mouse events such as mousedown or mousemove. To
+     * avoid complicated triggers for certain actions HiGlass supports different mouse
+     * tools for different interactions. The default mouse tool enables pan&zoom. The
+     * only other mouse tool available right now is ``select``, which lets you brush
+     * on to a track to select a range for annotating regions.
+     *
+     * @param {string} [mouseTool='']  Select a mouse tool to use. Currently there
+     * only 'default' and 'select' are available.
+     *
+     * @example
+     *
+     * hgv.activateTool('select'); // Select tool is active
+     * hgv.activateTool(); // Default pan&zoom tool is active
+     */
+    activateTool(tool?: HiGlassApiMouseTool): void;
+
+    /**
+     * Cancel a subscription.
+     *
+     * @param {string} event One of the available events
+     * @param {object|string} listenerId The id of the listener to unsubscribe or an object containing the listenerId in the 'callback' property
+     * @param {string} viewId The viewId to unsubscribe it from (not strictly necessary except for 'location' events)
+     * The variables used in the following examples are coming from the examples of ``on()``.
+     *
+     * @example
+     *
+     * hgv.off('location', listener, 'viewId1');
+     * hgv.off('rangeSelection', rangeListener);
+     * hgv.off('viewConfig', viewConfigListener);
+     * hgv.off('mouseMoveZoom', mmz);
+     * hgv.off('wheel', wheelListener);
+     * hgv.off('createSVG');
+     * hgv.off('geneSearch', geneSearchListener);
+     */
+    off(event: string, listenerId: object | string, viewId?: string): void;
+
+    /**
+     * Destroy HiGlass instance
+     */
+    destroy(): void;
 
     /**
      * Subscribe to events
