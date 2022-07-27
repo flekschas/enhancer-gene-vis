@@ -1,10 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { ExoticComponent, MouseEventHandler, useCallback, useMemo, useState } from 'react';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import HelpIcon from '@material-ui/icons/Help';
 import InfoIcon from '@material-ui/icons/Info';
 import SettingsIcon from '@material-ui/icons/Settings';
-import Popover from '@material-ui/core/Popover';
+import Popover, { PopoverOrigin } from '@material-ui/core/Popover';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -55,6 +55,15 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+type TitleBarProps = {
+  id: string,
+  title: string,
+  Info: ExoticComponent,
+  Help: ExoticComponent,
+  Settings: ExoticComponent,
+  useShowInfo: () => [boolean, (x: boolean) => void],
+  popoverDirection?: PopoverOrigin['vertical'],
+}
 const TitleBar = React.memo(function TitleBar({
   id,
   title,
@@ -63,16 +72,16 @@ const TitleBar = React.memo(function TitleBar({
   Settings,
   useShowInfo,
   popoverDirection = 'bottom',
-}) {
+}: TitleBarProps) {
   const [showInfo, setShowInfo] = useShowInfo();
-  const [helpAnchorEl, setHelpAnchorEl] = useState();
-  const [settingsAnchorEl, setSettingsAnchorEl] = useState();
+  const [helpAnchorEl, setHelpAnchorEl] = useState<Element|null>();
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState<Element|null>();
 
   const infoToggleHandler = useCallback(() => {
-    setShowInfo((show) => !(show === true || show === 'true'));
-  }, [setShowInfo]);
+    setShowInfo(!showInfo);
+  }, [showInfo, setShowInfo]);
 
-  const helpOpenHandler = useCallback((event) => {
+  const helpOpenHandler: MouseEventHandler<HTMLAnchorElement> = useCallback((event) => {
     setHelpAnchorEl(event.currentTarget);
   }, []);
 
@@ -80,7 +89,7 @@ const TitleBar = React.memo(function TitleBar({
     setHelpAnchorEl(null);
   }, []);
 
-  const settingsOpenHandler = useCallback((event) => {
+  const settingsOpenHandler: MouseEventHandler<HTMLAnchorElement> = useCallback((event) => {
     setSettingsAnchorEl(event.currentTarget);
   }, []);
 
@@ -111,7 +120,7 @@ const TitleBar = React.memo(function TitleBar({
   const iconSettingsClass = settingsOpen ? classes.iconActive : classes.icon;
 
   return (
-    <Grid item className={classes.root}>
+    <Grid item>
       <Grid
         item
         className={classes.bar}
@@ -146,6 +155,7 @@ const TitleBar = React.memo(function TitleBar({
               className={iconHelpClass}
               size="small"
               onClick={helpOpenHandler}
+              href=""
             >
               <HelpIcon fontSize="inherit" />
             </IconButton>
@@ -173,6 +183,7 @@ const TitleBar = React.memo(function TitleBar({
               className={iconSettingsClass}
               size="small"
               onClick={settingsOpenHandler}
+              href=""
             >
               <SettingsIcon fontSize="inherit" />
             </IconButton>
