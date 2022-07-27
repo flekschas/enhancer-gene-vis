@@ -19,7 +19,7 @@ import {
   useFocusGene,
   // useFocusVariant,
   useFocusRegion,
-} from './state';
+} from './state/focus-state';
 
 import { DRAWER_WIDTH, GENE_SEARCH_URL, VARIANT_SEARCH_URL } from './constants';
 
