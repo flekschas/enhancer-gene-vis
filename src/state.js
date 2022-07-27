@@ -42,6 +42,16 @@ export const sampleFilterState = atom({
   default: '',
 });
 
+export const sampleWithName = memoize((name) =>
+  atom({
+    key: `sample-${name}`,
+    default: {
+      checked: true,
+      visible: true,
+    },
+  })
+);
+
 export const sampleSelectionState = selector({
   key: 'sampleSelection',
   get: ({ get }) =>
@@ -57,16 +67,6 @@ export const selectedSamplesState = selector({
       (name) => get(sampleWithName(name)).checked
     ),
 });
-
-export const sampleWithName = memoize((name) =>
-  atom({
-    key: `sample-${name}`,
-    default: {
-      checked: true,
-      visible: true,
-    },
-  })
-);
 
 export const dnaAccessLabelStyleState = atom({
   key: 'dnaAccessLabelStyle',

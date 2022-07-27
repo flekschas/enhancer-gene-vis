@@ -20,6 +20,7 @@ import {
   HiGlassApiRangeSelectionEventData,
   HiGlassComponent,
 } from 'higlass';
+import { SubscribeFnResult } from 'pub-sub-es';
 import { debounce, deepClone, isParentOf, pipe, sum } from '@flekschas/utils';
 
 import Typography from '@material-ui/core/Typography';
@@ -86,7 +87,6 @@ import {
   StratifiedBedTrack,
   ViewConfig,
 } from '../../view-config-types';
-import { SubscribeFnResult } from 'pub-sub-es';
 
 const useStyles = makeStyles((theme) => ({
   grow: {

@@ -9,7 +9,7 @@ declare module 'pub-sub-es' {
   // Warning! Copied into `higlass.d.ts` because not sure how to import from sibling declaration file
   type SubscribeFnResult = { event: string; handler: Function };
   type UnsubscribeFn = ({ event: string, handler: Function }) => void;
-  type PublishFn = (event: string, news: any, options: PublishOptions) => void;
+  type PublishFn = (event: string, news: any, options?: PublishOptions) => void;
   type PublishOptions = {
     isNoGlobalBroadcast: boolean;
     async: boolean;
