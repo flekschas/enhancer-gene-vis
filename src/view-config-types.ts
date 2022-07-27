@@ -340,6 +340,7 @@ export enum FocusStyle {
 
 export enum OpacityEncoding {
   SOLID = 'solid',
+  FREQUENCY = 'frequency',
   HIGHEST_IMPORTANCE = 'highestImportance',
   CLOSEST_IMPORTANCE = 'closestImportance',
 }
