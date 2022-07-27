@@ -23,10 +23,7 @@ import {
   chrRangePosUrlEncoder,
 } from './utils';
 
-import {
-  samples,
-  stratificationState,
-} from './state/stratification-state';
+import { samples, stratificationState } from './state/stratification-state';
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,

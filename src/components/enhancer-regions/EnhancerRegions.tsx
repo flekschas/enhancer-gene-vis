@@ -41,7 +41,6 @@ import {
   xDomainStartAbsWithAssembly,
 } from '../../state';
 import {
-
   focusGeneEndWithAssembly,
   focusGeneOptionState,
   focusGeneStartWithAssembly,
@@ -67,10 +66,7 @@ import {
   updateViewConfigVariantTracks,
 } from '../../view-config';
 
-import {
-  BIOSAMPLE_COLUMN,
-  IGNORED_FOCUS_ELEMENTS,
-} from '../../constants';
+import { BIOSAMPLE_COLUMN, IGNORED_FOCUS_ELEMENTS } from '../../constants';
 import {
   DEFAULT_VIEW_CONFIG_ENHANCER,
   getTrackByUid,

@@ -43,10 +43,10 @@ declare module 'higlass' {
     yRange: [number, number];
   };
   type HiGlassApiClickEventData = {
-    type: string,
-    event: object,
-    payload: any
-  }
+    type: string;
+    event: object;
+    payload: any;
+  };
   type HiGlassApiRangeSelectionEventData = {
     dataRange: [[number, number], [number, number] | null];
     genomicRange: [

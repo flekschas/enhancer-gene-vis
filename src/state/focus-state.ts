@@ -1,17 +1,26 @@
-import { ChromosomeInfoResult } from "higlass";
-import { identity, memoize } from "lodash-es";
-import { atom, RecoilState, selector } from "recoil";
-import { isChrRange, chrRangePosUrlDecoder, chrRangePosEncoder, toAbsPosition, chrRangePosUrlEncoder } from "../utils";
-import { useRecoilQueryString, useRecoilQueryStringSyncher } from "../utils/query-string";
-import { getDefault } from "./utils";
+import { ChromosomeInfoResult } from 'higlass';
+import { identity, memoize } from 'lodash-es';
+import { atom, RecoilState, selector } from 'recoil';
+import {
+  isChrRange,
+  chrRangePosUrlDecoder,
+  chrRangePosEncoder,
+  toAbsPosition,
+  chrRangePosUrlEncoder,
+} from '../utils';
+import {
+  useRecoilQueryString,
+  useRecoilQueryStringSyncher,
+} from '../utils/query-string';
+import { getDefault } from './utils';
 
 type FocusGene = {
   chr: string;
   txStart: number;
   txEnd: number;
   geneName: string;
-  type: 'gene'
-}
+  type: 'gene';
+};
 
 type FocusRegion = {
   chr?: string;
@@ -21,27 +30,27 @@ type FocusRegion = {
   txEnd: number;
   geneName: string;
   score?: number;
-  type: 'region' | 'variant'
-}
+  type: 'region' | 'variant';
+};
 
 export const focusGeneState: RecoilState<string> = atom({
   key: 'focusGene',
   default: getDefault('g', '', identity),
 });
 
-export const focusGeneOptionState = atom<FocusGene|null>({
+export const focusGeneOptionState = atom<FocusGene | null>({
   key: 'focusGeneOption',
   default: null,
 });
 
-export const focusRegionState = atom<string|string[]>({
+export const focusRegionState = atom<string | string[]>({
   key: `focusRegion`,
   default: getDefault('f', 'rs1250566', (v) =>
     v && isChrRange(v) ? chrRangePosUrlDecoder(v) : v
   ),
 });
 
-export const focusRegionOptionState = atom<FocusRegion|null>({
+export const focusRegionOptionState = atom<FocusRegion | null>({
   key: `focusRegionOption`,
   default: getDefault('f', null, (v) => {
     if (!v || !isChrRange(v)) return null;
@@ -178,7 +187,8 @@ export const focusRegionStrState = selector({
   },
 });
 
-export const useFocusGene = () => useRecoilQueryString('g', focusGeneState, identity);
+export const useFocusGene = () =>
+  useRecoilQueryString('g', focusGeneState, identity);
 export const useFocusGeneSyncher = () =>
   useRecoilQueryStringSyncher('g', focusGeneState, identity);
 

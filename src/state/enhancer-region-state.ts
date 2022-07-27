@@ -12,7 +12,12 @@ import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
-import { OneDimensionalArcTrack, OpacityEncoding, Track, TrackType } from '../view-config-types';
+import {
+  OneDimensionalArcTrack,
+  OpacityEncoding,
+  Track,
+  TrackType,
+} from '../view-config-types';
 import { DEFAULT_STRATIFICATION, samples } from './stratification-state';
 import {
   getDefault,

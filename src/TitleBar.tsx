@@ -1,4 +1,10 @@
-import React, { ExoticComponent, MouseEventHandler, useCallback, useMemo, useState } from 'react';
+import React, {
+  ExoticComponent,
+  MouseEventHandler,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import HelpIcon from '@material-ui/icons/Help';
@@ -56,14 +62,14 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 type TitleBarProps = {
-  id: string,
-  title: string,
-  Info: ExoticComponent,
-  Help: ExoticComponent,
-  Settings: ExoticComponent,
-  useShowInfo: () => [boolean, (x: boolean) => void],
-  popoverDirection?: PopoverOrigin['vertical'],
-}
+  id: string;
+  title: string;
+  Info: ExoticComponent;
+  Help: ExoticComponent;
+  Settings: ExoticComponent;
+  useShowInfo: () => [boolean, (x: boolean) => void];
+  popoverDirection?: PopoverOrigin['vertical'];
+};
 const TitleBar = React.memo(function TitleBar({
   id,
   title,
@@ -74,24 +80,30 @@ const TitleBar = React.memo(function TitleBar({
   popoverDirection = 'bottom',
 }: TitleBarProps) {
   const [showInfo, setShowInfo] = useShowInfo();
-  const [helpAnchorEl, setHelpAnchorEl] = useState<Element|null>();
-  const [settingsAnchorEl, setSettingsAnchorEl] = useState<Element|null>();
+  const [helpAnchorEl, setHelpAnchorEl] = useState<Element | null>();
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState<Element | null>();
 
   const infoToggleHandler = useCallback(() => {
     setShowInfo(!showInfo);
   }, [showInfo, setShowInfo]);
 
-  const helpOpenHandler: MouseEventHandler<HTMLAnchorElement> = useCallback((event) => {
-    setHelpAnchorEl(event.currentTarget);
-  }, []);
+  const helpOpenHandler: MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (event) => {
+      setHelpAnchorEl(event.currentTarget);
+    },
+    []
+  );
 
   const helpCloseHandler = useCallback(() => {
     setHelpAnchorEl(null);
   }, []);
 
-  const settingsOpenHandler: MouseEventHandler<HTMLAnchorElement> = useCallback((event) => {
-    setSettingsAnchorEl(event.currentTarget);
-  }, []);
+  const settingsOpenHandler: MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (event) => {
+      setSettingsAnchorEl(event.currentTarget);
+    },
+    []
+  );
 
   const settingsCloseHandler = useCallback(() => {
     setSettingsAnchorEl(null);

@@ -21,8 +21,7 @@ import {
   useDnaAccessShowInfos,
   variantYScaleState,
 } from './state';
-import {
-  focusRegionAbsWithAssembly,} from './state/focus-state';
+import { focusRegionAbsWithAssembly } from './state/focus-state';
 import { variantTracksState } from './state/variant-track-state';
 
 import {

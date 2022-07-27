@@ -10,7 +10,10 @@ import createLocalBedDataServer, {
   LocalBedDataServer,
 } from '../../local-data-handlers/local-bed-data-server';
 
-import { focusRegionOptionState, useFocusRegion } from '../../state/focus-state';
+import {
+  focusRegionOptionState,
+  useFocusRegion,
+} from '../../state/focus-state';
 import {
   useVariantTracks,
   VariantTrack,
@@ -174,7 +177,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
           `${focusRegionOption.chrEnd}:${focusRegionOption.txEnd}`,
         ]);
       } else {
-        setFocusRegion(focusRegion)
+        setFocusRegion(focusRegion);
       }
       // TODO: Type this when focus region state is typed
       setFocusRegionOption((currFocusRegionOption: any) => {
