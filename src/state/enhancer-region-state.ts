@@ -12,7 +12,12 @@ import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
-import { OneDimensionalArcTrack, Track, TrackType } from '../view-config-types';
+import {
+  OneDimensionalArcTrack,
+  OpacityEncoding,
+  Track,
+  TrackType,
+} from '../view-config-types';
 import { DEFAULT_STRATIFICATION, samples } from './stratification-state';
 import {
   getDefault,
@@ -37,13 +42,6 @@ const enum EnhancerRegionQueryKey {
   HIDE_UNFOCUSED = 'erhu',
   COLOR_ENCODING = 'erc',
   TRACK = 'ert',
-}
-
-export const enum EnhancerRegionColorEncodingType {
-  SOLID = 'solid',
-  FREQUENCY = 'frequency',
-  HIGHEST_IMPORTANCE = 'highestImportance',
-  CLOSEST_IMPORTANCE = 'closestImportance',
 }
 
 export const DEFAULT_ENHANCER_REGION_SERVER_ABBR = TrackSourceAbbr.RG;
@@ -201,13 +199,13 @@ export const enhancerRegionsHideUnfocusedState: RecoilState<boolean> = atom({
   ),
 });
 
-export const enhancerRegionsColorEncodingState: RecoilState<EnhancerRegionColorEncodingType> = atom(
+export const enhancerRegionsColorEncodingState: RecoilState<OpacityEncoding> = atom(
   {
     key: 'enhancerRegionsColorEncoding',
     default: getDefault(
       EnhancerRegionQueryKey.COLOR_ENCODING,
-      EnhancerRegionColorEncodingType.SOLID,
-      (v) => v as EnhancerRegionColorEncodingType
+      OpacityEncoding.SOLID,
+      (v) => v as OpacityEncoding
     ),
   }
 );

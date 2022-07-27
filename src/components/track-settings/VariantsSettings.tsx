@@ -10,7 +10,10 @@ import createLocalBedDataServer, {
   LocalBedDataServer,
 } from '../../local-data-handlers/local-bed-data-server';
 
-import { focusRegionOptionState, useFocusRegion } from '../../state';
+import {
+  focusRegionOptionState,
+  useFocusRegion,
+} from '../../state/focus-state';
 import {
   useVariantTracks,
   VariantTrack,
@@ -86,7 +89,7 @@ const VariantsSettings = React.memo(function VariantsSettings({
 }: VariantsSettingsProps) {
   const chromInfo = useChromInfo();
 
-  const setFocusRegion = useFocusRegion()[1];
+  const [focusRegion, setFocusRegion] = useFocusRegion();
   const [variantTracks, setVariantTracks] = useVariantTracks();
 
   const [focusRegionOption, setFocusRegionOption] = useRecoilState(
@@ -168,16 +171,14 @@ const VariantsSettings = React.memo(function VariantsSettings({
           newTrackConfig.file !== currVariantTracks.current[i].file
       )
     ) {
-      // TODO: Correct this when focus region state is typed
-      setFocusRegion((currFocusRegion: string) => {
-        if (isString(currFocusRegion)) {
-          return [
-            `${focusRegionOption.chrStart}:${focusRegionOption.txStart}`,
-            `${focusRegionOption.chrEnd}:${focusRegionOption.txEnd}`,
-          ];
-        }
-        return currFocusRegion;
-      });
+      if (focusRegionOption && isString(focusRegion)) {
+        setFocusRegion([
+          `${focusRegionOption.chrStart}:${focusRegionOption.txStart}`,
+          `${focusRegionOption.chrEnd}:${focusRegionOption.txEnd}`,
+        ]);
+      } else {
+        setFocusRegion(focusRegion);
+      }
       // TODO: Type this when focus region state is typed
       setFocusRegionOption((currFocusRegionOption: any) => {
         if (currFocusRegionOption.chr) {

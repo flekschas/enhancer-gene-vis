@@ -298,7 +298,15 @@ export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
   if (!topTracks) {
     throw new Error('No tracks found in top track layout');
   }
-  const trackCandidate = topTracks.find((track) => track.uid === uid);
+  const topTracksFlattened = topTracks
+    .map((track) => {
+      if (track.type === TrackType.COMBINED) {
+        return [track, ...track.contents];
+      }
+      return track;
+    })
+    .flat();
+  const trackCandidate = topTracksFlattened.find((track) => track.uid === uid);
   if (!trackCandidate) {
     throw new Error(`No track found with uid: ${uid}`);
   }

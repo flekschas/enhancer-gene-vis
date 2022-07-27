@@ -14,8 +14,8 @@ import { useVariantYScale } from '../../state';
 import {
   useEnhancerRegionsHideUnfocused,
   useEnhancerRegionsColorEncoding,
-  EnhancerRegionColorEncodingType,
 } from '../../state/enhancer-region-state';
+import { OpacityEncoding } from '../../view-config-types';
 
 const useStyles = makeStyles((theme) => ({
   iconRadioLegend: {
@@ -24,24 +24,24 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 type ColorEncodingSettingRenderInfo = {
-  type: EnhancerRegionColorEncodingType;
+  type: OpacityEncoding;
   label: string;
 };
 const colorEncodingSettings: ColorEncodingSettingRenderInfo[] = [
   {
-    type: EnhancerRegionColorEncodingType.SOLID,
+    type: OpacityEncoding.SOLID,
     label: 'Solid',
   },
   {
-    type: EnhancerRegionColorEncodingType.FREQUENCY,
+    type: OpacityEncoding.FREQUENCY,
     label: 'Number of predictions',
   },
   {
-    type: EnhancerRegionColorEncodingType.HIGHEST_IMPORTANCE,
+    type: OpacityEncoding.HIGHEST_IMPORTANCE,
     label: 'Highest prediction score',
   },
   {
-    type: EnhancerRegionColorEncodingType.CLOSEST_IMPORTANCE,
+    type: OpacityEncoding.CLOSEST_IMPORTANCE,
     label: 'Closest prediction score',
   },
 ];
@@ -66,7 +66,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   );
 
   const changeColorEncoding = useCallback(
-    (value: EnhancerRegionColorEncodingType) => () => {
+    (value: OpacityEncoding) => () => {
       setColorEncoding(value);
     },
     [setColorEncoding]

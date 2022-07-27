@@ -1,6 +1,13 @@
 import { atom, selector } from 'recoil';
 import { memoize } from 'lodash-es';
 import { identity } from '@flekschas/utils';
+import {
+  focusGeneState,
+  focusRegionState,
+  focusGeneStartWithAssembly,
+  focusGeneEndWithAssembly,
+  focusRegionAbsWithAssembly,
+} from './state/focus-state';
 
 import {
   getQueryStringValue,
@@ -11,19 +18,12 @@ import {
 import {
   booleanQueryStringDecoder,
   toAbsPosition,
-  isChrRange,
   chrPosUrlDecoder,
   chrPosUrlEncoder,
-  chrRangePosUrlDecoder,
   chrRangePosUrlEncoder,
-  chrRangePosEncoder,
 } from './utils';
 
-import {
-  groupedSampleOptions,
-  samples,
-  stratificationState,
-} from './state/stratification-state';
+import { samples, stratificationState } from './state/stratification-state';
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,
@@ -42,6 +42,16 @@ export const sampleFilterState = atom({
   default: '',
 });
 
+export const sampleWithName = memoize((name) =>
+  atom({
+    key: `sample-${name}`,
+    default: {
+      checked: true,
+      visible: true,
+    },
+  })
+);
+
 export const sampleSelectionState = selector({
   key: 'sampleSelection',
   get: ({ get }) =>
@@ -58,16 +68,6 @@ export const selectedSamplesState = selector({
     ),
 });
 
-export const sampleWithName = memoize((name) =>
-  atom({
-    key: `sample-${name}`,
-    default: {
-      checked: true,
-      visible: true,
-    },
-  })
-);
-
 export const dnaAccessLabelStyleState = atom({
   key: 'dnaAccessLabelStyle',
   default: getDefault('dal', 'indicator', identity),
@@ -81,46 +81,6 @@ export const dnaAccessRowNormState = atom({
 export const dnaAccessLabelShowInfoState = atom({
   key: 'dnaAccessLabelShowInfos',
   default: getDefault('dai', true, booleanQueryStringDecoder),
-});
-
-export const focusGeneState = atom({
-  key: 'focusGene',
-  default: getDefault('g', '', identity),
-});
-
-export const focusGeneOptionState = atom({
-  key: 'focusGeneOption',
-  default: null,
-});
-
-export const focusRegionState = atom({
-  key: `focusRegion`,
-  default: getDefault('f', 'rs1250566', (v) =>
-    v && isChrRange(v) ? chrRangePosUrlDecoder(v) : v
-  ),
-});
-
-export const focusRegionOptionState = atom({
-  key: `focusRegionOption`,
-  default: getDefault('f', null, (v) => {
-    if (!v || !isChrRange(v)) return null;
-
-    const [start, end] = chrRangePosUrlDecoder(v);
-
-    if (!start || !end) return null;
-
-    const [chrStart, txStart] = start.split(':');
-    const [chrEnd, txEnd] = end.split(':');
-
-    return {
-      chrStart,
-      chrEnd,
-      txStart: +txStart,
-      txEnd: +txEnd,
-      geneName: chrRangePosEncoder([start, end]),
-      type: 'region',
-    };
-  }),
 });
 
 export const variantYScaleState = atom({
@@ -189,120 +149,6 @@ export const xDomainEndAbsWithAssembly = memoize(
     }),
   (chromInfo) => chromInfo.totalLength
 );
-
-export const focusGeneStartWithAssembly = memoize(
-  (chromInfo) =>
-    selector({
-      key: `focusGeneStart-${chromInfo.totalLength}`,
-      get: ({ get }) => {
-        const focusGeneOption = get(focusGeneOptionState);
-        return focusGeneOption
-          ? toAbsPosition(
-              `${focusGeneOption.chr}:${focusGeneOption.txStart}`,
-              chromInfo
-            )
-          : null;
-      },
-    }),
-  (chromInfo) => chromInfo.totalLength
-);
-
-export const focusGeneEndWithAssembly = memoize(
-  (chromInfo) =>
-    selector({
-      key: `focusGeneEnd-${chromInfo.totalLength}`,
-      get: ({ get }) => {
-        const focusGeneOption = get(focusGeneOptionState);
-        return focusGeneOption
-          ? toAbsPosition(
-              `${focusGeneOption.chr}:${focusGeneOption.txEnd}`,
-              chromInfo
-            )
-          : null;
-      },
-    }),
-  (chromInfo) => chromInfo.totalLength
-);
-
-export const focusRegionAbsWithAssembly = memoize(
-  (chromInfo) =>
-    selector({
-      key: `focusRegionAbs-${chromInfo.totalLength}`,
-      get: ({ get }) => {
-        const focusRegionOption = get(focusRegionOptionState);
-
-        if (!focusRegionOption) return null;
-
-        if (focusRegionOption.chrStart)
-          return [
-            toAbsPosition(
-              `${focusRegionOption.chrStart}:${focusRegionOption.txStart}`,
-              chromInfo
-            ),
-            toAbsPosition(
-              `${focusRegionOption.chrEnd}:${focusRegionOption.txEnd}`,
-              chromInfo
-            ),
-          ];
-
-        const startAbs = toAbsPosition(
-          `${focusRegionOption.chr}:${focusRegionOption.txStart}`,
-          chromInfo
-        );
-
-        return [startAbs, startAbs + 1];
-      },
-    }),
-  (chromInfo) => chromInfo.totalLength
-);
-
-export const focusRegionRelState = selector({
-  key: 'focusVariantRel',
-  get: ({ get }) => {
-    const focusRegionOption = get(focusRegionOptionState);
-
-    if (!focusRegionOption) return null;
-
-    if (
-      focusRegionOption.chrStart &&
-      focusRegionOption.chrEnd &&
-      focusRegionOption.chrStart !== focusRegionOption.chrEnd
-    )
-      // The relative position doesn't exist because the selected region
-      // stretches across chromsomes
-      return Number.NaN;
-
-    if (focusRegionOption.chrStart) {
-      return (
-        +focusRegionOption.txStart +
-        (+focusRegionOption.txEnd - +focusRegionOption.txStart) / 2
-      );
-    }
-
-    return +focusRegionOption.txStart;
-  },
-});
-
-export const focusRegionStrState = selector({
-  key: 'focusRegionStr',
-  get: ({ get }) => {
-    const focusRegionOption = get(focusRegionOptionState);
-
-    if (!focusRegionOption) return null;
-
-    const chrRange = focusRegionOption.chrStart
-      ? [
-          `${focusRegionOption.chrStart}:${focusRegionOption.txStart}`,
-          `${focusRegionOption.chrEnd}:${focusRegionOption.txEnd}`,
-        ]
-      : [
-          `${focusRegionOption.chr}:${focusRegionOption.txStart}`,
-          `${focusRegionOption.chr}:${focusRegionOption.txEnd}`,
-        ];
-
-    return chrRangePosEncoder(chrRange);
-  },
-});
 
 export const dnaAccessXDomainWithAssembly = memoize(
   (chromInfo) =>
