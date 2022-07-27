@@ -18,12 +18,13 @@ import { useShowTooltip } from '../../TooltipProvider';
 import { getCategories, getSamples } from './enhancer-gene-plot-helper';
 
 import {
+  sampleSelectionState,
+} from '../../state';
+import {
   focusRegionAbsWithAssembly,
   focusRegionRelState,
   focusRegionState,
-  focusRegionStrState,
-  sampleSelectionState,
-} from '../../state';
+  focusRegionStrState,} from '../../state/focus-state';
 import {
   enhancerGenesCellEncodingState,
   enhancerGenesPaddingState,

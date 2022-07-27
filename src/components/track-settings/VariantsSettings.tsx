@@ -10,7 +10,7 @@ import createLocalBedDataServer, {
   LocalBedDataServer,
 } from '../../local-data-handlers/local-bed-data-server';
 
-import { focusRegionOptionState, useFocusRegion } from '../../state';
+import { focusRegionOptionState, useFocusRegion } from '../../state/focus-state';
 import {
   useVariantTracks,
   VariantTrack,

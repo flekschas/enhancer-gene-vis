@@ -16,12 +16,6 @@ import TooltipProvider from './TooltipProvider';
 import { useChromInfo } from './ChromInfoProvider';
 
 import {
-  focusGeneOptionState,
-  focusRegionOptionState,
-  useFocusGene,
-  useFocusRegion,
-  useFocusGeneSyncher,
-  useFocusRegionSyncher,
   useDnaAccessLabelStyleSyncher,
   useDnaAccessRowNormSyncher,
   useDnaAccessShowInfosSyncher,
@@ -29,6 +23,15 @@ import {
   useXDomainEndWithAssemblySyncher,
   useVariantYScaleSyncher,
 } from './state';
+import {
+
+  focusGeneOptionState,
+  focusRegionOptionState,
+  useFocusGene,
+  useFocusRegion,
+  useFocusGeneSyncher,
+  useFocusRegionSyncher,
+} from './state/focus-state'
 import { useShowWelcomeSyncher } from './state/app-settings-state';
 import { useVariantTracksSyncher } from './state/variant-track-state';
 import {

@@ -31,21 +31,24 @@ import EnhancerRegionsSettings from './EnhancerRegionsSettings';
 import TitleBar from '../../TitleBar';
 
 import {
-  focusGeneEndWithAssembly,
-  focusGeneOptionState,
-  focusGeneStartWithAssembly,
-  focusRegionOptionState,
-  focusRegionAbsWithAssembly,
   higlassEnhancerRegionsState,
   selectedSamplesState,
-  useFocusGene,
-  useFocusRegion,
   useXDomainEndWithAssembly,
   useXDomainStartWithAssembly,
   variantYScaleState,
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
 } from '../../state';
+import {
+
+  focusGeneEndWithAssembly,
+  focusGeneOptionState,
+  focusGeneStartWithAssembly,
+  focusRegionOptionState,
+  focusRegionAbsWithAssembly,
+  useFocusGene,
+  useFocusRegion,
+} from '../../state/focus-state';
 import { sampleGroupSelectionSizesState } from '../../state/stratification-state';
 import {
   enhancerRegionsColorEncodingState,
