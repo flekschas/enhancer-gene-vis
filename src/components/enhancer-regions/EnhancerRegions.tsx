@@ -69,12 +69,9 @@ import {
 
 import {
   BIOSAMPLE_COLUMN,
-  HIGLASS_PAN_ZOOM,
-  HIGLASS_SELECT,
   IGNORED_FOCUS_ELEMENTS,
 } from '../../constants';
 import {
-  CombinedTrackUid,
   DEFAULT_VIEW_CONFIG_ENHANCER,
   getTrackByUid,
   updateViewConfigEnhancerRegionTracks,
@@ -309,7 +306,8 @@ const EnhancerRegion = React.memo((_props) => {
         updateViewConfigColorEncoding(colorEncoding),
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigXDomain(xDomainStartAbs, xDomainEndAbs, {
-          force: shouldSkipUpdatingXDomain,
+          // TODO: Check if calling the shouldSkipUpdatingXDomain function is breaking things later?
+          force: shouldSkipUpdatingXDomain(),
         }),
         updateViewConfigFilter(selectedSamples),
         updateViewConfigMatrixHeight(numSamples),
@@ -522,7 +520,7 @@ const EnhancerRegion = React.memo((_props) => {
         }
 
         higlassRangeSelection.current = null;
-        higlassApi.current?.activateTool(HiGlassApiMouseTool.PAN_ZOOM);
+        higlassApi.current?.activateTool(/** default PANZOOM */);
       }
 
       document.addEventListener('keydown', keydownHandler);
