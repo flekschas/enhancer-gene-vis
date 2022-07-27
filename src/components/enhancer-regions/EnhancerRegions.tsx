@@ -14,6 +14,7 @@ import {
 import {
   ChromosomeInfoResult,
   HiGlassApi,
+  HiGlassApiClickEventData,
   HiGlassApiLocationEventData,
   HiGlassApiMouseTool,
   HiGlassApiRangeSelectionEventData,
@@ -346,7 +347,7 @@ const EnhancerRegion = React.memo((_props) => {
   );
 
   // HiGlass Functions
-  const higlassClickHandler = (event) => {
+  const higlassClickHandler = (event: HiGlassApiClickEventData) => {
     if (event.type === 'gene-annotation') {
       setFocusGene(event.payload.name);
       higlassEnhancerClickSelection.current = true;

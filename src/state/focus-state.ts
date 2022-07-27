@@ -16,7 +16,7 @@ type FocusGene = {
 type FocusRegion = {
   chr?: string;
   chrStart?: number;
-  chrEnd?: string;
+  chrEnd?: number;
   txStart: number;
   txEnd: number;
   geneName: string;
