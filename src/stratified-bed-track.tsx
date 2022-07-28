@@ -1,4 +1,17 @@
 import IntervalTree from '@flatten-js/interval-tree';
+import { HiGlassComponent, HiGlassPluginInfo, HiGlassTile, HiGlassTileDataItem } from 'higlass';
+import { Container } from 'pixi.js';
+import { string } from 'prop-types';
+
+type Point = {
+  cX: number
+  height: number
+  highlight: boolean
+  opacity: number
+  widthHalf: number
+  y: number
+  __item: HiGlassTileDataItem
+}
 
 import {
   DEFAULT_COLOR_MAP,
@@ -6,7 +19,12 @@ import {
   DEFAULT_COLOR_MAP_LIGHT,
   EPS,
 } from './constants';
+import {
+  Stratification,
+  StratificationGroup,
+} from './state/stratification-state';
 import { dashedXLineTo, toFixed } from './utils';
+import { OpacityEncoding } from './view-config-types';
 
 const intersects = (a, b) => a[0] < b[1] && a[1] >= b[0];
 
@@ -53,7 +71,7 @@ const FS = `
 `;
 
 // prettier-ignore
-const pointToPosition = (pt) => [
+const pointToPosition = (pt: Point) => [
   // top-left
   pt.cX - pt.widthHalf, pt.y,
   // top-right
@@ -66,25 +84,25 @@ const pointToPosition = (pt) => [
   // pt.cX - pt.widthHalf, pt.y,
 ];
 
-const pointToIndex = (pt, i) => {
+const pointToIndex = (_pt: Point, i: number) => {
   const base = i * 4;
   return [base, base + 1, base + 2, base + 2, base + 3, base];
 };
 
-const pointToOpacity = (pt) => [pt.opacity, pt.opacity, pt.opacity, pt.opacity];
+const pointToOpacity = (pt: Point) => [pt.opacity, pt.opacity, pt.opacity, pt.opacity];
 
-const pointToHighlight = (pt) => [
+const pointToHighlight = (pt: Point) => [
   pt.highlight,
   pt.highlight,
   pt.highlight,
   pt.highlight,
 ];
 
-const getItemDistance = (item) =>
+const getItemDistance = (item: HiGlassTileDataItem) =>
   Math.abs(
     +item.fields[1] +
-      (+item.fields[2] - +item.fields[1]) / 2 -
-      (+item.fields[4] + (+item.fields[4] - +item.fields[5]) / 2)
+    (+item.fields[2] - +item.fields[1]) / 2 -
+    (+item.fields[4] + (+item.fields[4] - +item.fields[5]) / 2)
   );
 
 const getMaxDistance = (fetchedTiles) =>
@@ -115,8 +133,8 @@ const getRegionId = (item) =>
   `${item.fields[0]}:${item.fields[1]}-${item.fields[2]}`;
 
 const createStratifiedBedTrack = function createStratifiedBedTrack(
-  HGC,
-  ...args
+  HGC: HiGlassPluginInfo,
+  ...args: any[]
 ) {
   if (!new.target) {
     throw new Error(
@@ -124,7 +142,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
     );
   }
 
-  const { PIXI } = HGC.libraries;
+  const pixi: typeof PIXI = HGC.libraries.PIXI;
   const { scaleLinear, scaleLog } = HGC.libraries.d3Scale;
   const { tileProxy } = HGC.services;
   const { MAX_CLICK_DELAY } = HGC.configs;
@@ -134,11 +152,35 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
     .range([0.1, 1])
     .clamp(true);
 
+  type StratifiedBedTrackOptions = {
+    stratification: Stratification;
+    opacityEncoding: OpacityEncoding;
+    importanceDomain: [number, number];
+    focusRegion: [number, number];
+    markColorHighlight: number;
+  };
   class StratifiedBedTrack extends HGC.tracks.HorizontalLine1DPixiTrack {
-    constructor(context, options) {
-      super(context, options);
+    private options: StratifiedBedTrackOptions;
+    private groupLabels!: string[];
+    private bg: PIXI.Sprite;
+    private pLegend: PIXI.Graphics;
+    // private pMasked!: PIXI.Graphics;
+    private pLoading!: PIXI.Graphics;
+    private legendMin: number;
+    private legendMax: number;
+    private legendMinText!: PIXI.Text;
+    private legendMaxText!: PIXI.Text;
+    private markColor!: number;
+    private markColorHighlight!: number;
+    private focusRegion!: [number, number];
+    private markColorHighlightRgbNorm!: [number, number, number];
+    // protected fetchedTiles!: { [key: string]: HiGlassTile };
 
-      this.pLegend = new PIXI.Graphics();
+    constructor(context, options: StratifiedBedTrackOptions) {
+      super(context, options);
+      this.options = options;
+
+      this.pLegend = new pixi.Graphics();
       this.pMasked.addChild(this.pLegend);
 
       this.legendMin = Infinity;
@@ -146,7 +188,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       // Needed for interaction tracking because interaction tracking on the
       // mesh causes errors...
-      this.bg = new PIXI.Sprite(PIXI.Texture.WHITE);
+      this.bg = new pixi.Sprite(pixi.Texture.WHITE);
       [this.bg.width, this.bg.height] = this.dimensions;
       this.bg.interactive = true;
       this.bg.interactiveChildren = false;
@@ -163,19 +205,21 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.updateOptions();
 
-      this.pLoading = new PIXI.Graphics();
+      this.pLoading = new pixi.Graphics();
       this.pLoading.position.x = 0;
       this.pLoading.position.y = 0;
+      console.log(this.pMasked)
       this.pMasked.addChild(this.pLoading);
 
-      this.loadIndicator = new PIXI.Text('Loading data...', {
+      this.loadIndicator = new pixi.Text('Loading data...', {
         fontSize: this.labelSize || 10,
         fill: 0x808080,
       });
       this.pLoading.addChild(this.loadIndicator);
     }
 
-    initTile(tile) {
+    initTile(tile: HiGlassTile) {
+      console.log(tile);
       const intervals = [];
 
       tile.intervalTree = new IntervalTree(intervals);
@@ -218,47 +262,49 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       );
       this.numGroups = this.filteredGroups.length;
       this.numCategories = this.groupSizes.reduce(
-        (numCategories, groupSize) => numCategories + groupSize,
+        (numCategories: number, groupSize: number) => numCategories + groupSize,
         0
       );
       this.groupLabels = this.options.stratification.groups.map(
-        (group, i) => group.label || `Group ${i}`
+        (group: StratificationGroup, i: number) => group.label || `Group ${i}`
       );
 
       let k = 0;
-      this.options.stratification.groups.forEach((group, i) => {
-        this.groupToColor.set(i, [
-          HGC.utils.colorToHex(
-            group.color || DEFAULT_COLOR_MAP[i % DEFAULT_COLOR_MAP.length]
-          ),
-          HGC.utils.colorToHex(
-            group.backgroundColor ||
+      this.options.stratification.groups.forEach(
+        (group: StratificationGroup, i) => {
+          this.groupToColor.set(i, [
+            HGC.utils.colorToHex(
+              group.color || DEFAULT_COLOR_MAP[i % DEFAULT_COLOR_MAP.length]
+            ),
+            HGC.utils.colorToHex(
+              group.backgroundColor ||
               DEFAULT_COLOR_MAP_LIGHT[i % DEFAULT_COLOR_MAP_LIGHT.length]
-          ),
-          HGC.utils.colorToHex(
-            group.backgroundColor ||
+            ),
+            HGC.utils.colorToHex(
+              group.backgroundColor ||
               DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
-          ),
-        ]);
-        group.categories
-          .filter((category) => this.valueFilter(category))
-          .forEach((category, j) => {
-            const cat = category.toLowerCase();
-            this.categoryToGroup.set(cat, i);
-            this.categoryToY.set(cat, k + j);
-            this.yToCategory.set(k + j, cat);
-          });
-        k += this.groupSizes[i];
-      });
+            ),
+          ]);
+          group.categories
+            .filter((category) => this.valueFilter(category))
+            .forEach((category, j) => {
+              const cat = category.toLowerCase();
+              this.categoryToGroup.set(cat, i);
+              this.categoryToY.set(cat, k + j);
+              this.yToCategory.set(k + j, cat);
+            });
+          k += this.groupSizes[i];
+        }
+      );
 
       this.groupLabelsPixiText = this.groupLabels.map(
         (label, i) =>
-          new PIXI.Text(label, {
+          new pixi.Text(label, {
             fontSize: this.labelSize,
             align: this.axisAlign === 'right' ? 'right' : 'left',
             fill: HGC.utils.colorToHex(
               this.options.stratification.groups[i].axisLabelColor ||
-                DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
+              DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
             ),
           })
       );
@@ -277,9 +323,9 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.markColorRgbNorm = this.options.markColor
         ? HGC.utils
-            .colorToRgba(this.options.markColor)
-            .slice(0, 3)
-            .map((x) => Math.min(1, Math.max(0, x / 255)))
+          .colorToRgba(this.options.markColor)
+          .slice(0, 3)
+          .map((x) => Math.min(1, Math.max(0, x / 255)))
         : [0, 0, 0];
 
       this.markOpacity = Number.isNaN(+this.options.markOpacity)
@@ -298,9 +344,9 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.markColorHighlightRgbNorm = this.options.markColorHighlight
         ? HGC.utils
-            .colorToRgba(this.options.markColorHighlight)
-            .slice(0, 3)
-            .map((x) => Math.min(1, Math.max(0, x / 255)))
+          .colorToRgba(this.options.markColorHighlight)
+          .slice(0, 3)
+          .map((x) => Math.min(1, Math.max(0, x / 255)))
         : [1, 0, 0];
 
       this.markColorDehighlight = HGC.utils.colorToHex(
@@ -309,9 +355,9 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.markColorDehighlightRgbNorm = this.options.markColorDehighlight
         ? HGC.utils
-            .colorToRgba(this.options.markColorDehighlight)
-            .slice(0, 3)
-            .map((x) => Math.min(1, Math.max(0, x / 255)))
+          .colorToRgba(this.options.markColorDehighlight)
+          .slice(0, 3)
+          .map((x) => Math.min(1, Math.max(0, x / 255)))
         : [0.6, 0.6, 0.6];
 
       this.markOpacityFocus = Number.isNaN(+this.options.markOpacityFocus)
@@ -321,9 +367,9 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.filterSet =
         this.options.filter && this.options.filter.set
           ? this.options.filter.set.reduce((s, include) => {
-              s.add(include);
-              return s;
-            }, new Set())
+            s.add(include);
+            return s;
+          }, new Set())
           : null;
 
       this.filterField = this.options.filter && this.options.filter.field;
@@ -389,7 +435,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.updateStratificationOption();
     }
 
-    rerender(newOptions) {
+    rerender(newOptions: StratifiedBedTrackOptions) {
       this.options = newOptions;
       this.updateOptions();
       this.updateExistingGraphics();
@@ -425,7 +471,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         .range([0, height]);
     }
 
-    itemToIndicatorCategory(item, isHighlighting) {
+    itemToIndicatorCategory(item, isHighlighting: boolean) {
       return {
         cX: this._xScale(item.cX),
         y: this.categoryHeightScale(
@@ -494,7 +540,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       };
     }
 
-    getPoints(isHighlighting) {
+    getPoints(isHighlighting: boolean) {
       let reducerVar = [];
       let addFn = (accumulator, item) =>
         accumulator.push(this.itemToIndicatorCategory(item, isHighlighting));
@@ -559,7 +605,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const opacities = new Float32Array(points.flatMap(pointToOpacity));
       const highlights = new Float32Array(points.flatMap(pointToHighlight));
 
-      const uniforms = new PIXI.UniformGroup({
+      const uniforms = new pixi.UniformGroup({
         uColor: isHighlighting
           ? [...this.markColorDehighlightRgbNorm, this.markOpacity]
           : [...this.markColorRgbNorm, this.markOpacity],
@@ -567,17 +613,17 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         uHighlighting: isHighlighting,
       });
 
-      const shader = PIXI.Shader.from(VS, FS, uniforms);
+      const shader = pixi.Shader.from(VS, FS, uniforms);
 
-      const geometry = new PIXI.Geometry();
+      const geometry = new pixi.Geometry();
       geometry.addAttribute('aPosition', positions, 2);
       geometry.addAttribute('aOpacity', opacities, 1);
       geometry.addAttribute('aHighlight', highlights, 1);
       geometry.addIndex(indices);
 
-      const mesh = new PIXI.Mesh(geometry, shader);
+      const mesh = new pixi.Mesh(geometry, shader);
 
-      const newGraphics = new PIXI.Graphics();
+      const newGraphics = new pixi.Graphics();
       newGraphics.addChild(this.bg);
       newGraphics.addChild(mesh);
 
@@ -622,63 +668,65 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       this.pAxis.lineStyle(1, 0x000000, 1.0, 0.0);
 
-      this.groupLabelsPixiText.forEach((labelPixiText, i) => {
-        if (numAxisLabels < i + 1) {
-          this.pAxis.addChild(labelPixiText);
+      this.groupLabelsPixiText.forEach(
+        (labelPixiText: Container, i: number) => {
+          if (numAxisLabels < i + 1) {
+            this.pAxis.addChild(labelPixiText);
+          }
+
+          // Don't ask me why but somehow after `labelPixiText` was added to
+          // `this.pAxis` the object is not the same as `this.pAxis.children[i]`
+          // anymore and subsequent changes were ineffective
+          const text = this.pAxis.children[i];
+
+          if (this.groupSizes[i] === 0) {
+            text.alpha = 0;
+            return;
+          }
+
+          const height = this.categoryHeightScale(this.groupSizes[i]);
+          yEnd += height;
+          text.x = xLabelOffset;
+          text.y = yStart + height / 2;
+          text.anchor.x = this.axisAlign === 'right' ? 1 : 0;
+          text.anchor.y = 0.5;
+          text.alpha = 1;
+
+          if (this.options.focusStyle === 'highlighting') {
+            this.pAxis.beginFill(0xffffff, 0.66);
+          } else {
+            this.pAxis.beginFill(this.groupToColor.get(i)[1], 0.66);
+          }
+
+          this.pAxis.lineStyle(0);
+          if (this.axisAlign === 'right') {
+            this.pAxis.drawRect(
+              text.x - text.width,
+              text.y - text.height / 2,
+              text.width,
+              text.height
+            );
+          } else {
+            this.pAxis.drawRect(
+              text.x,
+              text.y - text.height / 2,
+              text.width,
+              text.height
+            );
+          }
+          this.pAxis.endFill();
+
+          this.pAxis.lineStyle(1, 0x000000, 1.0, 0.0);
+          this.pAxis.moveTo(0, yStart);
+          this.pAxis.lineTo(xTickOffset, yStart);
+
+          if (this.options.stratification.axisShowGroupSeparator) {
+            dashedXLineTo(this.pAxis, 0, xTickEnd, yStart, 5);
+          }
+
+          yStart = yEnd;
         }
-
-        // Don't ask me why but somehow after `labelPixiText` was added to
-        // `this.pAxis` the object is not the same as `this.pAxis.children[i]`
-        // anymore and subsequent changes were ineffective
-        const text = this.pAxis.children[i];
-
-        if (this.groupSizes[i] === 0) {
-          text.alpha = 0;
-          return;
-        }
-
-        const height = this.categoryHeightScale(this.groupSizes[i]);
-        yEnd += height;
-        text.x = xLabelOffset;
-        text.y = yStart + height / 2;
-        text.anchor.x = this.axisAlign === 'right' ? 1 : 0;
-        text.anchor.y = 0.5;
-        text.alpha = 1;
-
-        if (this.options.focusStyle === 'highlighting') {
-          this.pAxis.beginFill(0xffffff, 0.66);
-        } else {
-          this.pAxis.beginFill(this.groupToColor.get(i)[1], 0.66);
-        }
-
-        this.pAxis.lineStyle(0);
-        if (this.axisAlign === 'right') {
-          this.pAxis.drawRect(
-            text.x - text.width,
-            text.y - text.height / 2,
-            text.width,
-            text.height
-          );
-        } else {
-          this.pAxis.drawRect(
-            text.x,
-            text.y - text.height / 2,
-            text.width,
-            text.height
-          );
-        }
-        this.pAxis.endFill();
-
-        this.pAxis.lineStyle(1, 0x000000, 1.0, 0.0);
-        this.pAxis.moveTo(0, yStart);
-        this.pAxis.lineTo(xTickOffset, yStart);
-
-        if (this.options.stratification.axisShowGroupSeparator) {
-          dashedXLineTo(this.pAxis, 0, xTickEnd, yStart, 5);
-        }
-
-        yStart = yEnd;
-      });
+      );
 
       this.pAxis.moveTo(0, 0);
       this.pAxis.lineTo(0, yEnd);
@@ -726,7 +774,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
           this.pLegend.removeChild(this.legendMinText);
           this.legendMinText.destroy();
         }
-        this.legendMinText = new PIXI.Text(toFixed(minValue, 3), {
+        this.legendMinText = new pixi.Text(toFixed(minValue, 3), {
           fontSize: this.labelSize,
           align: isRightAligned ? 'right' : 'left',
           fill: 0x808080,
@@ -742,7 +790,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
           this.pLegend.removeChild(this.legendMaxText);
           this.legendMaxText.destroy();
         }
-        this.legendMaxText = new PIXI.Text(toFixed(maxValue, 3), {
+        this.legendMaxText = new pixi.Text(toFixed(maxValue, 3), {
           fontSize: this.labelSize,
           align: isRightAligned ? 'right' : 'left',
           fill: 0x808080,
@@ -760,7 +808,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         ? -(maxTextWidth + legendRectWidth + padding)
         : minTextWidth + 2 * padding;
 
-      const rectHeight = 18 + (isHighlighting * padding) / 2;
+      const rectHeight = 18 + (isHighlighting ? padding : 0) / 2;
 
       this.pLegend.beginFill(0xffffff);
       this.pLegend.lineStyle(1, 0xcccccc);
@@ -779,7 +827,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
           0.5,
           0,
           legendRectWidth + minTextWidth + maxTextWidth + 3 * padding,
-          18 + (isHighlighting * padding) / 2,
+          18 + (isHighlighting ? padding : 0) / 2,
           3
         );
       }
@@ -792,7 +840,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         this.pLegend.beginFill(this.markColor, opacity);
         this.pLegend.drawRect(
           i * 9 + offset,
-          padding / 2 + !isHighlighting * 3,
+          padding / 2 + (!isHighlighting ? 3 : 0),
           6,
           6
         );
@@ -843,7 +891,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
     }
 
     // Gets called on every draw call
-    drawTile(tile) {
+    drawTile(tile: HiGlassTile) {
       tile.graphics.clear();
 
       this.updateLoadIndicator();
@@ -1029,9 +1077,13 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
 
       const createLine = ({
         stroke = '#000000',
-        strokeWidth = 1,
+        strokeWidth = '1',
         strokeDasharray = null,
-      } = {}) => (x1, y1, x2, y2) => {
+      }: {
+        stroke?: string;
+        strokeWidth?: string;
+        strokeDasharray?: string | null;
+      } = {}) => (x1: string, y1: string, x2: string, y2: string) => {
         const l = document.createElement('line');
 
         l.setAttribute('x1', x1);
@@ -1052,51 +1104,53 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       const isHighlighting = this.options.focusStyle === 'highlighting';
       const backgroundOpacity = 0.66;
 
-      this.groupLabelsPixiText.forEach((labelPixiText, i) => {
-        const height = this.categoryHeightScale(this.groupSizes[i]);
-        yEnd += height;
-        labelPixiText.x = xLabelOffset;
-        labelPixiText.y = yStart + height / 2;
+      this.groupLabelsPixiText.forEach(
+        (labelPixiText: Container, i: number) => {
+          const height = this.categoryHeightScale(this.groupSizes[i]);
+          yEnd += height;
+          labelPixiText.x = xLabelOffset;
+          labelPixiText.y = yStart + height / 2;
 
-        // Background color
-        const backgroundColor = isHighlighting
-          ? '#ffffff'
-          : `#${this.groupToColor.get(i)[1].toString(16)}`;
+          // Background color
+          const backgroundColor = isHighlighting
+            ? '#ffffff'
+            : `#${this.groupToColor.get(i)[1].toString(16)}`;
 
-        if (this.axisAlign === 'right') {
-          gAxis.appendChild(
-            createRect(
-              labelPixiText.x - labelPixiText.width,
-              labelPixiText.y - labelPixiText.height / (4 / 1),
-              labelPixiText.width,
-              labelPixiText.height,
-              backgroundColor,
-              backgroundOpacity
-            )
-          );
-        } else {
-          gAxis.appendChild(
-            createRect(
-              labelPixiText.x,
-              labelPixiText.y - labelPixiText.height / (4 / 1),
-              labelPixiText.width,
-              labelPixiText.height,
-              backgroundColor,
-              backgroundOpacity
-            )
-          );
+          if (this.axisAlign === 'right') {
+            gAxis.appendChild(
+              createRect(
+                labelPixiText.x - labelPixiText.width,
+                labelPixiText.y - labelPixiText.height / (4 / 1),
+                labelPixiText.width,
+                labelPixiText.height,
+                backgroundColor,
+                backgroundOpacity
+              )
+            );
+          } else {
+            gAxis.appendChild(
+              createRect(
+                labelPixiText.x,
+                labelPixiText.y - labelPixiText.height / (4 / 1),
+                labelPixiText.width,
+                labelPixiText.height,
+                backgroundColor,
+                backgroundOpacity
+              )
+            );
+          }
+
+          gAxis.appendChild(createText(labelPixiText));
+
+          gAxis.appendChild(createLine()(0, yStart, xTickOffset, yStart));
+
+          if (this.options.stratification.axisShowGroupSeparator) {
+            gAxis.appendChild(createDashedLine(0, yStart, xTickEnd, yStart));
+          }
+
+          yStart = yEnd;
         }
-
-        gAxis.appendChild(createText(labelPixiText));
-
-        gAxis.appendChild(createLine()(0, yStart, xTickOffset, yStart));
-
-        if (this.options.stratification.axisShowGroupSeparator) {
-          gAxis.appendChild(createDashedLine(0, yStart, xTickEnd, yStart));
-        }
-
-        yStart = yEnd;
-      });
+      );
 
       gAxis.appendChild(createLine()(0, 0, 0, yEnd));
 

@@ -1,5 +1,27 @@
+/// <reference types="@flatten-js/interval-tree" />
 declare module 'higlass' {
   function ChromosomeInfo(source: string): Promise<ChromosomeInfoResult>;
+  type HiGlassTile = {
+    tileId: string, 
+    remoteId: string, 
+    tileData: HiGlassTileDataItem[], 
+    graphics: PIXI.Graphics, 
+    intervalTree: IntervalTree
+  }
+  type HiGlassTileDataItem = {
+    cX: number,
+    chrOffset: number,
+    distance: number,
+    fields: string[];
+    importance: number,
+    isLeftToRight: boolean;
+    name: string;
+    regionId: string;
+    uid: string;
+    xEnd: number,
+    xStart: number,
+    __focus: boolean
+  };
   class ChromosomeInfoResult {
     /** Mapping of chromosome to ChromosomePosition object */
     chrPositions: { [key: string]: ChromosomePosition };
