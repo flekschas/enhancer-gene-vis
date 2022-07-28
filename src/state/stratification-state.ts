@@ -9,17 +9,19 @@ export type Stratification = {
   groups: StratificationGroup[];
 };
 
-type StratificationGroup = {
+export type StratificationGroup = {
   label: string;
   categories: string[];
+  color?: string;
+  backgroundColor?: string;
 };
 
-type GroupedSampleOption = {
+export type GroupedSampleOption = {
   name: string;
   options: string[];
 };
 
-type SampleGroup = {
+export type SampleGroup = {
   checked: boolean;
   visible: boolean;
   n: number;

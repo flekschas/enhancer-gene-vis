@@ -296,4 +296,168 @@ declare module 'higlass' {
       callbackId?: string
     ): PubSubSubscribeFnResult;
   }
+
+  class HorizontalLine1DPixiTrack {
+    stopHover(): void;
+    getMouseOverHtml(trackX: number): string;
+
+    /**
+     * Create whatever is needed to draw this tile.
+     */
+    initTile(tile): void;
+
+    rerender(options, force): void;
+
+    renderTile(tile): void;
+
+    drawTile(tile): void;
+
+    setPosition(newPosition): void;
+
+    zoomed(newXScale, newYScale): void;
+
+    superSVG(): any;
+
+    /**
+     * Export an SVG representation of this track
+     *
+     * @returns {Array} The two returned DOM nodes are both SVG
+     * elements [base,track]. Base is a parent which contains track as a
+     * child. Track is clipped with a clipping rectangle contained in base.
+     *
+     */
+    exportSVG(): any;
+
+    tileToLocalId(tile): string;
+
+    tileToRemoteId(tile): string;
+  }
+
+  type HiGlassPluginInfo = {
+    chromosomes: HiGlassChromosomes;
+    libraries: HiGLassLibraries;
+    tracks: HiGlassTracks;
+    dataFetchers;
+    factories;
+    services;
+    utils;
+    configs;
+    // Defined globally by webpack.
+    VERSION: string;
+  };
+
+  type HiGLassLibraries = {
+    d3Array;
+    d3Axis;
+    d3Brush;
+    d3Color;
+    d3Drag;
+    d3Dsv;
+    d3Format;
+    d3Geo;
+    d3Queue;
+    d3Request;
+    d3Scale;
+    d3Selection;
+    d3Transition;
+    d3Zoom;
+    PIXI;
+    mix;
+    slugid;
+  };
+
+  type HiGlassTracks = {
+    Annotations1dTrack;
+    Annotations2dTrack;
+    ArrowheadDomainsTrack;
+    BarTrack;
+    BedLikeTrack;
+    CNVIntervalTrack;
+    Chromosome2DAnnotations;
+    Chromosome2DLabels;
+    ChromosomeGrid;
+    CombinedTrack;
+    CrossRule;
+    DivergentBarTrack;
+    HeatmapTiledPixiTrack;
+    Horizontal1dHeatmapTrack;
+    Horizontal2DDomainsTrack;
+    HorizontalChromosomeLabels;
+    HorizontalGeneAnnotationsTrack;
+    HorizontalHeatmapTrack;
+    HorizontalLine1DPixiTrack: HorizontalLine1DPixiTrack.constructor;
+    HorizontalMultivecTrack;
+    HorizontalPoint1DPixiTrack;
+    HorizontalRule;
+    HorizontalTiled1DPixiTrack;
+    HorizontalTiledPlot;
+    HorizontalTrack;
+    Id2DTiledPixiTrack;
+    IdHorizontal1DTiledPixiTrack;
+    IdVertical1DTiledPixiTrack;
+    LeftAxisTrack;
+    MapboxTilesTrack;
+    MoveableTrack;
+    OSMTileIdsTrack;
+    OSMTilesTrack;
+    OverlayTrack;
+    PixiTrack;
+    RasterTilesTrack;
+    SVGTrack;
+    SquareMarkersTrack;
+    Tiled1DPixiTrack;
+    TiledPixiTrack;
+    TopAxisTrack;
+    Track;
+    ValueIntervalTrack;
+    VerticalRule;
+    VerticalTiled1DPixiTrack;
+    VerticalTrack;
+    ViewportTracker2D;
+    ViewportTracker2DPixi;
+    ViewportTrackerHorizontal;
+    ViewportTrackerVertical;
+  };
+
+  type HiGlassChromosomes = {
+    ChromosomeInfo: ChromosomeInfo;
+    SearchField: SearchField;
+  };
+
+  import { bisector } from 'd3-array';
+  import { format } from 'd3-format';
+  import { absToChr } from './utils';
+
+  class Scale {
+    domain(): [number, number];
+  }
+
+  class SearchField {
+    constructor(chromInfo: ChromosomeInfoResult);
+
+    scalesToPositionText(xScale: Scale, yScale: Scale, twoD: boolean): string;
+
+    convertNumberNotation(numStr: string): string;
+
+    /**
+     * Parse chr:position strings
+     * i.e. chr1:1000
+     * or   chr2:20000
+     */
+    parsePosition(
+      positionText: string,
+      prevChr?: string
+    ): [string, number, number];
+
+    matchRangesToLarger(
+      range1: [number, number],
+      range2: [number, number]
+    ): [number, number];
+
+    getSearchRange(term: string): [number, number];
+
+    parseOffset(offsetText: string): [[number, number], [number, number]];
+
+    searchPosition(text: string): [[number, number], [number, number]];
+  }
 }
