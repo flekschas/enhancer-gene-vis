@@ -612,6 +612,7 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
       this.pAxis.position.y = top;
 
       this.pAxis.clear();
+      this.pAxis.removeChildren();
       let yStart = 0;
       let yEnd = 0;
 

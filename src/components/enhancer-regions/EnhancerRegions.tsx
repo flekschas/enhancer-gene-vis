@@ -50,7 +50,10 @@ import {
   useFocusGene,
   useFocusRegion,
 } from '../../state/focus-state';
-import { sampleGroupSelectionSizesState } from '../../state/stratification-state';
+import {
+  sampleGroupSelectionSizesState,
+  Stratification,
+} from '../../state/stratification-state';
 import {
   enhancerRegionsColorEncodingState,
   enhancerRegionsHideUnfocusedState,
@@ -66,6 +69,7 @@ import {
   updateViewConfigXDomain,
   updateViewConfigVariantTracks,
 } from '../../view-config';
+import { stratificationState } from '../../state/stratification-state';
 
 import { BIOSAMPLE_COLUMN, IGNORED_FOCUS_ELEMENTS } from '../../constants';
 import {
@@ -212,6 +216,23 @@ const updateViewConfigMatrixHeight = (numSamples: number) => (
   return viewConfig;
 };
 
+const updateViewConfigStratification = (stratification: Stratification) => (
+  viewConfig: ViewConfig
+) => {
+  const stratifiedTrack = getTrackByUid(
+    viewConfig,
+    'indicatorByCellTypes'
+  ) as StratifiedBedTrack;
+  stratifiedTrack.options.stratification = stratification;
+
+  const stackedBarTrack = getTrackByUid(
+    viewConfig,
+    'stacked-bars'
+  ) as StackedBarTrack;
+  stackedBarTrack.options.stratification = stratification;
+  return viewConfig;
+};
+
 const EnhancerRegion = React.memo((_props) => {
   const chromInfo = useChromInfo();
 
@@ -244,6 +265,7 @@ const EnhancerRegion = React.memo((_props) => {
     sampleGroupSelectionSizesState
   );
   const selectedSamples = useRecoilValue(selectedSamplesState);
+  const stratification = useRecoilValue(stratificationState);
 
   const [higlassMouseOver, setHiglassMouseOver] = useState(false);
   const [higlassFocus, setHiglassFocus] = useState(false);
@@ -307,7 +329,8 @@ const EnhancerRegion = React.memo((_props) => {
         }),
         updateViewConfigFilter(selectedSamples),
         updateViewConfigMatrixHeight(numSamples),
-        updateViewConfigEnhancerRegionTracks(enhancerTrackConfig)
+        updateViewConfigEnhancerRegionTracks(enhancerTrackConfig),
+        updateViewConfigStratification(stratification)
       )(deepClone(DEFAULT_VIEW_CONFIG_ENHANCER)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -323,6 +346,7 @@ const EnhancerRegion = React.memo((_props) => {
       variantYScale,
       selectedSamples,
       numSamples,
+      stratification,
     ]
   );
 

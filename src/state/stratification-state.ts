@@ -29,7 +29,7 @@ type SampleGroup = {
 export const DEFAULT_STRATIFICATION: Stratification = {
   categoryField: BIOSAMPLE_COLUMN,
   axisShowGroupSeparator: true,
-  axisNoGroupColor: false,
+  axisNoGroupColor: true,
   groups: [
     {
       label: 'Mononuclear Phagocytes',
@@ -208,17 +208,18 @@ export const stratificationState: RecoilState<Stratification> = atom({
 });
 
 export const sampleGroupWithGroup = memoize(
-  (group) =>
-    atom<SampleGroup>({
-      key: `sampleGroup-${group.name}`,
+  (group: GroupedSampleOption) => {
+    return atom<SampleGroup>({
+      key: `sampleGroup-${JSON.stringify(group)}`,
       default: {
         checked: true,
         visible: true,
         n: group.options.length,
         N: group.options.length,
       },
-    }),
-  (group) => group.name
+    });
+  },
+  (group) => JSON.stringify(group)
 );
 
 export const sampleGroupSelectionSizesState = selector({
