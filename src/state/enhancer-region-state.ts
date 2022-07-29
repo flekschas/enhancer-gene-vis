@@ -15,6 +15,7 @@ import {
 import {
   OneDimensionalArcTrack,
   OpacityEncoding,
+  StackedBarTrack,
   Track,
   TrackType,
 } from '../view-config-types';
@@ -79,7 +80,7 @@ export const DEFAULT_ENHANCER_GENE_ARC_TRACK: OneDimensionalArcTrack = {
     },
   },
 };
-export const DEFAULT_ENHANCER_GENE_STACKED_BAR_TRACK: Track = {
+export const DEFAULT_ENHANCER_GENE_STACKED_BAR_TRACK: StackedBarTrack = {
   type: TrackType.STACKED_BAR,
   // server: 'http://localhost:9876/api/v1',
   // tilesetUid: 'AllPredictionsAvgHiCABC0015minus150ForABCPaperV2hg19beddb',
