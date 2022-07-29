@@ -208,8 +208,8 @@ export const stratificationState: RecoilState<Stratification> = atom({
 });
 
 export const sampleGroupWithGroup = memoize(
-  (group) =>
-    atom<SampleGroup>({
+  (group: GroupedSampleOption) => {
+    return atom<SampleGroup>({
       key: `sampleGroup-${group.name}`,
       default: {
         checked: true,
@@ -217,8 +217,9 @@ export const sampleGroupWithGroup = memoize(
         n: group.options.length,
         N: group.options.length,
       },
-    }),
-  (group) => group.name
+    });
+  },
+  (group) => JSON.stringify(group)
 );
 
 export const sampleGroupSelectionSizesState = selector({
