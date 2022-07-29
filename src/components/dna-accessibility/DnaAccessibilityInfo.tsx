@@ -12,7 +12,7 @@ import {
 
 import { toFixed } from '../../utils';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((_theme) => ({
   root: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -34,7 +34,7 @@ const DnaAccessibilityInfo = React.memo(function DnaAccessibilityInfo() {
     (xDomainAbs[1] - xDomainAbs[0]) / 1000
   );
 
-  if (!showInfo) return '';
+  if (!showInfo) return null;
 
   return (
     <div className={classes.root}>
