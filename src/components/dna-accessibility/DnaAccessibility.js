@@ -5,12 +5,12 @@ import { makeStyles } from '@material-ui/core/styles';
 import { deepClone, pipe } from '@flekschas/utils';
 import { HiGlassComponent } from 'higlass';
 
-import { useChromInfo } from './ChromInfoProvider';
+import { useChromInfo } from '../../ChromInfoProvider';
 import DnaAccessibilityInfo from './DnaAccessibilityInfo';
 import DnaAccessibilityHelp from './DnaAccessibilityHelp';
 import DnaAccessibilitySettings from './DnaAccessibilitySettings';
 
-import TitleBar from './TitleBar';
+import TitleBar from '../../TitleBar';
 
 import {
   dnaAccessLabelStyleState,
@@ -20,22 +20,22 @@ import {
   sampleSelectionState,
   useDnaAccessShowInfos,
   variantYScaleState,
-} from './state';
-import { focusRegionAbsWithAssembly } from './state/focus-state';
-import { variantTracksState } from './state/variant-track-state';
+} from '../../state';
+import { focusRegionAbsWithAssembly } from '../../state/focus-state';
+import { variantTracksState } from '../../state/variant-track-state';
 
 import {
   DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,
   DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
 } from './constants-dna-accessibility';
-import useDebounce from './hooks/use-debounce';
+import useDebounce from '../../hooks/use-debounce';
 
 import {
   updateViewConfigFocusRegion,
   updateViewConfigVariantYScale,
   updateViewConfigXDomain,
   updateViewConfigVariantTracks,
-} from './view-config';
+} from '../../view-config';
 
 import 'higlass/dist/hglib.css';
 
