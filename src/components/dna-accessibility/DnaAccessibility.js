@@ -13,14 +13,16 @@ import DnaAccessibilitySettings from './DnaAccessibilitySettings';
 import TitleBar from '../../TitleBar';
 
 import {
-  dnaAccessLabelStyleState,
-  dnaAccessRowNormState,
-  dnaAccessXDomainWithAssembly,
   higlassDnaAccessState,
   sampleSelectionState,
-  useDnaAccessShowInfos,
   variantYScaleState,
+  dnaAccessXDomainWithAssembly,
 } from '../../state';
+import {
+  dnaAccessLabelStyleState,
+  dnaAccessRowNormState,
+  useDnaAccessShowInfos,
+} from '../../state/dna-accessibility-state'
 import { focusRegionAbsWithAssembly } from '../../state/focus-state';
 import { variantTracksState } from '../../state/variant-track-state';
 

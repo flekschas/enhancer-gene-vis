@@ -16,7 +16,6 @@ import {
 } from './utils/query-string';
 
 import {
-  booleanQueryStringDecoder,
   toAbsPosition,
   chrPosUrlDecoder,
   chrPosUrlEncoder,
@@ -66,21 +65,6 @@ export const selectedSamplesState = selector({
     samples(get(stratificationState)).filter(
       (name) => get(sampleWithName(name)).checked
     ),
-});
-
-export const dnaAccessLabelStyleState = atom({
-  key: 'dnaAccessLabelStyle',
-  default: getDefault('dal', 'indicator', identity),
-});
-
-export const dnaAccessRowNormState = atom({
-  key: 'dnaAccessRowNorm',
-  default: getDefault('darn', true, booleanQueryStringDecoder),
-});
-
-export const dnaAccessLabelShowInfoState = atom({
-  key: 'dnaAccessLabelShowInfos',
-  default: getDefault('dai', true, booleanQueryStringDecoder),
 });
 
 export const variantYScaleState = atom({
@@ -189,21 +173,6 @@ export const useFocusRegionSyncher = (chromInfo) =>
   useRecoilQueryStringSyncher('f', focusRegionState, (v) =>
     Array.isArray(v) ? chrRangePosUrlEncoder(v) : v
   );
-
-export const useDnaAccessLabelStyle = () =>
-  useRecoilQueryString('dal', dnaAccessLabelStyleState);
-export const useDnaAccessLabelStyleSyncher = () =>
-  useRecoilQueryStringSyncher('dal', dnaAccessLabelStyleState);
-
-export const useDnaAccessRowNorm = () =>
-  useRecoilQueryString('darn', dnaAccessRowNormState);
-export const useDnaAccessRowNormSyncher = () =>
-  useRecoilQueryStringSyncher('darn', dnaAccessRowNormState);
-
-export const useDnaAccessShowInfos = () =>
-  useRecoilQueryString('dai', dnaAccessLabelShowInfoState);
-export const useDnaAccessShowInfosSyncher = () =>
-  useRecoilQueryStringSyncher('dai', dnaAccessLabelShowInfoState);
 
 export const useXDomainStartWithAssembly = (chromInfo) =>
   useRecoilQueryString(

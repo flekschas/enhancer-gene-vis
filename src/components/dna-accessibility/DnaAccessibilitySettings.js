@@ -11,7 +11,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import AntSwitch from '../../AntSwitch';
 
-import { useDnaAccessLabelStyle, useDnaAccessRowNorm } from '../../state';
+import { useDnaAccessLabelStyle, useDnaAccessRowNorm } from '../../state/dna-accessibility-state';
 
 const useStyles = makeStyles((theme) => ({
   iconRadioLegend: {
