@@ -51,7 +51,7 @@ const DnaAccessibilitySettings = React.memo(
     const classes = useStyles();
 
     return (
-      <React.Fragment>
+      <>
         <Box m={1}>
           <FormControlLabel
             className={classes.switch}
@@ -97,7 +97,7 @@ const DnaAccessibilitySettings = React.memo(
             </RadioGroup>
           </FormControl>
         </Box>
-      </React.Fragment>
+      </>
     );
   }
 );
