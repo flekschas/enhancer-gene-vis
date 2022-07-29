@@ -22,7 +22,7 @@ import {
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,
   useDnaAccessShowInfos,
-} from '../../state/dna-accessibility-state'
+} from '../../state/dna-accessibility-state';
 import { focusRegionAbsWithAssembly } from '../../state/focus-state';
 import { variantTracksState } from '../../state/variant-track-state';
 

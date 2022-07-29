@@ -1,10 +1,14 @@
 import { identity } from 'lodash-es';
 import { atom, RecoilState } from 'recoil';
 import { booleanQueryStringDecoder } from '../utils';
-import { booleanQueryStringEncoder, useRecoilQueryString, useRecoilQueryStringSyncher } from '../utils/query-string';
+import {
+  booleanQueryStringEncoder,
+  useRecoilQueryString,
+  useRecoilQueryStringSyncher,
+} from '../utils/query-string';
 import { getDefault } from './utils';
 
-export const enum DnaAccessibilityLabelStyle {
+export enum DnaAccessibilityLabelStyle {
   INDICATOR = 'indicator',
   TEXT = 'text',
   HIDDEN = 'hidden',
@@ -37,11 +41,27 @@ export const useDnaAccessLabelStyleSyncher = () =>
   useRecoilQueryStringSyncher('dal', dnaAccessLabelStyleState, identity);
 
 export const useDnaAccessRowNorm = () =>
-  useRecoilQueryString('darn', dnaAccessRowNormState, booleanQueryStringEncoder);
+  useRecoilQueryString(
+    'darn',
+    dnaAccessRowNormState,
+    booleanQueryStringEncoder
+  );
 export const useDnaAccessRowNormSyncher = () =>
-  useRecoilQueryStringSyncher('darn', dnaAccessRowNormState, booleanQueryStringEncoder);
+  useRecoilQueryStringSyncher(
+    'darn',
+    dnaAccessRowNormState,
+    booleanQueryStringEncoder
+  );
 
 export const useDnaAccessShowInfos = () =>
-  useRecoilQueryString('dai', dnaAccessLabelShowInfoState, booleanQueryStringEncoder);
+  useRecoilQueryString(
+    'dai',
+    dnaAccessLabelShowInfoState,
+    booleanQueryStringEncoder
+  );
 export const useDnaAccessShowInfosSyncher = () =>
-  useRecoilQueryStringSyncher('dai', dnaAccessLabelShowInfoState, booleanQueryStringEncoder);
+  useRecoilQueryStringSyncher(
+    'dai',
+    dnaAccessLabelShowInfoState,
+    booleanQueryStringEncoder
+  );

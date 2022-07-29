@@ -21,7 +21,6 @@ import {
   useVariantYScaleSyncher,
 } from './state';
 import {
-
   useDnaAccessLabelStyleSyncher,
   useDnaAccessRowNormSyncher,
   useDnaAccessShowInfosSyncher,
