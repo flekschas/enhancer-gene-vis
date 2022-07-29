@@ -16,13 +16,15 @@ import TooltipProvider from './TooltipProvider';
 import { useChromInfo } from './ChromInfoProvider';
 
 import {
-  useDnaAccessLabelStyleSyncher,
-  useDnaAccessRowNormSyncher,
-  useDnaAccessShowInfosSyncher,
   useXDomainStartWithAssemblySyncher,
   useXDomainEndWithAssemblySyncher,
   useVariantYScaleSyncher,
 } from './state';
+import {
+  useDnaAccessLabelStyleSyncher,
+  useDnaAccessRowNormSyncher,
+  useDnaAccessShowInfosSyncher,
+} from '././state/dna-accessibility-state';
 import {
   focusGeneOptionState,
   focusRegionOptionState,

@@ -5,10 +5,8 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import { useChromInfo } from '../../ChromInfoProvider';
 
-import {
-  dnaAccessLabelShowInfoState,
-  dnaAccessXDomainWithAssembly,
-} from '../../state';
+import { dnaAccessXDomainWithAssembly } from '../../state';
+import { dnaAccessLabelShowInfoState } from '../../state/dna-accessibility-state';
 
 import { toFixed } from '../../utils';
 
