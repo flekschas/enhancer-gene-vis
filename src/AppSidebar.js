@@ -46,7 +46,7 @@ import {
   SVG_SKELETON,
   DRAWER_WIDTH,
 } from './constants';
-import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from './constants-dna-accessibility';
+import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from './components/dna-accessibility/constants-dna-accessibility';
 import {
   groupedSampleOptions,
   sampleToGroup,

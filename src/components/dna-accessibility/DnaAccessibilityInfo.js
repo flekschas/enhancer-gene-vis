@@ -3,14 +3,14 @@ import { useRecoilValue } from 'recoil';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useChromInfo } from './ChromInfoProvider';
+import { useChromInfo } from '../../ChromInfoProvider';
 
 import {
   dnaAccessLabelShowInfoState,
   dnaAccessXDomainWithAssembly,
-} from './state';
+} from '../../state';
 
-import { toFixed } from './utils';
+import { toFixed } from '../../utils';
 
 const useStyles = makeStyles((theme) => ({
   root: {
