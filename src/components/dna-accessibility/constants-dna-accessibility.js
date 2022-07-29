@@ -1,4 +1,4 @@
-import { DEFAULT_STRATIFICATION } from './state/stratification-state';
+import { DEFAULT_STRATIFICATION } from '../../state/stratification-state';
 
 export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES = DEFAULT_STRATIFICATION.groups.reduce(
   (row, group, index) => {

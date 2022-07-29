@@ -9,7 +9,7 @@ import AppSidebar from './AppSidebar';
 import AppTopbar from './AppTopbar';
 import EnhancerRegions from './components/enhancer-regions/EnhancerRegions';
 import EnhancerGenes from './components/enhancer-genes/EnhancerGenes';
-import DnaAccessibility from './DnaAccessibility';
+import DnaAccessibility from './components/dna-accessibility/DnaAccessibility';
 import ModalProvider from './ModalProvider';
 import TooltipProvider from './TooltipProvider';
 

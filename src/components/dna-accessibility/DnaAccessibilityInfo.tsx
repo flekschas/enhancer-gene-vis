@@ -3,16 +3,16 @@ import { useRecoilValue } from 'recoil';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useChromInfo } from './ChromInfoProvider';
+import { useChromInfo } from '../../ChromInfoProvider';
 
 import {
   dnaAccessLabelShowInfoState,
   dnaAccessXDomainWithAssembly,
-} from './state';
+} from '../../state';
 
-import { toFixed } from './utils';
+import { toFixed } from '../../utils';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((_theme) => ({
   root: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -34,7 +34,7 @@ const DnaAccessibilityInfo = React.memo(function DnaAccessibilityInfo() {
     (xDomainAbs[1] - xDomainAbs[0]) / 1000
   );
 
-  if (!showInfo) return '';
+  if (!showInfo) return null;
 
   return (
     <div className={classes.root}>
