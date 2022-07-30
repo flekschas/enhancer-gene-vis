@@ -19,6 +19,7 @@ import {
   dnaAccessXDomainWithAssembly,
 } from '../../state';
 import {
+  DnaAccessibilityLabelStyle,
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,
   useDnaAccessShowInfos,
@@ -40,6 +41,8 @@ import {
 } from '../../view-config';
 
 import 'higlass/dist/hglib.css';
+import { RidgePlotTrack, ViewConfig } from '../../view-config-types';
+import { getTrackByUid } from '../../view-config-typed';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -54,18 +57,27 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const updateViewConfigDnaAccessLabels = (labels) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[3].options.showRowLabels =
-    !labels || labels === 'hidden' ? false : labels;
+const updateViewConfigDnaAccessLabelStyle = (
+  labelStyle: DnaAccessibilityLabelStyle
+) => (viewConfig: ViewConfig) => {
+  const track = getTrackByUid(
+    viewConfig,
+    'dna-accessibility'
+  ) as RidgePlotTrack;
+  track.options.showRowLabels = labelStyle;
   return viewConfig;
 };
 
-const updateViewConfigDnaAccessRowNorm = (rowNorm) => (viewConfig) => {
+const updateViewConfigDnaAccessRowNorm = (rowNorm) => (
+  viewConfig: ViewConfig
+) => {
   viewConfig.views[0].tracks.top[3].options.rowNormalization = rowNorm;
   return viewConfig;
 };
 
-const updateViewConfigRowSelection = (selection) => (viewConfig) => {
+const updateViewConfigRowSelection = (selection) => (
+  viewConfig: ViewConfig
+) => {
   viewConfig.views[0].tracks.top[3].options.rowSelections = DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
     (rowId, i) => selection[i]
   );
@@ -107,7 +119,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
         updateViewConfigVariantTracks(variantTracks),
         updateViewConfigFocusRegion(focusRegionAbs, [2]),
         updateViewConfigVariantYScale(variantYScale),
-        updateViewConfigDnaAccessLabels(labelStyle),
+        updateViewConfigDnaAccessLabelStyle(labelStyle),
         updateViewConfigDnaAccessRowNorm(rowNorm),
         updateViewConfigXDomain(...xDomainAbsDb, { force: true }),
         updateViewConfigRowSelection(sampleSelection)
