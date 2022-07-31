@@ -12,11 +12,11 @@ import { makeStyles } from '@material-ui/core/styles';
 import AntSwitch from '../../AntSwitch';
 
 import {
-  DnaAccessibilityLabelStyle,
   useDnaAccessLabelStyle,
   useDnaAccessRowNorm,
 } from '../../state/dna-accessibility-state';
 import { capitalizeFirstLetter } from '../../utils/string';
+import { DnaAccessibilityLabelStyle } from '../../view-config-types';
 
 const useStyles = makeStyles((theme) => ({
   iconRadioLegend: {

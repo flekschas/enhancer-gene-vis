@@ -12,6 +12,8 @@ export type Stratification = {
 type StratificationGroup = {
   label: string;
   categories: string[];
+  axisLabelColor?: string;
+  axisLabelBackground?: string;
 };
 
 type GroupedSampleOption = {

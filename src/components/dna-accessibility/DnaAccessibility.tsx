@@ -3,7 +3,7 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
 import { deepClone, pipe } from '@flekschas/utils';
-import { HiGlassComponent } from 'higlass';
+import { HiGlassApi, HiGlassComponent } from 'higlass';
 
 import { useChromInfo } from '../../ChromInfoProvider';
 import DnaAccessibilityInfo from './DnaAccessibilityInfo';
@@ -40,8 +40,10 @@ import {
 } from '../../view-config';
 
 import 'higlass/dist/hglib.css';
+import { DnaAccessibilityLabelStyle, RidgePlotTrack, ViewConfig } from '../../view-config-types';
+import { getTrackByUid } from '../../view-config-typed';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((_theme) => ({
   root: {
     position: 'absolute',
     top: 0,
@@ -54,19 +56,36 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const updateViewConfigDnaAccessLabels = (labels) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[3].options.showRowLabels =
-    !labels || labels === 'hidden' ? false : labels;
+const updateViewConfigDnaAccessLabelStyle = (
+  labelStyle: DnaAccessibilityLabelStyle
+) => (viewConfig: ViewConfig) => {
+  const track = getTrackByUid(
+    viewConfig,
+    'dna-accessibility'
+  ) as RidgePlotTrack;
+  track.options.showRowLabels = labelStyle;
   return viewConfig;
 };
 
-const updateViewConfigDnaAccessRowNorm = (rowNorm) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[3].options.rowNormalization = rowNorm;
+const updateViewConfigDnaAccessRowNorm = (rowNorm: boolean) => (
+  viewConfig: ViewConfig
+) => {
+  const track = getTrackByUid(
+    viewConfig,
+    'dna-accessibility'
+  ) as RidgePlotTrack;
+  track.options.rowNormalization = rowNorm;
   return viewConfig;
 };
 
-const updateViewConfigRowSelection = (selection) => (viewConfig) => {
-  viewConfig.views[0].tracks.top[3].options.rowSelections = DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
+const updateViewConfigRowSelection = (selection: boolean[]) => (
+  viewConfig: ViewConfig
+) => {
+  const track = getTrackByUid(
+    viewConfig,
+    'dna-accessibility'
+  ) as RidgePlotTrack;
+  track.options.rowSelections = DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
     (rowId, i) => selection[i]
   );
   return viewConfig;
@@ -84,7 +103,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
   const variantTracks = useRecoilValue(variantTracksState);
   const focusRegionAbs = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
 
-  const higlassApi = useRef(null);
+  const higlassApi = useRef<HiGlassApi|null>(null);
 
   const xDomainAbsDb = useDebounce(
     useRecoilValue(dnaAccessXDomainWithAssembly(chromInfo)),
@@ -107,7 +126,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
         updateViewConfigVariantTracks(variantTracks),
         updateViewConfigFocusRegion(focusRegionAbs, [2]),
         updateViewConfigVariantYScale(variantYScale),
-        updateViewConfigDnaAccessLabels(labelStyle),
+        updateViewConfigDnaAccessLabelStyle(labelStyle),
         updateViewConfigDnaAccessRowNorm(rowNorm),
         updateViewConfigXDomain(...xDomainAbsDb, { force: true }),
         updateViewConfigRowSelection(sampleSelection)

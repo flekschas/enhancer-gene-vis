@@ -21,8 +21,19 @@ declare module 'higlass' {
   interface HiGlassComponentOptions {
     sizeMode: HiGlassComponentSizeMode;
     globalMousePosition: boolean;
+    pixelPreciseMarginPadding?: true,
+    containerPaddingX?: number,
+    containerPaddingY?: number,
+    viewMarginTop?: number,
+    viewMarginBottom?: number,
+    viewMarginLeft?: number,
+    viewMarginRight?: number,
+    viewPaddingTop?: number,
+    viewPaddingBottom?: number,
+    viewPaddingLeft?: number,
+    viewPaddingRight?: number,
   }
-  type HiGlassComponentSizeMode = 'bounded'; // Make string union of any other size modes
+  type HiGlassComponentSizeMode = 'bounded' | 'scroll'; // Make string union of any other size modes
   class HiGlassComponent extends React.Component<HiGlassComponentProps> {
     api: HiGlassApi;
     element: Element;

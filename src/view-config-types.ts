@@ -1,4 +1,5 @@
 export type ViewConfig = {
+  zoomFixed?: boolean;
   editable: boolean;
   trackSourceServers: string[];
   views: View[];
@@ -8,7 +9,7 @@ export type View = {
   uid: string;
   initialXDomain: [number, number];
   initialYDomain: [number, number];
-  genomePositionSearchBox: GenomePositionSearchBox;
+  genomePositionSearchBox?: GenomePositionSearchBox;
   chromInfoPath: string;
   tracks: {
     top?: Track[];
@@ -18,7 +19,7 @@ export type View = {
     right?: Track[];
   };
   overlays: Overlay[];
-  metaTracks: MetaTrack[];
+  metaTracks?: MetaTrack[];
   layout: {
     w: number;
     h: number;
@@ -83,6 +84,7 @@ export const enum TrackType {
   POINT_ANNOTATION = 'point-annotation',
   ARCS_1D = '1d-arcs',
   STRATIFIED_BED = 'stratified-bed',
+  RIDGE_PLOT = 'ridge-plot',
 }
 
 export type TrackLabelPosition = 'topLeft' | 'topRight' | 'hidden';
@@ -98,7 +100,8 @@ export type Track =
   | OneDimensionalArcTrack
   | StackedBarTrack
   | StratifiedBedTrack
-  | HorizontalChromosomeLabelTrack;
+  | HorizontalChromosomeLabelTrack
+  | RidgePlotTrack;
 
 export type TrackCommon = {
   uid: string;
@@ -331,6 +334,54 @@ export type StratifiedBedTrackOptions = {
     set: string[];
     field: number;
   };
+};
+
+export type RidgePlotTrack = TrackCommon & {
+  type: TrackType.RIDGE_PLOT;
+  options: RidgePlotTrackOptions;
+};
+
+export type RidgePlotTrackOptions = {
+  name: string;
+  labelPosition: string;
+  labelShowResolution: boolean;
+  labelShowAssembly: boolean;
+  markArea: boolean;
+  markColor: string;
+  markResolution: number;
+  valueScaling: 'exponential';
+  colorRange: [string, string];
+  rowHeight: number;
+  rowPadding: number;
+  rowNormalization: boolean;
+  rowSelections: number[];
+  rowIdToCategory: {
+    fn: string;
+    args: [string, string];
+  };
+  rowCategories: CategoryNameToDnaAccessibilityCategoryMap;
+  showRowLabels: DnaAccessibilityLabelStyle;
+  rowLabelSize: number;
+  showMousePosition: boolean;
+  showGlobalMousePosition: boolean;
+  mousePositionColor: string;
+};
+
+export enum DnaAccessibilityLabelStyle {
+  INDICATOR = 'indicator',
+  TEXT = 'text',
+  HIDDEN = 'hidden',
+}
+
+export type DnaAccessibilityCategory = {
+  label: string;
+  color?: string;
+  background?: string;
+  index: number;
+};
+
+export type CategoryNameToDnaAccessibilityCategoryMap = {
+  [key: string]: DnaAccessibilityCategory;
 };
 
 export enum FocusStyle {

@@ -6,13 +6,8 @@ import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
+import { DnaAccessibilityLabelStyle } from '../view-config-types';
 import { getDefault } from './utils';
-
-export enum DnaAccessibilityLabelStyle {
-  INDICATOR = 'indicator',
-  TEXT = 'text',
-  HIDDEN = 'hidden',
-}
 
 export const dnaAccessLabelStyleState: RecoilState<DnaAccessibilityLabelStyle> = atom(
   {
