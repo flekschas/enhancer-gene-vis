@@ -3,7 +3,7 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
 import { deepClone, pipe } from '@flekschas/utils';
-import { HiGlassComponent } from 'higlass';
+import { HiGlassApi, HiGlassComponent } from 'higlass';
 
 import { useChromInfo } from '../../ChromInfoProvider';
 import DnaAccessibilityInfo from './DnaAccessibilityInfo';
@@ -19,7 +19,6 @@ import {
   dnaAccessXDomainWithAssembly,
 } from '../../state';
 import {
-  DnaAccessibilityLabelStyle,
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,
   useDnaAccessShowInfos,
@@ -41,10 +40,10 @@ import {
 } from '../../view-config';
 
 import 'higlass/dist/hglib.css';
-import { RidgePlotTrack, ViewConfig } from '../../view-config-types';
+import { DnaAccessibilityLabelStyle, RidgePlotTrack, ViewConfig } from '../../view-config-types';
 import { getTrackByUid } from '../../view-config-typed';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((_theme) => ({
   root: {
     position: 'absolute',
     top: 0,
@@ -68,17 +67,25 @@ const updateViewConfigDnaAccessLabelStyle = (
   return viewConfig;
 };
 
-const updateViewConfigDnaAccessRowNorm = (rowNorm) => (
+const updateViewConfigDnaAccessRowNorm = (rowNorm: boolean) => (
   viewConfig: ViewConfig
 ) => {
-  viewConfig.views[0].tracks.top[3].options.rowNormalization = rowNorm;
+  const track = getTrackByUid(
+    viewConfig,
+    'dna-accessibility'
+  ) as RidgePlotTrack;
+  track.options.rowNormalization = rowNorm;
   return viewConfig;
 };
 
-const updateViewConfigRowSelection = (selection) => (
+const updateViewConfigRowSelection = (selection: boolean[]) => (
   viewConfig: ViewConfig
 ) => {
-  viewConfig.views[0].tracks.top[3].options.rowSelections = DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
+  const track = getTrackByUid(
+    viewConfig,
+    'dna-accessibility'
+  ) as RidgePlotTrack;
+  track.options.rowSelections = DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
     (rowId, i) => selection[i]
   );
   return viewConfig;
@@ -96,7 +103,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
   const variantTracks = useRecoilValue(variantTracksState);
   const focusRegionAbs = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
 
-  const higlassApi = useRef(null);
+  const higlassApi = useRef<HiGlassApi|null>(null);
 
   const xDomainAbsDb = useDebounce(
     useRecoilValue(dnaAccessXDomainWithAssembly(chromInfo)),

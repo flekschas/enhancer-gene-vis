@@ -9,7 +9,6 @@ import {
 
 export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES: CategoryNameToDnaAccessibilityCategoryMap = DEFAULT_STRATIFICATION.groups.reduce(
   (row: { [key: string]: DnaAccessibilityCategory }, group, index) => {
-    console.log(group);
     const category: DnaAccessibilityCategory = {
       label: group.label,
       color: group.axisLabelColor,
