@@ -12,7 +12,7 @@ import {
   DEFAULT_COLOR_MAP,
   DEFAULT_COLOR_MAP_LIGHT,
   DEFAULT_COLOR_MAP_DARK,
-} from './constants';
+} from '../../constants';
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 

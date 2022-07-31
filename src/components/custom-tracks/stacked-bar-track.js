@@ -2,8 +2,8 @@ import {
   DEFAULT_COLOR_MAP,
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP_LIGHT,
-} from './constants';
-import { createColorTexture } from './utils';
+} from '../../constants';
+import { createColorTexture } from '../../utils';
 
 const DEFAULT_TILE_SIZE = 1024;
 
