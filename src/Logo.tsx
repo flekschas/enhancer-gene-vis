@@ -24,7 +24,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Logo = (props) => {
+type LogoPropTypes = {
+  styles?: React.CSSProperties
+}
+const Logo = (props: LogoPropTypes) => {
   const classes = useStyles();
 
   return (
@@ -40,14 +43,6 @@ const Logo = (props) => {
       </Grid>
     </Grid>
   );
-};
-
-Logo.defaultProps = {
-  styles: {},
-};
-
-Logo.propTypes = {
-  styles: PropTypes.object,
 };
 
 export default Logo;

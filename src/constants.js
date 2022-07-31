@@ -89,7 +89,3 @@ export const LOCAL_BED_TILESET_INFO_HG19 = {
 };
 
 export const IGNORED_FOCUS_ELEMENTS = new Set(['input', 'textarea']);
-
-export const HIGLASS_PAN_ZOOM = 'panZoom';
-
-export const HIGLASS_SELECT = 'select';
