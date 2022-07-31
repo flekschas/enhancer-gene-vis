@@ -1,4 +1,4 @@
-import { dashedXLineTo } from './utils';
+import { dashedXLineTo } from '../../utils';
 
 const VS = `
   precision mediump float;

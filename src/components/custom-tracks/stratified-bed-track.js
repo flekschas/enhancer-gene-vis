@@ -5,8 +5,8 @@ import {
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP_LIGHT,
   EPS,
-} from './constants';
-import { dashedXLineTo, toFixed } from './utils';
+} from '../../constants';
+import { dashedXLineTo, toFixed } from '../../utils';
 
 const intersects = (a, b) => a[0] < b[1] && a[1] >= b[0];
 
