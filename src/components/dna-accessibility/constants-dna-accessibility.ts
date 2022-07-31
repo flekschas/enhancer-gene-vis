@@ -1,8 +1,15 @@
 import { DEFAULT_STRATIFICATION } from '../../state/stratification-state';
+import {
+  CategoryNameToDnaAccessibilityCategoryMap,
+  DnaAccessibilityCategory,
+  DnaAccessibilityLabelStyle,
+  TrackType,
+  ViewConfig,
+} from '../../view-config-types';
 
-export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES = DEFAULT_STRATIFICATION.groups.reduce(
-  (row, group, index) => {
-    const category = {
+export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES: CategoryNameToDnaAccessibilityCategoryMap = DEFAULT_STRATIFICATION.groups.reduce(
+  (row: { [key: string]: DnaAccessibilityCategory }, group, index) => {
+    const category: DnaAccessibilityCategory = {
       label: group.label,
       color: group.axisLabelColor,
       background: group.axisLabelBackground,
@@ -150,7 +157,7 @@ export const DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION = [
   42,
 ];
 
-export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
+export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY: ViewConfig = {
   zoomFixed: false,
   editable: false,
   trackSourceServers: ['//higlass.io/api/v1'],
@@ -162,7 +169,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
         top: [
           {
             uid: 'chroms',
-            type: 'horizontal-chromosome-labels',
+            type: TrackType.HORIZONTAL_CHROMOSOME_LABELS,
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'ADfY_RtsQR6oKOMyrq6qhw',
             height: 17,
@@ -178,7 +185,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
           },
           {
             uid: 'genes',
-            type: 'horizontal-gene-annotations',
+            type: TrackType.HORIZONTAL_GENE_ANNOTATIONS,
             server: 'https://resgen.io/api/v1',
             tilesetUid: 'NCifnbrKQu6j-ohVWJLoJw',
             height: 48,
@@ -195,12 +202,12 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
             },
           },
           {
-            type: 'combined',
+            type: TrackType.COMBINED,
             uid: 'variants',
             height: 32,
             contents: [
               {
-                type: 'point-annotation',
+                type: TrackType.POINT_ANNOTATION,
                 uid: 'ibd-snps',
                 // server: 'http://localhost:9876/api/v1',
                 // tilesetUid: 'IBDCombinedset1-2variantonly-pval',
@@ -248,7 +255,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
           },
           {
             uid: 'dna-accessibility',
-            type: 'ridge-plot',
+            type: TrackType.RIDGE_PLOT,
             // server: 'http://localhost:9876/api/v1',
             // tilesetUid: 'test',
             server: 'https://resgen.io/api/v1',
@@ -274,7 +281,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY = {
                 args: ['.accessibility', ''],
               },
               rowCategories: DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES,
-              showRowLabels: true,
+              showRowLabels: DnaAccessibilityLabelStyle.INDICATOR,
               rowLabelSize: 10,
               showMousePosition: true,
               showGlobalMousePosition: true,

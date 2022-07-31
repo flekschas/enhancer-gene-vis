@@ -401,7 +401,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
             : 0x808080;
           return indicator;
         });
-      } else if (this.showRowLabels) {
+      } else if (this.showRowLabels === 'text') {
         this.rowLabels = labels.map(
           (label) =>
             new PIXI.Text(label, {
@@ -422,7 +422,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
     }
 
     drawLabel() {
-      if (!this.showRowLabels) {
+      if (this.showRowLabels === 'hidden') {
         if (this.rowLabels) {
           while (this.pAxis.children.length) {
             this.pAxis.removeChildAt(0);
