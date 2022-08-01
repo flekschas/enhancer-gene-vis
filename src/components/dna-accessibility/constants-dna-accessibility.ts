@@ -1,27 +1,13 @@
 import { DEFAULT_STRATIFICATION } from '../../state/stratification-state';
 import {
   CategoryNameToDnaAccessibilityCategoryMap,
-  DnaAccessibilityCategory,
   DnaAccessibilityLabelStyle,
   TrackType,
   ViewConfig,
 } from '../../view-config-types';
+import { createCategoryMap } from './dna-accessibility-fns';
 
-export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES: CategoryNameToDnaAccessibilityCategoryMap = DEFAULT_STRATIFICATION.groups.reduce(
-  (row: { [key: string]: DnaAccessibilityCategory }, group, index) => {
-    const category: DnaAccessibilityCategory = {
-      label: group.label,
-      color: group.axisLabelColor,
-      background: group.axisLabelBackground,
-      index,
-    };
-    group.categories.forEach((sample) => {
-      row[sample] = category;
-    });
-    return row;
-  },
-  {}
-);
+export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES: CategoryNameToDnaAccessibilityCategoryMap = createCategoryMap(DEFAULT_STRATIFICATION)
 
 export const DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION = [
   120,

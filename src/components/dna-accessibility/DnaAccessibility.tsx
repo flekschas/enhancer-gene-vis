@@ -40,8 +40,17 @@ import {
 } from '../../view-config';
 
 import 'higlass/dist/hglib.css';
-import { DnaAccessibilityLabelStyle, RidgePlotTrack, ViewConfig } from '../../view-config-types';
+import {
+  DnaAccessibilityLabelStyle,
+  RidgePlotTrack,
+  ViewConfig,
+} from '../../view-config-types';
 import { getTrackByUid } from '../../view-config-typed';
+import {
+  Stratification,
+  stratificationState,
+} from '../../state/stratification-state';
+import { createCategoryMap } from './dna-accessibility-fns';
 
 const useStyles = makeStyles((_theme) => ({
   root: {
@@ -91,6 +100,18 @@ const updateViewConfigRowSelection = (selection: boolean[]) => (
   return viewConfig;
 };
 
+const updateViewConfigStratification = (stratification: Stratification) => (
+  viewConfig: ViewConfig
+) => {
+  const track = getTrackByUid(
+    viewConfig,
+    'dna-accessibility'
+  ) as RidgePlotTrack;
+  const categoryMap = createCategoryMap(stratification)
+  track.options.rowCategories = categoryMap;
+  return viewConfig;
+};
+
 const DnaAccessibility = React.memo(function DnaAccessibility() {
   const chromInfo = useChromInfo();
 
@@ -102,8 +123,9 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
   const variantYScale = useRecoilValue(variantYScaleState);
   const variantTracks = useRecoilValue(variantTracksState);
   const focusRegionAbs = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
+  const stratification = useRecoilValue(stratificationState);
 
-  const higlassApi = useRef<HiGlassApi|null>(null);
+  const higlassApi = useRef<HiGlassApi | null>(null);
 
   const xDomainAbsDb = useDebounce(
     useRecoilValue(dnaAccessXDomainWithAssembly(chromInfo)),
@@ -129,7 +151,8 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
         updateViewConfigDnaAccessLabelStyle(labelStyle),
         updateViewConfigDnaAccessRowNorm(rowNorm),
         updateViewConfigXDomain(...xDomainAbsDb, { force: true }),
-        updateViewConfigRowSelection(sampleSelection)
+        updateViewConfigRowSelection(sampleSelection),
+        updateViewConfigStratification(stratification)
       )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -142,6 +165,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
       labelStyle,
       sampleSelection,
       rowNorm,
+      stratification,
     ]
   );
 
