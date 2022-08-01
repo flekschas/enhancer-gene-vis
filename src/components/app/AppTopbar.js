@@ -8,9 +8,9 @@ import Toolbar from '@material-ui/core/Toolbar';
 import { makeStyles } from '@material-ui/core/styles';
 import SearchIcon from '@material-ui/icons/Search';
 
-import SearchField from './SearchField';
+import SearchField from '../../SearchField';
 
-import usePrevious from './hooks/use-previous';
+import usePrevious from '../../hooks/use-previous';
 
 import {
   focusGeneOptionState,
@@ -19,11 +19,11 @@ import {
   useFocusGene,
   // useFocusVariant,
   useFocusRegion,
-} from './state/focus-state';
+} from '../../state/focus-state';
 
-import { DRAWER_WIDTH, GENE_SEARCH_URL, VARIANT_SEARCH_URL } from './constants';
+import { DRAWER_WIDTH, GENE_SEARCH_URL, VARIANT_SEARCH_URL } from '../../constants';
 
-import { isChrRange } from './utils';
+import { isChrRange } from '../../utils';
 
 const useStyles = makeStyles((theme) => ({
   appBar: {

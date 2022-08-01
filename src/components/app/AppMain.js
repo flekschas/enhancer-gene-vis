@@ -7,24 +7,24 @@ import { isString } from '@flekschas/utils';
 
 import AppSidebar from './AppSidebar';
 import AppTopbar from './AppTopbar';
-import EnhancerRegions from './components/enhancer-regions/EnhancerRegions';
-import EnhancerGenes from './components/enhancer-genes/EnhancerGenes';
-import DnaAccessibility from './components/dna-accessibility/DnaAccessibility';
-import ModalProvider from './ModalProvider';
-import TooltipProvider from './TooltipProvider';
+import EnhancerRegions from '../enhancer-regions/EnhancerRegions';
+import EnhancerGenes from '../enhancer-genes/EnhancerGenes';
+import DnaAccessibility from '../dna-accessibility/DnaAccessibility';
+import ModalProvider from '../../ModalProvider';
+import TooltipProvider from '../../TooltipProvider';
 
-import { useChromInfo } from './ChromInfoProvider';
+import { useChromInfo } from '../../ChromInfoProvider';
 
 import {
   useXDomainStartWithAssemblySyncher,
   useXDomainEndWithAssemblySyncher,
   useVariantYScaleSyncher,
-} from './state';
+} from '../../state';
 import {
   useDnaAccessLabelStyleSyncher,
   useDnaAccessRowNormSyncher,
   useDnaAccessShowInfosSyncher,
-} from '././state/dna-accessibility-state';
+} from '../../state/dna-accessibility-state';
 import {
   focusGeneOptionState,
   focusRegionOptionState,
@@ -32,22 +32,22 @@ import {
   useFocusRegion,
   useFocusGeneSyncher,
   useFocusRegionSyncher,
-} from './state/focus-state';
-import { useShowWelcomeSyncher } from './state/app-settings-state';
-import { useVariantTracksSyncher } from './state/variant-track-state';
+} from '../../state/focus-state';
+import { useShowWelcomeSyncher } from '../../state/app-settings-state';
+import { useVariantTracksSyncher } from '../../state/variant-track-state';
 import {
   useEnhancerRegionsShowInfosSyncher,
   useEnhancerRegionsHideUnfocusedSyncher,
   useEnhancerRegionsColorEncodingSyncher,
   useEnhancerRegionsTrackSyncher,
-} from './state/enhancer-region-state';
+} from '../../state/enhancer-region-state';
 import {
   useEnhancerGenesShowInfosSyncher,
   useEnhancerGenesPaddingSyncher,
   useEnhancerGenesCellEncodingSyncher,
-} from './state/enhancer-gene-track-state';
+} from '../../state/enhancer-gene-track-state';
 
-import { GENE_SEARCH_URL, VARIANT_SEARCH_URL } from './constants';
+import { GENE_SEARCH_URL, VARIANT_SEARCH_URL } from '../../constants';
 
 const useStyles = makeStyles((theme) => ({
   root: {
