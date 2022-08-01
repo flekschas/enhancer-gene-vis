@@ -351,7 +351,16 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       this.rowLabelAlign = this.options.rowLabelAlign || 'left';
       this.rowLabelSize = this.options.rowLabelSize || 12;
 
+      this.oldRowCategories = this.rowCategories;
       this.rowCategories = this.options.rowCategories || {};
+      if (
+        JSON.stringify(this.rowCategories) !==
+        JSON.stringify(this.oldRowCategories)
+      ) {
+        this.updateRowLabels();
+        this.drawLabel();
+      }
+
       this.rowIdToCategory = (id) => id.substring(0, id.length - 14);
       this.rowIdToCategory = this.options.rowIdToCategory
         ? (id) =>
@@ -440,6 +449,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC, ...args) {
       this.pAxis.position.y = top;
 
       this.pAxis.clear();
+      this.pAxis.removeChildren();
       let yStart = 0;
 
       const xLabelOffset = this.axisAlign === 'right' ? -3 : 3;

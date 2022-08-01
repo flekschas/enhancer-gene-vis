@@ -107,7 +107,7 @@ const updateViewConfigStratification = (stratification: Stratification) => (
     viewConfig,
     'dna-accessibility'
   ) as RidgePlotTrack;
-  const categoryMap = createCategoryMap(stratification)
+  const categoryMap = createCategoryMap(stratification);
   track.options.rowCategories = categoryMap;
   return viewConfig;
 };
