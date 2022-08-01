@@ -39,7 +39,6 @@ import {
   DEFAULT_COLOR_MAP,
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP_LIGHT,
-  BIOSAMPLE_COLUMN,
   GENE_NAME_COLUMN,
 } from '../../constants';
 import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
@@ -949,7 +948,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
       const genesDownstreamByDist = new TinyQueue([], distComparator);
 
       tile.forEach((entry) => {
-        const sample = entry.fields[BIOSAMPLE_COLUMN];
+        const sample = entry.fields[stratification.categoryField];
 
         // Exclude samples that have been deselected
         if (!sampleSelection[sampleIdx(stratification)[sample]]) return;
