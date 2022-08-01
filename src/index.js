@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import 'higlass-arcs';
 
-import App from './App';
+import App from './components/app/App';
 import * as serviceWorker from './serviceWorker';
 
 import createAnnotationOverlayMetaTrack from './components/custom-tracks/annotation-overlay-meta-track';

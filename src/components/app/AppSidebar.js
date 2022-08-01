@@ -14,13 +14,13 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 import { makeStyles } from '@material-ui/core/styles';
 import SettingsIcon from '@material-ui/icons/Settings';
 
-import CheckboxList from './CheckboxList';
-import Logo from './Logo';
-import VariantsSettings from './components/track-settings/VariantsSettings';
-import EnhancerRegionSettings from './components/track-settings/EnhancerRegionSettings';
-import Welcome from './Welcome';
-import { useChromInfo } from './ChromInfoProvider';
-import { useShowModal } from './ModalProvider';
+import CheckboxList from '../../CheckboxList';
+import Logo from '../../Logo';
+import VariantsSettings from '../track-settings/VariantsSettings';
+import EnhancerRegionSettings from '../track-settings/EnhancerRegionSettings';
+import Welcome from '../../Welcome';
+import { useChromInfo } from '../../ChromInfoProvider';
+import { useShowModal } from '../../ModalProvider';
 
 import {
   higlassEnhancerRegionsState,
@@ -29,31 +29,31 @@ import {
   sampleWithName,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
-} from './state';
-import { enhancerGenesSvgState } from './state/enhancer-gene-track-state';
+} from '../../state';
+import { enhancerGenesSvgState } from '../../state/enhancer-gene-track-state';
 import {
   useShowWelcome,
   showVariantsSettingsState,
   showEnhancerRegionsSettingsState,
   WelcomeIntroState,
-} from './state/app-settings-state';
+} from '../../state/app-settings-state';
 
-import { download, stringifySvg } from './utils';
+import { download, stringifySvg } from '../../utils';
 
 import {
   DEFAULT_COLOR_MAP_DARK,
   DEFAULT_COLOR_MAP,
   SVG_SKELETON,
   DRAWER_WIDTH,
-} from './constants';
-import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from './components/dna-accessibility/constants-dna-accessibility';
+} from '../../constants';
+import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from '../../components/dna-accessibility/constants-dna-accessibility';
 import {
   groupedSampleOptions,
   sampleToGroup,
   sampleGroupWithGroup,
   stratificationState,
-} from './state/stratification-state';
-import { DEFAULT_VIEW_CONFIG_ENHANCER } from './view-config-typed';
+} from '../../state/stratification-state';
+import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
 
 const useStyles = makeStyles((theme) => ({
   h1: {
@@ -194,9 +194,9 @@ const AppSidebar = React.memo(function AppSidebar() {
     () =>
       isString(xDomainStart) && xDomainStart.indexOf(':') >= 0
         ? chromInfo.chrToAbs([
-            xDomainStart.split(':')[0],
-            +xDomainStart.split(':')[1],
-          ])
+          xDomainStart.split(':')[0],
+          +xDomainStart.split(':')[1],
+        ])
         : +xDomainStart,
     [xDomainStart, chromInfo]
   );
@@ -205,9 +205,9 @@ const AppSidebar = React.memo(function AppSidebar() {
     () =>
       isString(xDomainEnd) && xDomainEnd.indexOf(':') >= 0
         ? chromInfo.chrToAbs([
-            xDomainEnd.split(':')[0],
-            +xDomainEnd.split(':')[1],
-          ])
+          xDomainEnd.split(':')[0],
+          +xDomainEnd.split(':')[1],
+        ])
         : +xDomainEnd,
     [xDomainEnd, chromInfo]
   );
