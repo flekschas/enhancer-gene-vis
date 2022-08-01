@@ -1,10 +1,9 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((_theme) => ({
   logo: {
     height: '100%',
     padding: '0.1em',
@@ -25,9 +24,9 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 type LogoPropTypes = {
-  styles?: React.CSSProperties
-}
-const Logo = (props: LogoPropTypes) => {
+  styles?: React.CSSProperties;
+};
+const Logo = function (props: LogoPropTypes) {
   const classes = useStyles();
 
   return (
