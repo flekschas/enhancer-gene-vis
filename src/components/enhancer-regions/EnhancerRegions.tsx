@@ -71,7 +71,7 @@ import {
 } from '../../view-config';
 import { stratificationState } from '../../state/stratification-state';
 
-import { BIOSAMPLE_COLUMN, IGNORED_FOCUS_ELEMENTS } from '../../constants';
+import { IGNORED_FOCUS_ELEMENTS } from '../../constants';
 import {
   DEFAULT_VIEW_CONFIG_ENHANCER,
   getTrackByUid,
@@ -180,18 +180,19 @@ const updateViewConfigColorEncoding = (coloring: OpacityEncoding) => (
   return viewConfig;
 };
 
-const updateViewConfigFilter = (selectedSamples: string[]) => (
-  viewConfig: ViewConfig
-) => {
+const updateViewConfigFilter = (
+  selectedSamples: string[],
+  sampleField: number
+) => (viewConfig: ViewConfig) => {
   const arcTrack = getTrackByUid(viewConfig, 'arcs') as OneDimensionalArcTrack;
   arcTrack.options.filter = {
     set: selectedSamples,
-    field: BIOSAMPLE_COLUMN,
+    field: sampleField,
   };
   const barTrack = getTrackByUid(viewConfig, 'stacked-bars') as StackedBarTrack;
   barTrack.options.filter = {
     set: selectedSamples,
-    field: BIOSAMPLE_COLUMN,
+    field: sampleField,
   };
   const stratifiedBedTrack = getTrackByUid(
     viewConfig,
@@ -199,7 +200,7 @@ const updateViewConfigFilter = (selectedSamples: string[]) => (
   ) as StratifiedBedTrack;
   stratifiedBedTrack.options.filter = {
     set: selectedSamples,
-    field: BIOSAMPLE_COLUMN,
+    field: sampleField,
   };
   return viewConfig;
 };
@@ -327,7 +328,7 @@ const EnhancerRegion = React.memo((_props) => {
           // TODO: Check if calling the shouldSkipUpdatingXDomain function is breaking things later?
           force: shouldSkipUpdatingXDomain(),
         }),
-        updateViewConfigFilter(selectedSamples),
+        updateViewConfigFilter(selectedSamples, stratification.categoryField),
         updateViewConfigMatrixHeight(numSamples),
         updateViewConfigEnhancerRegionTracks(enhancerTrackConfig),
         updateViewConfigStratification(stratification)
