@@ -7,7 +7,9 @@ import {
 } from '../../view-config-types';
 import { createCategoryMap } from './dna-accessibility-fns';
 
-export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES: CategoryNameToDnaAccessibilityCategoryMap = createCategoryMap(DEFAULT_STRATIFICATION)
+export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES: CategoryNameToDnaAccessibilityCategoryMap = createCategoryMap(
+  DEFAULT_STRATIFICATION
+);
 
 export const DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION = [
   120,
