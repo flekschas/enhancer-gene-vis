@@ -14,10 +14,11 @@ import TitleBar from '../../TitleBar';
 
 import {
   higlassDnaAccessState,
-  sampleSelectionState,
   variantYScaleState,
   dnaAccessXDomainWithAssembly,
 } from '../../state';
+import {
+  sampleSelectionState,} from '../../state/filter-state'
 import {
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,

@@ -36,36 +36,6 @@ const getDefault = (key, initialValue, decoder) => {
 };
 
 // Atoms
-export const sampleFilterState = atom({
-  key: 'sampleFilterState',
-  default: '',
-});
-
-export const sampleWithName = memoize((name) =>
-  atom({
-    key: `sample-${name}`,
-    default: {
-      checked: true,
-      visible: true,
-    },
-  })
-);
-
-export const sampleSelectionState = selector({
-  key: 'sampleSelection',
-  get: ({ get }) =>
-    samples(get(stratificationState)).map(
-      (name) => get(sampleWithName(name)).checked
-    ),
-});
-
-export const selectedSamplesState = selector({
-  key: 'selectedSamples',
-  get: ({ get }) =>
-    samples(get(stratificationState)).filter(
-      (name) => get(sampleWithName(name)).checked
-    ),
-});
 
 export const variantYScaleState = atom({
   key: 'variantYScale',

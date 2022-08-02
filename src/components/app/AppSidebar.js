@@ -25,12 +25,13 @@ import { useShowModal } from '../../ModalProvider';
 import {
   higlassEnhancerRegionsState,
   higlassDnaAccessState,
-  sampleFilterState,
-  sampleWithName,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
 } from '../../state';
 import { enhancerGenesSvgState } from '../../state/enhancer-gene-track-state';
+import {
+  sampleFilterState,
+  sampleWithName} from '../../state/filter-state';
 import {
   useShowWelcome,
   showVariantsSettingsState,

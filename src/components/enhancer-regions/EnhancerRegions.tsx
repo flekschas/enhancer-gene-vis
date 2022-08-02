@@ -34,13 +34,14 @@ import TitleBar from '../../TitleBar';
 
 import {
   higlassEnhancerRegionsState,
-  selectedSamplesState,
   useXDomainEndWithAssembly,
   useXDomainStartWithAssembly,
   variantYScaleState,
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
 } from '../../state';
+import {
+  selectedSamplesState,} from '../../state/filter-state'
 import {
   focusGeneEndWithAssembly,
   focusGeneOptionState,
