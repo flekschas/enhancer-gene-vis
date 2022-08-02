@@ -9,20 +9,26 @@ export type Stratification = {
   groups: StratificationGroup[];
 };
 
-type StratificationGroup = {
+export type StratificationGroup = {
   label: string;
   categories: string[];
   axisLabelColor?: string;
   axisLabelBackground?: string;
 };
 
-type GroupedSampleOption = {
+export type GroupedSampleOption = {
   name: string;
   options: string[];
 };
 
-type SampleGroup = {
-  checked: boolean;
+export enum SampleGroupCheckedStatus {
+  CHECKED = 'CHECKED',
+  NOT_CHECKED = 'NOT_CHECKED',
+  PARTIAL_CHECKED = 'PARTIAL_CHECKED',
+}
+
+export type SampleGroupFilterState = {
+  checked: SampleGroupCheckedStatus;
   visible: boolean;
   n: number;
   N: number;
@@ -211,10 +217,10 @@ export const stratificationState: RecoilState<Stratification> = atom({
 
 export const sampleGroupWithGroup = memoize(
   (group: GroupedSampleOption) => {
-    return atom<SampleGroup>({
+    return atom<SampleGroupFilterState>({
       key: `sampleGroup-${JSON.stringify(group)}`,
       default: {
-        checked: true,
+        checked: SampleGroupCheckedStatus.CHECKED,
         visible: true,
         n: group.options.length,
         N: group.options.length,
