@@ -2,7 +2,10 @@ import { memoize } from "lodash-es";
 import { atom, RecoilState, selector } from "recoil";
 import { samples, stratificationState } from "./stratification-state";
 
-type SampleState = {
+/**
+ * Properties to help 
+ */
+export type SampleFilterState = {
   checked: boolean,
   visible: boolean,
 }
@@ -12,13 +15,16 @@ export const sampleFilterState: RecoilState<string> = atom({
   default: '',
 });
 
+/**
+ * Dynamic state accessor.
+ */
 export const sampleWithName = memoize((name: string) =>
   atom({
     key: `sample-${name}`,
     default: {
       checked: true,
       visible: true,
-    } as SampleState,
+    } as SampleFilterState,
   })
 );
 

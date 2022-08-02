@@ -14,7 +14,7 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 import { makeStyles } from '@material-ui/core/styles';
 import SettingsIcon from '@material-ui/icons/Settings';
 
-import CheckboxList from '../../CheckboxList';
+import CheckboxList from '../checkbox/CheckboxList';
 import Logo from '../../Logo';
 import VariantsSettings from '../track-settings/VariantsSettings';
 import EnhancerRegionSettings from '../track-settings/EnhancerRegionSettings';

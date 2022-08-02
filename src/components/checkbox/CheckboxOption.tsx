@@ -1,17 +1,24 @@
 import { FormControlLabel, Checkbox, Typography } from "@material-ui/core";
 import React, { useMemo, useCallback, useEffect } from "react";
 import { useRecoilValue, useRecoilState, RecoilState } from "recoil";
+import { SampleFilterState } from "../../state/filter-state";
+import { GroupedSampleOption, SampleGroupCheckedStatus, SampleGroupFilterState } from "../../state/stratification-state";
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import { useCheckboxStyles } from "./checkbox-styles";
 
-type OptionProps = {
+type CheckboxOptionProps = {
   filterState: RecoilState<string>,
   name: string,
-  stateWithName,
-  group,
-  stateWithGroup,
-  colorCheckbox,
-  colorText,
+  /** State generator function using the name parameter */
+  stateWithName: (name: string) => RecoilState<SampleFilterState>,
+  group: GroupedSampleOption,
+  /** State generator function using the group parameter */
+  stateWithGroup: (group: GroupedSampleOption) => RecoilState<SampleGroupFilterState>,
+  colorCheckbox: string,
+  colorText: string,
 }
-export const Option = React.memo(function Option({
+const CheckboxOption = React.memo(function Option({
   filterState,
   name,
   stateWithName,
@@ -19,8 +26,8 @@ export const Option = React.memo(function Option({
   stateWithGroup,
   colorCheckbox,
   colorText,
-}) {
-  const filter = useRecoilValue(filterState);
+}: CheckboxOptionProps) {
+  const filter: string = useRecoilValue(filterState);
   const [state, setState] = useRecoilState(stateWithName(name));
   const [groupState, setGroupState] = useRecoilState(stateWithGroup(group));
   const nameLowerCase = useMemo(() => name.toLowerCase(), [name]);
@@ -38,13 +45,13 @@ export const Option = React.memo(function Option({
         };
         switch (newGroupState.n) {
           case currGroupState.N:
-            newGroupState.checked = true;
+            newGroupState.checked = SampleGroupCheckedStatus.CHECKED;
             break;
           case 0:
-            newGroupState.checked = false;
+            newGroupState.checked = SampleGroupCheckedStatus.NOT_CHECKED;
             break;
           default:
-            newGroupState.checked = undefined;
+            newGroupState.checked = SampleGroupCheckedStatus.PARTIAL_CHECKED;
             break;
         }
         return newGroupState;
@@ -54,12 +61,12 @@ export const Option = React.memo(function Option({
   );
 
   useEffect(() => {
-    if (groupState.checked === true) {
+    if (groupState.checked === SampleGroupCheckedStatus.CHECKED) {
       setState((currState) => ({
         ...currState,
         checked: true,
       }));
-    } else if (groupState.checked === false) {
+    } else if (groupState.checked === SampleGroupCheckedStatus.NOT_CHECKED) {
       setState((currState) => ({
         ...currState,
         checked: false,
@@ -74,7 +81,7 @@ export const Option = React.memo(function Option({
     }));
   }, [filter, nameLowerCase, setState]);
 
-  const classes = useStyles();
+  const classes = useCheckboxStyles();
 
   return (
     <div className={state.visible ? classes.visible : classes.invisible}>
@@ -108,3 +115,5 @@ export const Option = React.memo(function Option({
     </div>
   );
 });
+
+export default CheckboxOption
