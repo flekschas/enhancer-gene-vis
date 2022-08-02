@@ -12,7 +12,7 @@ export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES: CategoryNameToDnaAccessib
 );
 
 export const DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION = [
-  g120,
+  120,
   36,
   54,
   20,
