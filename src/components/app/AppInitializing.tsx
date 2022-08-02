@@ -11,16 +11,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const AppInitializing = () => {
+function AppInitializing() {
   const classes = useStyles();
 
   return (
     <div className="full-wh">
-      <Backdrop className={classes.backdrop} open={true}>
+      <Backdrop className={classes.backdrop} open>
         <CircularProgress color="inherit" />
       </Backdrop>
     </div>
   );
-};
+}
 
 export default AppInitializing;

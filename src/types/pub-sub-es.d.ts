@@ -45,7 +45,9 @@ declare module 'pub-sub-es' {
   class globalPubSub {
     constructor();
     static subscribe: SubscribeFn;
+
     static unsubscribe: UnsubscribeFn;
+
     static publish: PublishFn;
   }
 }

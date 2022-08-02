@@ -1,14 +1,14 @@
 import { FormControlLabel, Checkbox, Typography } from '@material-ui/core';
 import React, { useMemo, useCallback, useEffect } from 'react';
 import { useRecoilValue, useRecoilState, RecoilState } from 'recoil';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
+import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import { SampleFilterState } from '../../state/filter-state';
 import {
   GroupedSampleOption,
   SampleGroupCheckedStatus,
   SampleGroupFilterState,
 } from '../../state/stratification-state';
-import CheckBoxIcon from '@material-ui/icons/CheckBox';
-import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
 import { useCheckboxStyles } from './checkbox-styles';
 
 type CheckboxOptionProps = {

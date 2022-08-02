@@ -53,6 +53,7 @@ import {
 import {
   sampleGroupSelectionSizesState,
   Stratification,
+  stratificationState,
 } from '../../state/stratification-state';
 import {
   enhancerRegionsColorEncodingState,
@@ -69,7 +70,6 @@ import {
   updateViewConfigXDomain,
   updateViewConfigVariantTracks,
 } from '../../view-config';
-import { stratificationState } from '../../state/stratification-state';
 
 import { IGNORED_FOCUS_ELEMENTS } from '../../constants';
 import {

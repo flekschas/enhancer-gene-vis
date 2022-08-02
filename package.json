@@ -15,7 +15,9 @@
     "eject": "react-scripts eject",
     "deploy": "npm run build; touch build/.nojekyll; gh-pages -d build -t --git git",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lint": "eslint src --fix",
+    "lint:check": "eslint src"
   },
   "dependencies": {
     "@flatten-js/interval-tree": "^1.0.13",
