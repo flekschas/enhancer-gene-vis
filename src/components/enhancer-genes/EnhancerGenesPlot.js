@@ -375,12 +375,12 @@ const plotEnhancerGeneConnections = (
   };
 
   const arrayTooltipTitleGetter = (d) => (
-    <React.Fragment>
+    <>
       The enhancer overlapping <strong>{position}</strong>
       {focusRegion ? ` (${focusRegion})` : ''} is predicted to regulate{' '}
       <strong>{d.gene}</strong> in sample <strong>{d.sample}</strong> with a
       score of <strong className="value">{d.score.toFixed(3)}</strong>.
-    </React.Fragment>
+    </>
   );
 
   const geneArrayInstances = {
@@ -467,26 +467,26 @@ const plotEnhancerGeneConnections = (
   };
 
   const enhancerTooltipTitleGetter = (d) => (
-    <React.Fragment>
+    <>
       Found {d.numEnhancers} active enhancer overlapping {position} across all{' '}
       {d.category.size} {Object.values(categories)[d.row].name} samples.
-    </React.Fragment>
+    </>
   );
 
   const boxTooltipTitleGetter = (d) => (
-    <React.Fragment>
+    <>
       <strong className="value">{d.length}</strong> active enhancers found
       across {d.size} {Object.values(categories)[d.row].name} samples.
-    </React.Fragment>
+    </>
   );
 
   const boxScoreTooltipTitleGetter = (d) => (
-    <React.Fragment>
+    <>
       The most likely active enhancer for {d.maxScoreSample.gene} has an ABC
       score of <strong className="value">{d.maxScore.toFixed(3)}</strong> and is
       found in {d.maxScoreSample.sample.replaceAll('_', ' ')} (Overall max. ABC
       score is {data.maxScore.toFixed(3)}).
-    </React.Fragment>
+    </>
   );
 
   // ---------------------------------------------------------------------------
@@ -1118,10 +1118,10 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
       {isInit && !isLoadingTile ? (
         <Grid item className={classes.plot}>
           <svg ref={plotElRef} className={classes.plotSvg}>
-            <g id="enhancers"></g>
-            <g id="gene-distance-axis"></g>
-            <g id="genes-upstream"></g>
-            <g id="genes-downstream"></g>
+            <g id="enhancers" />
+            <g id="gene-distance-axis" />
+            <g id="genes-upstream" />
+            <g id="genes-downstream" />
           </svg>
         </Grid>
       ) : (

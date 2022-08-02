@@ -23,7 +23,7 @@ const theme = createMuiTheme({
   },
 });
 
-const App = () => {
+function App() {
   const [chromInfo, setChromInfo] = useState<
     ChromosomeInfoResult | boolean | null
   >(null);
@@ -60,6 +60,6 @@ const App = () => {
       </RecoilRoot>
     </div>
   );
-};
+}
 
 export default App;

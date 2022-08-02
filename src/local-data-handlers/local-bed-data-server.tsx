@@ -1,8 +1,8 @@
 import { globalPubSub } from 'pub-sub-es';
 import IntervalTree from '@flatten-js/interval-tree';
 
-import { toAbsPosition } from '../utils';
 import { ChromosomeInfoResult } from 'higlass';
+import { toAbsPosition } from '../utils';
 
 // TODO: Find a better location for this?
 export type TilesetInfo = {

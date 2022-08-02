@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import FileInput from '../FileInput';
 import yaml from 'js-yaml';
 import { useRecoilState } from 'recoil';
+import FileInput from '../FileInput';
 import {
   Stratification,
   stratificationState,

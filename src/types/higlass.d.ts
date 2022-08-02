@@ -3,8 +3,11 @@ declare module 'higlass' {
   class ChromosomeInfoResult {
     /** Mapping of chromosome to ChromosomePosition object */
     chrPositions: { [key: string]: ChromosomePosition };
+
     chromLengths: { [key: string]: number };
+
     cumPositions: ChromosomePosition[];
+
     totalLength: number;
     absToChr(absPos: number): number[];
   }
@@ -36,6 +39,7 @@ declare module 'higlass' {
   type HiGlassComponentSizeMode = 'bounded' | 'scroll'; // Make string union of any other size modes
   class HiGlassComponent extends React.Component<HiGlassComponentProps> {
     api: HiGlassApi;
+
     element: Element;
   }
 
