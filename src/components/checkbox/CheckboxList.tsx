@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { RecoilState, useRecoilState } from 'recoil';
-import CheckboxOption from './CheckboxOption';
-import CheckboxOptionGroup from './CheckboxOptionGroup';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import FormControl from '@material-ui/core/FormControl';
 import FormGroup from '@material-ui/core/FormGroup';
 import Grid from '@material-ui/core/Grid';
 import InputLabel from '@material-ui/core/InputLabel';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
+import CheckboxOptionGroup from './CheckboxOptionGroup';
+import CheckboxOption from './CheckboxOption';
 
 import useDebounce from '../../hooks/use-debounce';
 import { SampleFilterState } from '../../state/filter-state';

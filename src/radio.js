@@ -21,16 +21,16 @@ const useRadioButtons = (name, onChange) => {
 
 const RadioGroupContext = createContext();
 
-const RadioGroup = ({ children, name, onChange }) => {
+function RadioGroup({ children, name, onChange }) {
   const [, inputProps] = useRadioButtons(name, onChange);
   return (
     <RadioGroupContext.Provider value={inputProps}>
       {children}
     </RadioGroupContext.Provider>
   );
-};
+}
 
-const RadioButton = (props) => {
+function RadioButton(props) {
   const context = useContext(RadioGroupContext);
   return (
     <label className="fb fb-align-center radio-button">
@@ -38,6 +38,6 @@ const RadioButton = (props) => {
       {props.label}
     </label>
   );
-};
+}
 
 export { RadioButton, RadioGroup };
