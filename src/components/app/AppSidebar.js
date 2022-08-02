@@ -14,7 +14,7 @@ import ButtonBase from '@material-ui/core/ButtonBase';
 import { makeStyles } from '@material-ui/core/styles';
 import SettingsIcon from '@material-ui/icons/Settings';
 
-import CheckboxList from '../../CheckboxList';
+import CheckboxList from '../checkbox/CheckboxList';
 import Logo from '../../Logo';
 import VariantsSettings from '../track-settings/VariantsSettings';
 import EnhancerRegionSettings from '../track-settings/EnhancerRegionSettings';
@@ -25,12 +25,11 @@ import { useShowModal } from '../../ModalProvider';
 import {
   higlassEnhancerRegionsState,
   higlassDnaAccessState,
-  sampleFilterState,
-  sampleWithName,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
 } from '../../state';
 import { enhancerGenesSvgState } from '../../state/enhancer-gene-track-state';
+import { sampleFilterState, sampleWithName } from '../../state/filter-state';
 import {
   useShowWelcome,
   showVariantsSettingsState,
@@ -194,9 +193,9 @@ const AppSidebar = React.memo(function AppSidebar() {
     () =>
       isString(xDomainStart) && xDomainStart.indexOf(':') >= 0
         ? chromInfo.chrToAbs([
-          xDomainStart.split(':')[0],
-          +xDomainStart.split(':')[1],
-        ])
+            xDomainStart.split(':')[0],
+            +xDomainStart.split(':')[1],
+          ])
         : +xDomainStart,
     [xDomainStart, chromInfo]
   );
@@ -205,9 +204,9 @@ const AppSidebar = React.memo(function AppSidebar() {
     () =>
       isString(xDomainEnd) && xDomainEnd.indexOf(':') >= 0
         ? chromInfo.chrToAbs([
-          xDomainEnd.split(':')[0],
-          +xDomainEnd.split(':')[1],
-        ])
+            xDomainEnd.split(':')[0],
+            +xDomainEnd.split(':')[1],
+          ])
         : +xDomainEnd,
     [xDomainEnd, chromInfo]
   );
