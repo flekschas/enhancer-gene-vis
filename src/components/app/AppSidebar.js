@@ -29,9 +29,7 @@ import {
   useXDomainEndWithAssembly,
 } from '../../state';
 import { enhancerGenesSvgState } from '../../state/enhancer-gene-track-state';
-import {
-  sampleFilterState,
-  sampleWithName} from '../../state/filter-state';
+import { sampleFilterState, sampleWithName } from '../../state/filter-state';
 import {
   useShowWelcome,
   showVariantsSettingsState,
@@ -195,9 +193,9 @@ const AppSidebar = React.memo(function AppSidebar() {
     () =>
       isString(xDomainStart) && xDomainStart.indexOf(':') >= 0
         ? chromInfo.chrToAbs([
-          xDomainStart.split(':')[0],
-          +xDomainStart.split(':')[1],
-        ])
+            xDomainStart.split(':')[0],
+            +xDomainStart.split(':')[1],
+          ])
         : +xDomainStart,
     [xDomainStart, chromInfo]
   );
@@ -206,9 +204,9 @@ const AppSidebar = React.memo(function AppSidebar() {
     () =>
       isString(xDomainEnd) && xDomainEnd.indexOf(':') >= 0
         ? chromInfo.chrToAbs([
-          xDomainEnd.split(':')[0],
-          +xDomainEnd.split(':')[1],
-        ])
+            xDomainEnd.split(':')[0],
+            +xDomainEnd.split(':')[1],
+          ])
         : +xDomainEnd,
     [xDomainEnd, chromInfo]
   );

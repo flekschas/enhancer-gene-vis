@@ -1,14 +1,14 @@
-import { memoize } from "lodash-es";
-import { atom, RecoilState, selector } from "recoil";
-import { samples, stratificationState } from "./stratification-state";
+import { memoize } from 'lodash-es';
+import { atom, RecoilState, selector } from 'recoil';
+import { samples, stratificationState } from './stratification-state';
 
 /**
- * Properties to help 
+ * Properties to help
  */
 export type SampleFilterState = {
-  checked: boolean,
-  visible: boolean,
-}
+  checked: boolean;
+  visible: boolean;
+};
 
 export const sampleFilterState: RecoilState<string> = atom({
   key: 'sampleFilterState',

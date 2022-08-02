@@ -21,7 +21,11 @@ import {
   useFocusRegion,
 } from '../../state/focus-state';
 
-import { DRAWER_WIDTH, GENE_SEARCH_URL, VARIANT_SEARCH_URL } from '../../constants';
+import {
+  DRAWER_WIDTH,
+  GENE_SEARCH_URL,
+  VARIANT_SEARCH_URL,
+} from '../../constants';
 
 import { isChrRange } from '../../utils';
 

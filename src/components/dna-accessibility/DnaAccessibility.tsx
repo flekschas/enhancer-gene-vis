@@ -17,8 +17,7 @@ import {
   variantYScaleState,
   dnaAccessXDomainWithAssembly,
 } from '../../state';
-import {
-  sampleSelectionState,} from '../../state/filter-state'
+import { sampleSelectionState } from '../../state/filter-state';
 import {
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,

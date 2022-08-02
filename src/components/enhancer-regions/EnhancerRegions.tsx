@@ -40,8 +40,7 @@ import {
   xDomainEndAbsWithAssembly,
   xDomainStartAbsWithAssembly,
 } from '../../state';
-import {
-  selectedSamplesState,} from '../../state/filter-state'
+import { selectedSamplesState } from '../../state/filter-state';
 import {
   focusGeneEndWithAssembly,
   focusGeneOptionState,

@@ -11,19 +11,24 @@ import OutlinedInput from '@material-ui/core/OutlinedInput';
 
 import useDebounce from '../../hooks/use-debounce';
 import { SampleFilterState } from '../../state/filter-state';
-import { GroupedSampleOption, SampleGroupFilterState } from '../../state/stratification-state';
+import {
+  GroupedSampleOption,
+  SampleGroupFilterState,
+} from '../../state/stratification-state';
 import { useCheckboxStyles } from './checkbox-styles';
 
 type NestedCheckboxListProps = {
-  filterState: RecoilState<string>,
-  optionWithName: (name: string) => RecoilState<SampleFilterState>,
-  optionGroupWithGroup: (group: GroupedSampleOption) => RecoilState<SampleGroupFilterState>,
-  filterLabel: string,
-  groupedOptions: GroupedSampleOption[],
-  optionToGroup: {[key: string]: string},
-  groupColors: string[],
-  groupColorsDark: string[],
-}
+  filterState: RecoilState<string>;
+  optionWithName: (name: string) => RecoilState<SampleFilterState>;
+  optionGroupWithGroup: (
+    group: GroupedSampleOption
+  ) => RecoilState<SampleGroupFilterState>;
+  filterLabel: string;
+  groupedOptions: GroupedSampleOption[];
+  optionToGroup: { [key: string]: string };
+  groupColors: string[];
+  groupColorsDark: string[];
+};
 const NestedCheckboxList = React.memo(function NestedCheckboxList({
   filterState,
   optionWithName,

@@ -24,7 +24,7 @@ export type GroupedSampleOption = {
 export enum SampleGroupCheckedStatus {
   CHECKED = 'CHECKED',
   NOT_CHECKED = 'NOT_CHECKED',
-  PARTIAL_CHECKED = 'PARTIAL_CHECKED'
+  PARTIAL_CHECKED = 'PARTIAL_CHECKED',
 }
 
 export type SampleGroupFilterState = {

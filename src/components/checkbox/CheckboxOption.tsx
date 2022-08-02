@@ -1,23 +1,29 @@
-import { FormControlLabel, Checkbox, Typography } from "@material-ui/core";
-import React, { useMemo, useCallback, useEffect } from "react";
-import { useRecoilValue, useRecoilState, RecoilState } from "recoil";
-import { SampleFilterState } from "../../state/filter-state";
-import { GroupedSampleOption, SampleGroupCheckedStatus, SampleGroupFilterState } from "../../state/stratification-state";
+import { FormControlLabel, Checkbox, Typography } from '@material-ui/core';
+import React, { useMemo, useCallback, useEffect } from 'react';
+import { useRecoilValue, useRecoilState, RecoilState } from 'recoil';
+import { SampleFilterState } from '../../state/filter-state';
+import {
+  GroupedSampleOption,
+  SampleGroupCheckedStatus,
+  SampleGroupFilterState,
+} from '../../state/stratification-state';
 import CheckBoxIcon from '@material-ui/icons/CheckBox';
 import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
-import { useCheckboxStyles } from "./checkbox-styles";
+import { useCheckboxStyles } from './checkbox-styles';
 
 type CheckboxOptionProps = {
-  filterState: RecoilState<string>,
-  name: string,
+  filterState: RecoilState<string>;
+  name: string;
   /** State generator function using the name parameter */
-  stateWithName: (name: string) => RecoilState<SampleFilterState>,
-  group: GroupedSampleOption,
+  stateWithName: (name: string) => RecoilState<SampleFilterState>;
+  group: GroupedSampleOption;
   /** State generator function using the group parameter */
-  stateWithGroup: (group: GroupedSampleOption) => RecoilState<SampleGroupFilterState>,
-  colorCheckbox: string,
-  colorText: string,
-}
+  stateWithGroup: (
+    group: GroupedSampleOption
+  ) => RecoilState<SampleGroupFilterState>;
+  colorCheckbox: string;
+  colorText: string;
+};
 const CheckboxOption = React.memo(function Option({
   filterState,
   name,
@@ -116,4 +122,4 @@ const CheckboxOption = React.memo(function Option({
   );
 });
 
-export default CheckboxOption
+export default CheckboxOption;
