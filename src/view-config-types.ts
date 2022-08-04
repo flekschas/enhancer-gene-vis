@@ -341,6 +341,13 @@ export type RidgePlotTrack = TrackCommon & {
   options: RidgePlotTrackOptions;
 };
 
+export enum RidgePlotTrackRowAggregationMode {
+  MAX = 'max',
+  MIN = 'min',
+  SUM = 'sum',
+  MEAN = 'mean'
+}
+
 export type RidgePlotTrackOptions = {
   name: string;
   labelPosition: string;
@@ -348,26 +355,30 @@ export type RidgePlotTrackOptions = {
   labelShowAssembly: boolean;
   markArea: boolean;
   markColor: string;
-  markResolution: number;
+  markResolution?: number;
   valueScaling: 'exponential';
   colorRange: [string, string];
-  rowHeight: number;
-  rowPadding: number;
-  rowNormalization: boolean;
-  rowSelections: number[];
+  rowHeight?: number;
+  rowPadding?: number;
+  rowNormalization?: boolean;
+  rowSelections?: number[];
   rowIdToCategory: {
     fn: string;
     args: [string, string];
   };
   rowCategories: CategoryNameToDnaAccessibilityCategoryMap;
-  showRowLabels: DnaAccessibilityLabelStyle;
-  rowLabelSize: number;
+  showRowLabels: RidgePlotTrackLabelStyle;
+  rowLabelSize?: number;
   showMousePosition: boolean;
   showGlobalMousePosition: boolean;
   mousePositionColor: string;
+  selectRowsAggregationMode?: RidgePlotTrackRowAggregationMode;
+  markOpacity?: number;
+  markSize?: number;
+  rowLabelAlign?: 'left' | 'right';
 };
 
-export enum DnaAccessibilityLabelStyle {
+export enum RidgePlotTrackLabelStyle {
   INDICATOR = 'indicator',
   TEXT = 'text',
   HIDDEN = 'hidden',

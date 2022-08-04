@@ -6,6 +6,8 @@ import {
   minNan,
   sumNan,
 } from '@flekschas/utils';
+import { ColorRGB, ColorRGBA } from '@higlass/common';
+import { Context } from '@higlass/tracks';
 import { HGC } from '@higlass/types';
 import { line, ScaleContinuousNumeric } from 'd3';
 import { HiGlassTile } from 'higlass';
@@ -16,6 +18,8 @@ import {
   DEFAULT_COLOR_MAP_LIGHT,
   DEFAULT_COLOR_MAP_DARK,
 } from '../../constants';
+import { getMethodsMap } from '../../utils/string';
+import { CategoryNameToDnaAccessibilityCategoryMap, RidgePlotTrackLabelStyle, RidgePlotTrackOptions, RidgePlotTrackRowAggregationMode } from '../../view-config-types';
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 
@@ -110,7 +114,7 @@ const FS = `precision mediump float;
 
 const TILE_SIZE = 256;
 
-const COLORMAP_GRAYS: [number, number, number, number][] = Array(127)
+const COLORMAP_GRAYS: ColorRGBA[] = Array(127)
   .fill(undefined)
   .map((x, i) => {
     const gray = (1 - i / 127) * 0.5 + 0.5;
@@ -131,7 +135,11 @@ const getRowMaxs = (fetchedTiles: { [key: string]: HiGlassTile }) =>
     Object.values(fetchedTiles).map((tile) => tile.tileData.maxValueByRow)
   );
 
-const scaleGraphics = (graphics: Graphics, xScale: ScaleContinuousNumeric<number, number>, drawnAtScale: ScaleContinuousNumeric<number, number>) => {
+const scaleGraphics = (
+  graphics: Graphics,
+  xScale: ScaleContinuousNumeric<number, number>,
+  drawnAtScale: ScaleContinuousNumeric<number, number>
+) => {
   const tileK =
     (drawnAtScale.domain()[1] - drawnAtScale.domain()[0]) /
     (xScale.domain()[1] - xScale.domain()[0]);
@@ -142,8 +150,11 @@ const scaleGraphics = (graphics: Graphics, xScale: ScaleContinuousNumeric<number
   graphics.position.x = -posOffset * tileK;
 };
 
-const getNumPointsPerRow = (numRows: number, positions: any[], markArea: number) =>
-  positions.length / numRows / 4 / (1 + markArea) - 2;
+const getNumPointsPerRow = (
+  numRows: number,
+  positions: any[],
+  markArea: number
+) => positions.length / numRows / 4 / (1 + markArea) - 2;
 
 const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
   if (!new.target) {
@@ -177,55 +188,38 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
     ] as [PIXI.Texture, number];
   };
 
-  class RidgePlotTrack extends HGC.tracks.HorizontalLine1DPixiTrack {
-    pLoading: any;
-    pMasked: any;
-    loadIndicator: any;
-    labelSize!: number;
-    options: any;
-    selectRowsAggregationMode: any;
-    selectRowsAggregationFn: (arr: number[]) => number;
-    markArea: boolean;
+  class RidgePlotTrack extends HGC.tracks.HorizontalLine1DPixiTrack<
+    RidgePlotTrackOptions
+  > {
+    pLoading: PIXI.Graphics;
+    loadIndicator: PIXI.Text;
+    selectRowsAggregationMode!: RidgePlotTrackRowAggregationMode;
+    selectRowsAggregationFn!: (arr: number[]) => number;
+    // Set in setOptions
+    markArea!: boolean;
     markAreaColor!: string;
-    markColor: any;
-    markColorRgbNorm: any;
-    markColorTex?: PIXI.Texture;
-    markColorTexRes?: number;
+    markColor!: number;
+    markColorRgbNorm!: ColorRGB;
+    markColorTex!: PIXI.Texture;
+    markColorTexRes!: number;
     markNumColors!: number;
     markOpacity!: number;
     markSize!: number;
-    markResolution: any;
-    rowHeight!: number;
+    markResolution!: number;
+    rowHeight!: number | 'auto';
     rowPadding!: number;
-    rowNormalization: any;
+    rowNormalization!: boolean;
     rowSelections!: number[];
-    showRowLabels: any;
-    rowLabelAlign: any;
-    rowLabelSize: any;
-    oldRowCategories: any;
-    rowCategories: any;
-    rowIdToCategory: (id: any) => any;
-    pAxis: any;
-    rowLabels?: PIXI.Sprite[];
-    dimensions: [any];
-    position: [any, any];
-    axisAlign: string;
-    valueScale: any;
-    colorIndexScale: any;
-    rowValueScales: {};
-    rowColorIndexScales: {};
-    valueScaleByRow: (value: any, row: any) => any;
-    colorIndexScaleByRow: (value: any, row: any) => any;
-    rowScale: any;
-    drawnAtScale: any;
-    pMain: any;
-    lineGraphics: any;
-    fetching: any;
+    showRowLabels!: RidgePlotTrackLabelStyle;
+    rowLabelAlign!: 'left' | 'right';
+    rowLabelSize!: number;
+    rowCategories!: CategoryNameToDnaAccessibilityCategoryMap;
+    rowIdToCategory!: (id: string) => string;
 
-
-    constructor(context, options) {
-      console.log(context)
-      console.log(options)
+    constructor(
+      context: Context<RidgePlotTrackOptions>,
+      options: RidgePlotTrackOptions
+    ) {
       super(context, options);
       this.updateOptions();
 
@@ -254,7 +248,11 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
     /**
      * From HeatmapTiledPixiTrack
      */
-    getTilePosAndDimensions(zoomLevel, tilePos, binsPerTileIn) {
+    getTilePosAndDimensions(
+      zoomLevel: number,
+      tilePos: number[],
+      binsPerTileIn?: number
+    ) {
       const binsPerTile = binsPerTileIn || this.binsPerTile();
 
       if (this.tilesetInfo.resolutions) {
@@ -301,9 +299,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
     }
 
     updateOptions() {
-      console.log(this)
       this.selectRowsAggregationMode =
-        this.options.selectRowsAggregationMode || 'mean';
+        this.options.selectRowsAggregationMode || RidgePlotTrackRowAggregationMode.MEAN;
 
       switch (this.selectRowsAggregationMode) {
         case 'max':
@@ -334,7 +331,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
         ? HGC.utils
           .colorToRgba(this.options.markColor)
           .slice(0, 3)
-          .map((x) => Math.min(1, Math.max(0, x / 255)))
+          .map((x) => Math.min(1, Math.max(0, x / 255))) as ColorRGB
         : [0, 0, 0];
 
       [this.markColorTex, this.markColorTexRes] = createColorTexture([
@@ -343,9 +340,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
 
       this.markNumColors = COLORMAP_GRAYS.length;
 
-      this.markOpacity = Number.isNaN(+this.options.markOpacity)
-        ? 1
-        : Math.min(1, Math.max(0, +this.options.markOpacity));
+      this.markOpacity = this.options.markOpacity && !Number.isNaN(this.options.markOpacity)
+        ? Math.min(1, Math.max(0, this.options.markOpacity))
+        : 1;
 
       this.markSize = this.options.markSize || 2;
 
@@ -359,23 +356,23 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
       // 100 x (256 / 4) x 4 = 25,600 vertices
 
       const oldRowHeight = this.rowHeight;
-      this.rowHeight = Number.isNaN(+this.options.rowHeight)
-        ? 'auto'
-        : +this.options.rowHeight;
+      this.rowHeight = this.options.rowHeight && !Number.isNaN(this.options.rowHeight)
+        ? this.options.rowHeight
+        : 'auto';
 
       const oldRowPadding = this.rowPadding;
       this.rowPadding =
         this.rowHeight === 'auto' ? 0 : this.options.rowPadding || 0;
 
       const oldRowNormalization = this.rowNormalization;
-      this.rowNormalization = this.options.rowNormalization || false;
+      this.rowNormalization = !!this.options.rowNormalization;
 
       const oldRowSelections = this.rowSelections;
       this.rowSelections =
         this.options.rowSelections || this.rowSelections || [];
 
       const oldShowRowLabels = this.showRowLabels;
-      this.showRowLabels = this.options.showRowLabels;
+      this.showRowLabels = this.options.showRowLabels || RidgePlotTrackLabelStyle.INDICATOR;
 
       if (
         oldMarkResolution !== this.markResolution ||
@@ -402,11 +399,11 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
       this.rowLabelAlign = this.options.rowLabelAlign || 'left';
       this.rowLabelSize = this.options.rowLabelSize || 12;
 
-      this.oldRowCategories = this.rowCategories;
+      const oldRowCategories = this.rowCategories;
       this.rowCategories = this.options.rowCategories || {};
       if (
         JSON.stringify(this.rowCategories) !==
-        JSON.stringify(this.oldRowCategories)
+        JSON.stringify(oldRowCategories)
       ) {
         this.updateRowLabels();
         this.drawLabel();
@@ -414,10 +411,17 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
 
       this.rowIdToCategory = (id) => id.substring(0, id.length - 14);
       this.rowIdToCategory = this.options.rowIdToCategory
-        ? (id) =>
-          id[this.options.rowIdToCategory.fn](
-            ...this.options.rowIdToCategory.args
+        ? (id) => {
+          const idMethods = getMethodsMap(id);
+          const fnString = this.options.rowIdToCategory.fn;
+          if (!Object.keys(idMethods).includes(fnString)) {
+            throw new Error(`${fnString} is not a valid method for id ${id} of type ${typeof id}`)
+          }
+          return idMethods[fnString].apply(
+            id,
+            this.options.rowIdToCategory.args
           )
+        }
         : identity;
     }
 
@@ -435,7 +439,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
 
     updateRowLabels() {
       if (!this.tilesetInfo || !this.tilesetInfo.row_infos) return;
-      console.log(this.tilesetInfo)
 
       const labels = this.rowSelections.length
         ? this.rowSelections.map((rowIndex) =>
@@ -529,11 +532,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
     hasFetchedTiles() {
       return Object.values(this.fetchedTiles).length;
     }
-    fetchedTiles(fetchedTiles: any) {
-      throw new Error('Method not implemented.');
-    }
 
-    coarsifyTileValues(tile) {
+    coarsifyTileValues(tile: HiGlassTile) {
       const { tileX, tileWidth } = this.getTilePosAndDimensions(
         tile.tileData.zoomLevel,
         tile.tileData.tilePos
@@ -620,7 +620,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
         this.rowValueScales = {};
         this.rowColorIndexScales = {};
         for (let i = 0; i < numRows; i++) {
-          console.log(rowHeight)
           this.rowValueScales[i] = scaleLinear()
             .domain([0, rowMaxs[i]])
             .range([rowHeight, 0]);
@@ -712,9 +711,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
         new Float32Array(offsetSignsByRow.flatMap(identity)),
       ];
     }
-    _xScale(arg0: any) {
-      throw new Error('Method not implemented.');
-    }
 
     toLineIndices(numRows, numPointsPerRow, markArea) {
       const verticesPerLine = markArea ? 12 : 6;
@@ -787,7 +783,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
       return indices;
     }
 
-    getRowHeight(numRows) {
+    getRowHeight(numRows: number) {
       const [, visibleTrackHeight] = this.dimensions;
 
       return this.rowHeight === 'auto'
@@ -902,15 +898,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
       this.draw();
       this.animate();
     }
-    xScale() {
-      throw new Error('Method not implemented.');
-    }
-    draw() {
-      throw new Error('Method not implemented.');
-    }
-    animate() {
-      throw new Error('Method not implemented.');
-    }
 
     // Called whenever a new tile comes in
     updateExistingGraphics() {
@@ -953,9 +940,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
 
       this.refreshTiles();
       this.draw();
-    }
-    yScale(newYScale: any) {
-      throw new Error('Method not implemented.');
     }
 
     /**
@@ -1089,12 +1073,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
 
       return text;
     }
-    calculateZoomLevel() {
-      throw new Error('Method not implemented.');
-    }
-    tileToLocalId(arg0: any[]) {
-      throw new Error('Method not implemented.');
-    }
 
     /**
      * Get some information to display when the mouse is over this
@@ -1196,7 +1174,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
         const l = document.createElement('path');
         let d = createLine(arr);
         if (!d) {
-          throw new Error('Could not create ridge plot line path')
+          throw new Error('Could not create ridge plot line path');
         }
 
         const y0 = this.rowScale(i) + this.valueScaleByRow(0, i);

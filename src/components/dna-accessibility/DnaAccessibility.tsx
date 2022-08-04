@@ -41,7 +41,7 @@ import {
 
 import 'higlass/dist/hglib.css';
 import {
-  DnaAccessibilityLabelStyle,
+  RidgePlotTrackLabelStyle,
   RidgePlotTrack,
   ViewConfig,
 } from '../../view-config-types';
@@ -66,7 +66,7 @@ const useStyles = makeStyles((_theme) => ({
 }));
 
 const updateViewConfigDnaAccessLabelStyle = (
-  labelStyle: DnaAccessibilityLabelStyle
+  labelStyle: RidgePlotTrackLabelStyle
 ) => (viewConfig: ViewConfig) => {
   const track = getTrackByUid(
     viewConfig,
