@@ -56,7 +56,7 @@ declare module '@higlass/services' {
   type Tile = {
       tileData: TileData;
   };
-  type ColorRGBA = [r: number, g: number, b: number, a: number];
+  type ColorRGBA = [number, number, number, number];
 
   export const tileProxy: {
       calculateResolution(tilesetInfo: TilesetInfo, zoomLevel: number): number;
@@ -103,6 +103,7 @@ declare module '@higlass/tracks' {
   export const BarTrack: Track;
 
   import type { ScaleContinuousNumeric } from 'd3-scale';
+  import type { HiGlassTile } from 'higlass';
   import type * as PIXI from 'pixi.js';
 
   type Scale = ScaleContinuousNumeric<number, number>;
@@ -255,9 +256,203 @@ declare module '@higlass/tracks' {
       exportSVG(): [HTMLElement, HTMLElement];
   }
 
-  export class HorizontalLine1DPixiTrack<Options extends TrackOptions> extends PixiTrack {
+  export class TiledPixiTrack<Options extends TrackOptions> extends PixiTrack<Options> {
     constructor(context: Context<Options>, options: Options);
+    renderVersion: number;
+    visibleTiles: Set<any>;
+    visibleTileIds: Set<string>;
+    renderingTiles: Set<any>;
+    fetching: Set<any>;
+    scale: {};
+    fetchedTiles: {[key: string]: HiGlassTile};
+    tileGraphics: {};
+    maxZoom: number;
+    medianVisibleValue: any;
+    backgroundTaskScheduler: import("./utils/background-task-scheduler").BackgroundTaskScheduler;
+    continuousScaling: boolean;
+    valueScaleMin: number;
+    fixedValueScaleMin: number;
+    valueScaleMax: number;
+    fixedValueScaleMax: number;
+    listeners: {};
+    animate: any;
+    onValueScaleChanged: any;
+    prevValueScale: any;
+    dataFetcher: any;
+    tilesetInfo: TilesetInfo;
+    uuid: any;
+    trackNotFoundText: PIXI.Text;
+    refreshTilesDebounced: Function;
+    tilesetUid: any;
+    server: any;
+    chromInfo: any;
+    setError(error: any): void;
+    errorTextText: any;
+    setFixedValueScaleMin(value: any): void;
+    setFixedValueScaleMax(value: any): void;
+    checkValueScaleLimits(): void;
+    /**
+     * Register an event listener for track events. Currently, the only supported
+     * event is ``dataChanged``.
+     *
+     * @param {string} event The event to listen for
+     * @param {function} callback The callback to call when the event occurs. The
+     *  parameters for the event depend on the event called.
+     *
+     * @example
+     *
+     *  trackObj.on('dataChanged', (newData) => {
+     *   console.log('newData:', newData)
+     *  });
+     */
+    on(event: string, callback: Function): void;
+    off(event: any, callback: any): void;
+    /**
+     * Return the set of ids of all tiles which are both visible and fetched.
+     */
+    visibleAndFetchedIds(): string[];
+    visibleAndFetchedTiles(): any[];
+    /**
+     * Set which tiles are visible right now.
+     *
+     * @param tiles: A set of tiles which will be considered the currently visible
+     * tile positions.
+     */
+    setVisibleTiles(tilePositions: any): void;
+    removeOldTiles(): void;
+    refreshTiles(): void;
+    parentInFetched(tile: any): boolean;
+    parentTileId(tile: any): string;
+    /**
+     * Remove obsolete tiles
+     *
+     * @param toRemoveIds: An array of tile ids to remove from the list of fetched tiles.
+     */
+    removeTiles(toRemoveIds: any): void;
+    zoomed(newXScale: Scale, newYScale: Scale, k?: number, tx?: number, ty?: number): void;
+    /**
+     * Check to see if all the visible tiles are loaded.
+     *
+     * If they are, remove all other tiles.
+     */
+    areAllVisibleTilesLoaded(): boolean;
+    /**
+     * Function is called when all tiles that should be visible have
+     * been received.
+     */
+    allTilesLoaded(): void;
+    minValue(_: any): any;
+    maxValue(_: any): any;
+    minRawValue(): any;
+    maxRawValue(): any;
+    initTile(): void;
+    updateTile(): void;
+    destroyTile(): void;
+    addMissingGraphics(): void;
+    /**
+     * Change the graphics for existing tiles
+     */
+    updateExistingGraphics(): void;
+    synchronizeTilesAndGraphics(): void;
+    loadTileData(tile: any, dataLoader: any): any;
+    fetchNewTiles(toFetch: any): void;
+    /**
+     * We've gotten a bunch of tiles from the server in
+     * response to a request from fetchTiles.
+     */
+    receivedTiles(loadedTiles: any): void;
+    /**
+     * Draw a tile on some graphics
+     */
+    drawTile(): void;
+    calculateMedianVisibleValue(): any;
+    allVisibleValues(): any[];
+    minVisibleValue(ignoreFixedScale?: boolean): number;
+    minVisibleValueInTiles(ignoreFixedScale?: boolean): number;
+    maxVisibleValue(ignoreFixedScale?: boolean): number;
+    maxVisibleValueInTiles(ignoreFixedScale?: boolean): number;
+    makeValueScale(minValue: any, medianValue: any, maxValue: any, inMargin: any): any[];
   }
+
+  export class Tiled1DPixiTrack<Options extends TrackOptions> extends TiledPixiTrack<Options> {
+    constructor(context: Context<Options>, options: Options);
+    onMouseMoveZoom: any;
+    isValueScaleLocked: any;
+    getLockGroupExtrema: any;
+    initTile(tile: any): void;
+    tileToLocalId(tile: any): string;
+    tileToRemoteId(tile: any): string;
+    relevantScale(): any;
+    setVisibleTiles(tilePositions: any): void;
+    calculateVisibleTiles(): void;
+    zoomLevel: any;
+    getTilePosAndDimensions(zoomLevel: any, tilePos: any, binsPerTileIn: any): {
+        tileX: any;
+        tileY: any;
+        tileWidth: number;
+        tileHeight: number;
+    };
+    updateTile(tile: any): void;
+    scheduleRerender(): void;
+    handleRerender(): void;
+    getIndicesOfVisibleDataInTile(tile: any): number[];
+    /**
+     * Return an aggregated visible value. For example, the minimum or maximum.
+     *
+     * @description
+     *   The difference to `minVisibleValueInTiles`
+     *   is that the truly visible min or max value is returned instead of the
+     *   min or max value of the tile. The latter is not necessarily visible.
+     *
+     *   For 'min' and 'max' this is identical to minVisibleValue and maxVisibleValue
+     *
+     * @param  {string} aggregator Aggregation method. Currently supports `min`
+     *   and `max` only.
+     * @return {number} The aggregated value.
+     */
+    getAggregatedVisibleValue(aggregator?: string): number;
+    /**
+     * Get the data value at a relative pixel position
+     * @param   {number}  relPos  Relative pixel position, where 0 indicates the
+     *   start of the track
+     * @return  {number}  The data value at `relPos`
+     */
+    getDataAtPos(relPos: number): number;
+    mouseMoveHandler({ x, y }?: {
+        x: any;
+        y: any;
+    }): void;
+    mouseX: any;
+    mouseY: any;
+    mouseMoveZoomHandler(): void;
+    zoomed(...args: any[]): void;
+  }
+
+  export class HorizontalTiled1DPixiTrack<Options extends TrackOptions> extends Tiled1DPixiTrack<Options> {
+    constructor(context: Context<Options>, options: Options);
+    constIndicator: PIXI.Graphics;
+    axis: AxisPixi;
+    isShowGlobalMousePosition: any;
+    hideMousePosition: Function;
+    rerender(options: any, force: any): void;
+    calculateZoomLevel(): any;
+    drawAxis(valueScale: Scale): void;
+    mouseMoveZoomHandler(absX?: any, absY?: any): void;
+    drawConstIndicator(): void;
+  }
+
+  export class HorizontalLine1DPixiTrack<Options extends TrackOptions> extends HorizontalTiled1DPixiTrack<Options> {
+    constructor(context: Context<Options>, options: Options);
+    stopHover(): void;
+    getMouseOverHtml(trackX: any): string;
+    renderTile(tile: any): void;
+    drawTile(tile: any): void;
+    valueScale: Scale;
+    zoomed(newXScale: Scale, newYScale: Scale): void;
+    superSVG(): any[];
+  }
+
+  export function getValueScale(scalingType: string, minValue: number, pseudocountIn: any, maxValue: number, defaultScaling: string): any[];
 
   /* eslint-disable-next-line @typescript-eslint/ban-types */
   type LiteralUnion<T, U = string> = T | (U & {});
