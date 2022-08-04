@@ -11,6 +11,7 @@ import { Context } from '@higlass/tracks';
 import { HGC } from '@higlass/types';
 import { line } from 'd3';
 import { HiGlassTile } from 'higlass';
+import { TrackDefinitionConfig } from 'higlass-register';
 import { Graphics } from 'pixi.js';
 
 import {
@@ -1227,6 +1228,6 @@ createRidgePlotTrack.config = {
   datatype: ['multivec'],
   orientation: '1d',
   name: 'RidgePlot',
-};
+} as TrackDefinitionConfig;
 
 export default createRidgePlotTrack;
