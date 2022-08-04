@@ -1,7 +1,7 @@
 import { DEFAULT_STRATIFICATION } from '../../state/stratification-state';
 import {
   CategoryNameToDnaAccessibilityCategoryMap,
-  DnaAccessibilityLabelStyle,
+  RidgePlotTrackLabelStyle,
   TrackType,
   ViewConfig,
 } from '../../view-config-types';
@@ -269,7 +269,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY: ViewConfig = {
                 args: ['.accessibility', ''],
               },
               rowCategories: DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES,
-              showRowLabels: DnaAccessibilityLabelStyle.INDICATOR,
+              showRowLabels: RidgePlotTrackLabelStyle.INDICATOR,
               rowLabelSize: 10,
               showMousePosition: true,
               showGlobalMousePosition: true,

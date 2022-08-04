@@ -34,7 +34,7 @@ declare module '@flekschas/utils' {
    * Gets the max vector by combining the maximum value at each index
    * of the numeric arrays. Can be thought of as a max operation along
    * axis 0 in numpy.
-   * 
+   *
    * @param {array} m - Array of vectors
    * @return {array} Max vector
    */
