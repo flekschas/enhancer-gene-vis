@@ -82,9 +82,8 @@ const AppTopbar = React.memo(function AppTopbar() {
   // const [focusVariant, setFocusVariant] = useFocusVariant();
   const [focusRegion, setFocusRegion] = useFocusRegion();
 
-  const [focusGeneOption, setFocusGeneOption] = useRecoilState(
-    focusGeneOptionState
-  );
+  const [focusGeneOption, setFocusGeneOption] =
+    useRecoilState(focusGeneOptionState);
   const [focusRegionOption, setFocusRegionOption] = useRecoilState(
     focusRegionOptionState
   );

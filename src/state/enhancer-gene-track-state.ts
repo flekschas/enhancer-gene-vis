@@ -40,16 +40,15 @@ export const enhancerGenesPaddingState: RecoilState<boolean> = atom({
   ),
 });
 
-export const enhancerGenesCellEncodingState: RecoilState<EnhancerGeneCellEncodingType> = atom(
-  {
+export const enhancerGenesCellEncodingState: RecoilState<EnhancerGeneCellEncodingType> =
+  atom({
     key: 'enhancerGenesCellEncoding',
     default: getDefault(
       EnhancerGeneQueryKey.CELL_ENCODING,
       EnhancerGeneCellEncodingType.MAX_SCORE,
       (string) => string as EnhancerGeneCellEncodingType
     ),
-  }
-);
+  });
 
 // TODO: Determine type for this atom
 export const enhancerGenesSvgState = atom({

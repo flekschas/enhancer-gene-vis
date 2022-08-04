@@ -169,18 +169,15 @@ const AppSidebar = React.memo(function AppSidebar() {
   const chromInfo = useChromInfo();
   const showModal = useShowModal();
 
-  const [xDomainStart, setXDomainStart] = useXDomainStartWithAssembly(
-    chromInfo
-  );
+  const [xDomainStart, setXDomainStart] =
+    useXDomainStartWithAssembly(chromInfo);
   const [xDomainEnd, setXDomainEnd] = useXDomainEndWithAssembly(chromInfo);
   const [showWelcome, setShowWelcome] = useShowWelcome();
   const [showVariantsSettings, setShowVariantsSettings] = useRecoilState(
     showVariantsSettingsState
   );
-  const [
-    showEnhancerRegionsSettings,
-    setShowEnhancerRegionsSettings,
-  ] = useRecoilState(showEnhancerRegionsSettingsState);
+  const [showEnhancerRegionsSettings, setShowEnhancerRegionsSettings] =
+    useRecoilState(showEnhancerRegionsSettingsState);
   const stratification = useRecoilValue(stratificationState);
 
   const higlassEnhancerRegions = useRecoilValue(higlassEnhancerRegionsState);
@@ -319,19 +316,19 @@ const AppSidebar = React.memo(function AppSidebar() {
       width: dnaAccessWidth,
       height: dnaAccessHeight,
     } = extractCoreFromHiGlassSvg(dnaAccessSvg);
-    const {
-      core: enhancerGeneSvgCore = null,
-      height: enhancerGeneHeight = 0,
-    } = enhancerGeneSvg ? extractCoreFromStringifiedSvg(enhancerGeneSvg) : {};
+    const { core: enhancerGeneSvgCore = null, height: enhancerGeneHeight = 0 } =
+      enhancerGeneSvg ? extractCoreFromStringifiedSvg(enhancerGeneSvg) : {};
 
-    const actualEnhancerHeight = DEFAULT_VIEW_CONFIG_ENHANCER.views[0].tracks.top.reduce(
-      (height, track) => height + track.height,
-      0
-    );
-    const actualDnaAccessHeight = DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY.views[0].tracks.top.reduce(
-      (height, track) => height + track.height,
-      0
-    );
+    const actualEnhancerHeight =
+      DEFAULT_VIEW_CONFIG_ENHANCER.views[0].tracks.top.reduce(
+        (height, track) => height + track.height,
+        0
+      );
+    const actualDnaAccessHeight =
+      DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY.views[0].tracks.top.reduce(
+        (height, track) => height + track.height,
+        0
+      );
     const padding = 24;
 
     let mergedSvg = SVG_SKELETON;

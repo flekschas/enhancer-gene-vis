@@ -251,9 +251,9 @@ export function groupedSampleOptions(
   }));
 }
 
-export function sampleToGroup(
-  stratification: Stratification
-): { [key: string]: string } {
+export function sampleToGroup(stratification: Stratification): {
+  [key: string]: string;
+} {
   return groupedSampleOptions(stratification).reduce(
     (sampleToGroupObj: { [key: string]: string }, group) => {
       group.options.forEach((option) => {
@@ -271,9 +271,9 @@ export function samples(stratification: Stratification): string[] {
   );
 }
 
-export function sampleIdx(
-  stratification: Stratification
-): { [key: string]: number } {
+export function sampleIdx(stratification: Stratification): {
+  [key: string]: number;
+} {
   return samples(stratification).reduce(
     (idxs: { [key: string]: number }, sample: string, idx: number) => {
       idxs[sample] = idx;

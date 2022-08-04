@@ -1028,25 +1028,27 @@ const createStratifiedBedTrack = function createStratifiedBedTrack(
         return t;
       };
 
-      const createLine = ({
-        stroke = '#000000',
-        strokeWidth = 1,
-        strokeDasharray = null,
-      } = {}) => (x1, y1, x2, y2) => {
-        const l = document.createElement('line');
+      const createLine =
+        ({
+          stroke = '#000000',
+          strokeWidth = 1,
+          strokeDasharray = null,
+        } = {}) =>
+        (x1, y1, x2, y2) => {
+          const l = document.createElement('line');
 
-        l.setAttribute('x1', x1);
-        l.setAttribute('y1', y1);
-        l.setAttribute('x2', x2);
-        l.setAttribute('y2', y2);
-        l.setAttribute('stroke', stroke);
-        l.setAttribute('stroke-width', strokeWidth);
+          l.setAttribute('x1', x1);
+          l.setAttribute('y1', y1);
+          l.setAttribute('x2', x2);
+          l.setAttribute('y2', y2);
+          l.setAttribute('stroke', stroke);
+          l.setAttribute('stroke-width', strokeWidth);
 
-        if (strokeDasharray)
-          l.setAttribute('stroke-dasharray', strokeDasharray);
+          if (strokeDasharray)
+            l.setAttribute('stroke-dasharray', strokeDasharray);
 
-        return l;
-      };
+          return l;
+        };
 
       const createDashedLine = createLine({ strokeDasharray: '5' });
 

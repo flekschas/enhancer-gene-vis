@@ -16,9 +16,9 @@ type CategoryAndIndex = {
   index: number;
 };
 
-export function getCategories(
-  stratification: Stratification
-): { [key: string]: Category } {
+export function getCategories(stratification: Stratification): {
+  [key: string]: Category;
+} {
   const categories: { [key: string]: Category } = {};
   stratification.groups.forEach((group, i) => {
     categories[group.label] = {
@@ -30,9 +30,9 @@ export function getCategories(
   return categories;
 }
 
-export function getSamples(
-  stratification: Stratification
-): { [key: string]: CategoryAndIndex } {
+export function getSamples(stratification: Stratification): {
+  [key: string]: CategoryAndIndex;
+} {
   const categories = getCategories(stratification);
   const samples: { [key: string]: CategoryAndIndex } = {};
   stratification.groups.forEach((group, i) => {
