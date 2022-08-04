@@ -46,19 +46,20 @@ const FileInput = React.memo(
 
     const [file, setFile] = useState(props.file || null);
 
-    const localChangeHandler: ChangeEventHandler<HTMLInputElement> = useCallback(
-      (event: React.ChangeEvent<HTMLInputElement>) => {
-        const fileList = event.target.files;
-        if (fileList && fileList.length > 0) {
-          const file = fileList[0];
-          setFile(file);
-          if (changeHandler) {
-            changeHandler(file, event);
+    const localChangeHandler: ChangeEventHandler<HTMLInputElement> =
+      useCallback(
+        (event: React.ChangeEvent<HTMLInputElement>) => {
+          const fileList = event.target.files;
+          if (fileList && fileList.length > 0) {
+            const file = fileList[0];
+            setFile(file);
+            if (changeHandler) {
+              changeHandler(file, event);
+            }
           }
-        }
-      },
-      [changeHandler]
-    );
+        },
+        [changeHandler]
+      );
 
     const clearFile = useCallback(() => {
       setFile(null);

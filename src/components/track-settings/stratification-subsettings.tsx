@@ -10,9 +10,8 @@ import {
 const StratificationSubsettings = React.memo(
   function StratificationSubsettings() {
     const [stratificationConfig, setStratificationConfig] = useState<File>();
-    const [stratification, setStratification] = useRecoilState(
-      stratificationState
-    );
+    const [stratification, setStratification] =
+      useRecoilState(stratificationState);
 
     function handleNewStratificationConfig(newStratificationConfig: File) {
       const reader = new FileReader();

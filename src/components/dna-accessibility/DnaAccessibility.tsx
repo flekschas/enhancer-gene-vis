@@ -65,52 +65,49 @@ const useStyles = makeStyles((_theme) => ({
   },
 }));
 
-const updateViewConfigDnaAccessLabelStyle = (
-  labelStyle: RidgePlotTrackLabelStyle
-) => (viewConfig: ViewConfig) => {
-  const track = getTrackByUid(
-    viewConfig,
-    'dna-accessibility'
-  ) as RidgePlotTrack;
-  track.options.showRowLabels = labelStyle;
-  return viewConfig;
-};
+const updateViewConfigDnaAccessLabelStyle =
+  (labelStyle: RidgePlotTrackLabelStyle) => (viewConfig: ViewConfig) => {
+    const track = getTrackByUid(
+      viewConfig,
+      'dna-accessibility'
+    ) as RidgePlotTrack;
+    track.options.showRowLabels = labelStyle;
+    return viewConfig;
+  };
 
-const updateViewConfigDnaAccessRowNorm = (rowNorm: boolean) => (
-  viewConfig: ViewConfig
-) => {
-  const track = getTrackByUid(
-    viewConfig,
-    'dna-accessibility'
-  ) as RidgePlotTrack;
-  track.options.rowNormalization = rowNorm;
-  return viewConfig;
-};
+const updateViewConfigDnaAccessRowNorm =
+  (rowNorm: boolean) => (viewConfig: ViewConfig) => {
+    const track = getTrackByUid(
+      viewConfig,
+      'dna-accessibility'
+    ) as RidgePlotTrack;
+    track.options.rowNormalization = rowNorm;
+    return viewConfig;
+  };
 
-const updateViewConfigRowSelection = (selection: boolean[]) => (
-  viewConfig: ViewConfig
-) => {
-  const track = getTrackByUid(
-    viewConfig,
-    'dna-accessibility'
-  ) as RidgePlotTrack;
-  track.options.rowSelections = DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
-    (rowId, i) => selection[i]
-  );
-  return viewConfig;
-};
+const updateViewConfigRowSelection =
+  (selection: boolean[]) => (viewConfig: ViewConfig) => {
+    const track = getTrackByUid(
+      viewConfig,
+      'dna-accessibility'
+    ) as RidgePlotTrack;
+    track.options.rowSelections =
+      DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
+        (rowId, i) => selection[i]
+      );
+    return viewConfig;
+  };
 
-const updateViewConfigStratification = (stratification: Stratification) => (
-  viewConfig: ViewConfig
-) => {
-  const track = getTrackByUid(
-    viewConfig,
-    'dna-accessibility'
-  ) as RidgePlotTrack;
-  const categoryMap = createCategoryMap(stratification);
-  track.options.rowCategories = categoryMap;
-  return viewConfig;
-};
+const updateViewConfigStratification =
+  (stratification: Stratification) => (viewConfig: ViewConfig) => {
+    const track = getTrackByUid(
+      viewConfig,
+      'dna-accessibility'
+    ) as RidgePlotTrack;
+    const categoryMap = createCategoryMap(stratification);
+    track.options.rowCategories = categoryMap;
+    return viewConfig;
+  };
 
 const DnaAccessibility = React.memo(function DnaAccessibility() {
   const chromInfo = useChromInfo();

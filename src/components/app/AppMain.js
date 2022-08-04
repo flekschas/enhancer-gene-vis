@@ -128,9 +128,8 @@ const AppMain = React.memo(function AppMain() {
   const [focusGene, setFocusGene] = useFocusGene();
   const [focusRegion, setFocusRegion] = useFocusRegion();
 
-  const [focusGeneOption, setFocusGeneOption] = useRecoilState(
-    focusGeneOptionState
-  );
+  const [focusGeneOption, setFocusGeneOption] =
+    useRecoilState(focusGeneOptionState);
   const [focusRegionOption, setFocusRegionOption] = useRecoilState(
     focusRegionOptionState
   );

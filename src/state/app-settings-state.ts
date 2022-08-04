@@ -19,12 +19,11 @@ export const showVariantsSettingsState: RecoilState<boolean> = atom<boolean>({
   default: false,
 });
 
-export const showEnhancerRegionsSettingsState: RecoilState<boolean> = atom<
-  boolean
->({
-  key: 'showEnhancerRegionsSettings',
-  default: false,
-});
+export const showEnhancerRegionsSettingsState: RecoilState<boolean> =
+  atom<boolean>({
+    key: 'showEnhancerRegionsSettings',
+    default: false,
+  });
 
 export const enum WelcomeIntroState {
   NO_SHOW = 0,

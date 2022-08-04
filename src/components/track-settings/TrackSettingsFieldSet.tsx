@@ -89,16 +89,15 @@ export function TrackSettingsFieldSet<T extends TrackSettingsState>({
 }: TrackConfigProps<T>) {
   const [state, setState] = useState(config);
 
-  const propertyChangeHandler = (property: string) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    // eslint-disable-next-line prefer-destructuring
-    const value = event.target.value;
-    setState((currState) => ({
-      ...currState,
-      [property]: value,
-    }));
-  };
+  const propertyChangeHandler =
+    (property: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      // eslint-disable-next-line prefer-destructuring
+      const value = event.target.value;
+      setState((currState) => ({
+        ...currState,
+        [property]: value,
+      }));
+    };
 
   const serverChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
     const server = event.target.value;
