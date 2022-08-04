@@ -897,9 +897,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
         // note that each point is duplicated, hence we need to skip over the first four
         FLOAT_BYTES * numCoords * numVerticesPoint * 2 // offset/start
       );
-      geometry.addAttribute('aOffsetSign', Array.from(offsetSigns), 1);
-      geometry.addAttribute('aColorIndex', Array.from(colorIndices), 1);
-      geometry.addIndex(Array.from(indices));
+      geometry.addAttribute('aOffsetSign', new PIXI.Buffer(offsetSigns), 1);
+      geometry.addAttribute('aColorIndex', new PIXI.Buffer(colorIndices), 1);
+      geometry.addIndex(new PIXI.Buffer(indices));
 
       const mesh = new PIXI.Mesh(geometry, shader as PIXI.MeshMaterial);
 
