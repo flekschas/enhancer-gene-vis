@@ -157,7 +157,8 @@ const getNumPointsPerRow = (
   markArea: boolean
 ) => positions.length / numRows / 4 / (1 + Number(markArea)) - 2;
 
-const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: any[]) {
+const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Context<RidgePlotTrackOptions>,
+  options: RidgePlotTrackOptions) {
   if (!new.target) {
     throw new Error(
       'Uncaught TypeError: Class constructor cannot be invoked without "new"'
@@ -222,10 +223,12 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: an
     labelSize?: number;
     colorIndexScale!: Scale;
     lineGraphics?: PIXI.Graphics;
-    rowValueScales?: {[key: number]: Scale};
-    rowColorIndexScales?: {[key: number]: Scale};
+    rowValueScales?: { [key: number]: Scale };
+    rowColorIndexScales?: { [key: number]: Scale };
     valueScaleByRow?: (value: number, row: number) => number;
     colorIndexScaleByRow?: (value: number, row: number) => number;
+    /** Never seems to be set */
+    axisAlign?: string;
 
     constructor(
       context: Context<RidgePlotTrackOptions>,
@@ -295,8 +298,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: an
         ? -this.tilesetInfo.max_pos[1]
         : this.tilesetInfo.min_pos[1];
 
-      const tileWidth = this.tilesetInfo.max_width / 2 ** zoomLevel;
-      const tileHeight = this.tilesetInfo.max_width / 2 ** zoomLevel;
+      // TODO: Remove non-null assertion after determining when this triggers
+      const tileWidth = this.tilesetInfo.max_width! / 2 ** zoomLevel;
+      const tileHeight = this.tilesetInfo.max_width! / 2 ** zoomLevel;
 
       const tileX = minX + xTilePos * tileWidth;
       const tileY = minY + yTilePos * tileHeight;
@@ -640,9 +644,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: an
             .clamp(true);
         }
         this.valueScaleByRow = (value: number, row: number) =>
-          Number.isNaN(value) ? rowHeight : this.rowValueScales?.[row](value);
+          Number.isNaN(value) ? rowHeight : this.rowValueScales![row](value);
         this.colorIndexScaleByRow = (value: number, row: number) =>
-          Number.isNaN(value) ? -2 : this.rowColorIndexScales?.[row](value);
+          Number.isNaN(value) ? -2 : this.rowColorIndexScales![row](value);
       } else {
         this.valueScaleByRow = (value: number, _row: number) =>
           Number.isNaN(value) ? rowHeight : this.valueScale(value);
@@ -656,10 +660,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: an
     }
 
     tilesToData(tiles: HiGlassTile[], { markArea, maxRows = Infinity, rowHeight }: {
-      markArea?: boolean;
-      maxRows?: number;
-      rowHeight?: number;
-    } = {}) {
+      markArea: boolean;
+      maxRows: number;
+      rowHeight: number;
+    }) {
       if (!tiles.length) return [];
 
       const numRows = Math.min(maxRows, getNumRows(tiles));
@@ -678,6 +682,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: an
         tile.tileData.valuesByRow.forEach((values, i) => {
           if (i >= maxRows) return;
           values.forEach((value, j) => {
+            if (!this.valueScaleByRow || !this.colorIndexScaleByRow) return;
             const x = this._xScale(tile.tileData.binXPos[j]);
             const yStart = this.rowScale(i);
             const y = yStart + this.valueScaleByRow(value, i);
@@ -798,15 +803,19 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: an
       return indices;
     }
 
-    getRowHeight(numRows: number) {
+    getRowHeight(numRows?: number) {
       const [, visibleTrackHeight] = this.dimensions;
-
-      return this.rowHeight === 'auto'
-        ? [
+      if (this.rowHeight === 'auto') {
+        if (!numRows) {
+          throw new Error('numRows is required when rowHeight is auto');
+        }
+        return [
           Math.floor(visibleTrackHeight / numRows),
           Math.floor(visibleTrackHeight / numRows),
         ]
-        : [this.rowHeight, this.rowHeight + this.rowPadding];
+      } else {
+        return [this.rowHeight, this.rowHeight + this.rowPadding]
+      }
     }
 
     getTrackHeight(numRows: number, rowHeight: number) {
@@ -1108,7 +1117,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: an
       return this.getVisibleData(trackX, trackY);
     }
 
-    override exportSVG() {
+    override exportSVG(): [HTMLElement, HTMLElement] {
       const svgns = 'http://www.w3.org/2000/svg';
 
       let track = null;
@@ -1220,7 +1229,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args: an
     }
   }
 
-  return new RidgePlotTrack(...args);
+  return new RidgePlotTrack(context, options);
 };
 
 createRidgePlotTrack.config = {
