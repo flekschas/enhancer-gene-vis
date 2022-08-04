@@ -345,7 +345,7 @@ export enum RidgePlotTrackRowAggregationMode {
   MAX = 'max',
   MIN = 'min',
   SUM = 'sum',
-  MEAN = 'mean'
+  MEAN = 'mean',
 }
 
 export type RidgePlotTrackOptions = {

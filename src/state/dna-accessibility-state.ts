@@ -9,16 +9,15 @@ import {
 import { RidgePlotTrackLabelStyle } from '../view-config-types';
 import { getDefault } from './utils';
 
-export const dnaAccessLabelStyleState: RecoilState<RidgePlotTrackLabelStyle> = atom(
-  {
+export const dnaAccessLabelStyleState: RecoilState<RidgePlotTrackLabelStyle> =
+  atom({
     key: 'dnaAccessLabelStyle',
     default: getDefault<RidgePlotTrackLabelStyle>(
       'dal',
       RidgePlotTrackLabelStyle.INDICATOR,
       identity
     ),
-  }
-);
+  });
 
 export const dnaAccessRowNormState: RecoilState<boolean> = atom({
   key: 'dnaAccessRowNorm',

@@ -29,17 +29,14 @@ const useStyles = makeStyles((theme) => ({
 
 const DnaAccessibilitySettings = React.memo(
   function DnaAccessibilitySettings() {
-    const [
-      dnaAccessLabelStyle,
-      setDnaAccessLabelStyle,
-    ] = useDnaAccessLabelStyle();
+    const [dnaAccessLabelStyle, setDnaAccessLabelStyle] =
+      useDnaAccessLabelStyle();
     const [dnaAccessRowNorm, setDnaAccessRowNorm] = useDnaAccessRowNorm();
 
-    const changeDnaAccessLabelStyle = (
-      value: RidgePlotTrackLabelStyle
-    ) => () => {
-      setDnaAccessLabelStyle(value);
-    };
+    const changeDnaAccessLabelStyle =
+      (value: RidgePlotTrackLabelStyle) => () => {
+        setDnaAccessLabelStyle(value);
+      };
 
     const changeDnaAccessRowNorm = (
       event: React.ChangeEvent<HTMLInputElement>

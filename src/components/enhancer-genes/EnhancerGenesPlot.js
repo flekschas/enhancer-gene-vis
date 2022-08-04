@@ -81,10 +81,8 @@ const useTooltipStyles = DEFAULT_COLOR_MAP_LIGHT.map((color, i) =>
   }))
 );
 
-const {
-  server,
-  tilesetUid: uuid,
-} = DEFAULT_VIEW_CONFIG_ENHANCER.views[0].tracks.top[3].contents[1];
+const { server, tilesetUid: uuid } =
+  DEFAULT_VIEW_CONFIG_ENHANCER.views[0].tracks.top[3].contents[1];
 
 const fetchTiles = async (tileIds) => {
   const response = await fetch(
@@ -998,9 +996,8 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
         ) {
           genes[geneName].samplesByCategory[sampleCat].maxScore =
             entry.importance;
-          genes[geneName].samplesByCategory[
-            sampleCat
-          ].maxScoreSample = sampleObj;
+          genes[geneName].samplesByCategory[sampleCat].maxScoreSample =
+            sampleObj;
         }
 
         maxScore = Math.max(maxScore, entry.importance);

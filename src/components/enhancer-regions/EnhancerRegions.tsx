@@ -155,91 +155,91 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const updateViewConfigFocusStyle = (hideUnfocused: boolean) => (
-  viewConfig: ViewConfig
-) => {
-  const track = getTrackByUid(
-    viewConfig,
-    'indicatorByCellTypes'
-  ) as StratifiedBedTrack;
-  track.options.focusStyle = hideUnfocused
-    ? FocusStyle.FILTERING
-    : FocusStyle.HIGHLIGHTING;
-  track.options.stratification.axisNoGroupColor = !hideUnfocused;
-  return viewConfig;
-};
-
-const updateViewConfigColorEncoding = (coloring: OpacityEncoding) => (
-  viewConfig: ViewConfig
-) => {
-  const track = getTrackByUid(
-    viewConfig,
-    'indicatorByCellTypes'
-  ) as StratifiedBedTrack;
-  track.options.opacityEncoding = coloring;
-  return viewConfig;
-};
-
-const updateViewConfigFilter = (
-  selectedSamples: string[],
-  sampleField: number
-) => (viewConfig: ViewConfig) => {
-  const arcTrack = getTrackByUid(viewConfig, 'arcs') as OneDimensionalArcTrack;
-  arcTrack.options.filter = {
-    set: selectedSamples,
-    field: sampleField,
+const updateViewConfigFocusStyle =
+  (hideUnfocused: boolean) => (viewConfig: ViewConfig) => {
+    const track = getTrackByUid(
+      viewConfig,
+      'indicatorByCellTypes'
+    ) as StratifiedBedTrack;
+    track.options.focusStyle = hideUnfocused
+      ? FocusStyle.FILTERING
+      : FocusStyle.HIGHLIGHTING;
+    track.options.stratification.axisNoGroupColor = !hideUnfocused;
+    return viewConfig;
   };
-  const barTrack = getTrackByUid(viewConfig, 'stacked-bars') as StackedBarTrack;
-  barTrack.options.filter = {
-    set: selectedSamples,
-    field: sampleField,
+
+const updateViewConfigColorEncoding =
+  (coloring: OpacityEncoding) => (viewConfig: ViewConfig) => {
+    const track = getTrackByUid(
+      viewConfig,
+      'indicatorByCellTypes'
+    ) as StratifiedBedTrack;
+    track.options.opacityEncoding = coloring;
+    return viewConfig;
   };
-  const stratifiedBedTrack = getTrackByUid(
-    viewConfig,
-    'indicatorByCellTypes'
-  ) as StratifiedBedTrack;
-  stratifiedBedTrack.options.filter = {
-    set: selectedSamples,
-    field: sampleField,
+
+const updateViewConfigFilter =
+  (selectedSamples: string[], sampleField: number) =>
+  (viewConfig: ViewConfig) => {
+    const arcTrack = getTrackByUid(
+      viewConfig,
+      'arcs'
+    ) as OneDimensionalArcTrack;
+    arcTrack.options.filter = {
+      set: selectedSamples,
+      field: sampleField,
+    };
+    const barTrack = getTrackByUid(
+      viewConfig,
+      'stacked-bars'
+    ) as StackedBarTrack;
+    barTrack.options.filter = {
+      set: selectedSamples,
+      field: sampleField,
+    };
+    const stratifiedBedTrack = getTrackByUid(
+      viewConfig,
+      'indicatorByCellTypes'
+    ) as StratifiedBedTrack;
+    stratifiedBedTrack.options.filter = {
+      set: selectedSamples,
+      field: sampleField,
+    };
+    return viewConfig;
   };
-  return viewConfig;
-};
 
-const updateViewConfigMatrixHeight = (numSamples: number) => (
-  viewConfig: ViewConfig
-) => {
-  const track = getTrackByUid(
-    viewConfig,
-    'indicatorByCellTypes'
-  ) as StratifiedBedTrack;
-  // TODO: come back to this number -- is it sufficient?
-  track.height = numSamples * track.options.markHeight + 14;
-  return viewConfig;
-};
+const updateViewConfigMatrixHeight =
+  (numSamples: number) => (viewConfig: ViewConfig) => {
+    const track = getTrackByUid(
+      viewConfig,
+      'indicatorByCellTypes'
+    ) as StratifiedBedTrack;
+    // TODO: come back to this number -- is it sufficient?
+    track.height = numSamples * track.options.markHeight + 14;
+    return viewConfig;
+  };
 
-const updateViewConfigStratification = (stratification: Stratification) => (
-  viewConfig: ViewConfig
-) => {
-  const stratifiedTrack = getTrackByUid(
-    viewConfig,
-    'indicatorByCellTypes'
-  ) as StratifiedBedTrack;
-  stratifiedTrack.options.stratification = stratification;
+const updateViewConfigStratification =
+  (stratification: Stratification) => (viewConfig: ViewConfig) => {
+    const stratifiedTrack = getTrackByUid(
+      viewConfig,
+      'indicatorByCellTypes'
+    ) as StratifiedBedTrack;
+    stratifiedTrack.options.stratification = stratification;
 
-  const stackedBarTrack = getTrackByUid(
-    viewConfig,
-    'stacked-bars'
-  ) as StackedBarTrack;
-  stackedBarTrack.options.stratification = stratification;
-  return viewConfig;
-};
+    const stackedBarTrack = getTrackByUid(
+      viewConfig,
+      'stacked-bars'
+    ) as StackedBarTrack;
+    stackedBarTrack.options.stratification = stratification;
+    return viewConfig;
+  };
 
 const EnhancerRegion = React.memo((_props) => {
   const chromInfo = useChromInfo();
 
-  const [focusGeneOption, setFocusGeneOption] = useRecoilState(
-    focusGeneOptionState
-  );
+  const [focusGeneOption, setFocusGeneOption] =
+    useRecoilState(focusGeneOptionState);
 
   const setFocusGene = useFocusGene()[1];
   const setFocusRegion = useFocusRegion()[1];

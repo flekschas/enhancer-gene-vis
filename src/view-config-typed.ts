@@ -266,20 +266,19 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
   ],
 };
 
-export const updateViewConfigEnhancerRegionTracks = (
-  trackConfig: EnhancerGeneTrackInfo
-) => (viewConfig: ViewConfig) => {
-  const combinedTrack = getTrackByUid(
-    viewConfig,
-    CombinedTrackUid.ARCS_AND_BARS
-  );
-  if (combinedTrack.type === TrackType.COMBINED) {
-    const { contents } = combinedTrack;
-    const updatedTrack = getUpdatedEnhancerGeneTrack(trackConfig);
-    replaceTrackByType(contents, TrackType.ARCS_1D, updatedTrack);
-  }
-  return viewConfig;
-};
+export const updateViewConfigEnhancerRegionTracks =
+  (trackConfig: EnhancerGeneTrackInfo) => (viewConfig: ViewConfig) => {
+    const combinedTrack = getTrackByUid(
+      viewConfig,
+      CombinedTrackUid.ARCS_AND_BARS
+    );
+    if (combinedTrack.type === TrackType.COMBINED) {
+      const { contents } = combinedTrack;
+      const updatedTrack = getUpdatedEnhancerGeneTrack(trackConfig);
+      replaceTrackByType(contents, TrackType.ARCS_1D, updatedTrack);
+    }
+    return viewConfig;
+  };
 
 export function getUpdatedEnhancerGeneTrack(
   trackConfig: EnhancerGeneTrackInfo

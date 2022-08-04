@@ -180,16 +180,15 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
   } as EnhancerGeneTrackInfo;
 }
 
-export const enhancerRegionsTrackState: RecoilState<EnhancerGeneTrackInfo> = atom(
-  {
+export const enhancerRegionsTrackState: RecoilState<EnhancerGeneTrackInfo> =
+  atom({
     key: EnhancerRegionQueryKey.TRACK,
     default: getDefault(
       EnhancerRegionQueryKey.TRACK,
       DEFAULT_ENHANCER_GENE_INFO,
       enhancerRegionTrackDecoder
     ),
-  }
-);
+  });
 
 export const enhancerRegionsHideUnfocusedState: RecoilState<boolean> = atom({
   key: 'enhancerRegionsHideUnfocused',
@@ -200,16 +199,15 @@ export const enhancerRegionsHideUnfocusedState: RecoilState<boolean> = atom({
   ),
 });
 
-export const enhancerRegionsColorEncodingState: RecoilState<OpacityEncoding> = atom(
-  {
+export const enhancerRegionsColorEncodingState: RecoilState<OpacityEncoding> =
+  atom({
     key: 'enhancerRegionsColorEncoding',
     default: getDefault(
       EnhancerRegionQueryKey.COLOR_ENCODING,
       OpacityEncoding.SOLID,
       (v) => v as OpacityEncoding
     ),
-  }
-);
+  });
 
 export const enhancerRegionsShowInfoState: RecoilState<boolean> = atom({
   key: 'enhancerRegionsShowInfos',

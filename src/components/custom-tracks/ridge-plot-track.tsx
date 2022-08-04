@@ -20,7 +20,12 @@ import {
   DEFAULT_COLOR_MAP_DARK,
 } from '../../constants';
 import { getMethodsMap } from '../../utils/string';
-import { CategoryNameToDnaAccessibilityCategoryMap, RidgePlotTrackLabelStyle, RidgePlotTrackOptions, RidgePlotTrackRowAggregationMode } from '../../view-config-types';
+import {
+  CategoryNameToDnaAccessibilityCategoryMap,
+  RidgePlotTrackLabelStyle,
+  RidgePlotTrackOptions,
+  RidgePlotTrackRowAggregationMode,
+} from '../../view-config-types';
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 
@@ -128,8 +133,9 @@ const getMax = (fetchedTiles: { [key: string]: HiGlassTile }) =>
     -Infinity
   );
 
-const getNumRows = (fetchedTiles: { [key: string]: HiGlassTile } | HiGlassTile[]) =>
-  Object.values(fetchedTiles)[0].tileData.coarseShape[0];
+const getNumRows = (
+  fetchedTiles: { [key: string]: HiGlassTile } | HiGlassTile[]
+) => Object.values(fetchedTiles)[0].tileData.coarseShape[0];
 
 const getRowMaxs = (fetchedTiles: { [key: string]: HiGlassTile }) =>
   maxVector(
@@ -157,8 +163,11 @@ const getNumPointsPerRow = (
   markArea: boolean
 ) => positions.length / numRows / 4 / (1 + Number(markArea)) - 2;
 
-const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Context<RidgePlotTrackOptions>,
-  options: RidgePlotTrackOptions) {
+const createRidgePlotTrack = function createRidgePlotTrack(
+  HGC: HGC,
+  context: Context<RidgePlotTrackOptions>,
+  options: RidgePlotTrackOptions
+) {
   if (!new.target) {
     throw new Error(
       'Uncaught TypeError: Class constructor cannot be invoked without "new"'
@@ -190,9 +199,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
     ] as [PIXI.Texture, number];
   };
 
-  class RidgePlotTrack extends HGC.tracks.HorizontalLine1DPixiTrack<
-    RidgePlotTrackOptions
-  > {
+  class RidgePlotTrack extends HGC.tracks
+    .HorizontalLine1DPixiTrack<RidgePlotTrackOptions> {
     pLoading: PIXI.Graphics;
     loadIndicator: PIXI.Text;
     selectRowsAggregationMode!: RidgePlotTrackRowAggregationMode;
@@ -253,7 +261,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
       this.coarsifyTileValues(tile);
     }
 
-    destroyTile() { }
+    destroyTile() {}
 
     binsPerTile(): number {
       return this.tilesetInfo.bins_per_dimension || TILE_SIZE;
@@ -315,7 +323,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
 
     updateOptions() {
       this.selectRowsAggregationMode =
-        this.options.selectRowsAggregationMode || RidgePlotTrackRowAggregationMode.MEAN;
+        this.options.selectRowsAggregationMode ||
+        RidgePlotTrackRowAggregationMode.MEAN;
 
       switch (this.selectRowsAggregationMode) {
         case 'max':
@@ -343,10 +352,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
       this.markColor = HGC.utils.colorToHex(this.options.markColor || 'black');
 
       this.markColorRgbNorm = this.options.markColor
-        ? HGC.utils
-          .colorToRgba(this.options.markColor)
-          .slice(0, 3)
-          .map((x) => Math.min(1, Math.max(0, x / 255))) as ColorRGB
+        ? (HGC.utils
+            .colorToRgba(this.options.markColor)
+            .slice(0, 3)
+            .map((x) => Math.min(1, Math.max(0, x / 255))) as ColorRGB)
         : [0, 0, 0];
 
       [this.markColorTex, this.markColorTexRes] = createColorTexture([
@@ -355,9 +364,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
 
       this.markNumColors = COLORMAP_GRAYS.length;
 
-      this.markOpacity = this.options.markOpacity && !Number.isNaN(this.options.markOpacity)
-        ? Math.min(1, Math.max(0, this.options.markOpacity))
-        : 1;
+      this.markOpacity =
+        this.options.markOpacity && !Number.isNaN(this.options.markOpacity)
+          ? Math.min(1, Math.max(0, this.options.markOpacity))
+          : 1;
 
       this.markSize = this.options.markSize || 2;
 
@@ -371,9 +381,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
       // 100 x (256 / 4) x 4 = 25,600 vertices
 
       const oldRowHeight = this.rowHeight;
-      this.rowHeight = this.options.rowHeight && !Number.isNaN(this.options.rowHeight)
-        ? this.options.rowHeight
-        : 'auto';
+      this.rowHeight =
+        this.options.rowHeight && !Number.isNaN(this.options.rowHeight)
+          ? this.options.rowHeight
+          : 'auto';
 
       const oldRowPadding = this.rowPadding;
       this.rowPadding =
@@ -387,7 +398,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
         this.options.rowSelections || this.rowSelections || [];
 
       const oldShowRowLabels = this.showRowLabels;
-      this.showRowLabels = this.options.showRowLabels || RidgePlotTrackLabelStyle.INDICATOR;
+      this.showRowLabels =
+        this.options.showRowLabels || RidgePlotTrackLabelStyle.INDICATOR;
 
       if (
         oldMarkResolution !== this.markResolution ||
@@ -417,8 +429,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
       const oldRowCategories = this.rowCategories;
       this.rowCategories = this.options.rowCategories || {};
       if (
-        JSON.stringify(this.rowCategories) !==
-        JSON.stringify(oldRowCategories)
+        JSON.stringify(this.rowCategories) !== JSON.stringify(oldRowCategories)
       ) {
         this.updateRowLabels();
         this.drawLabel();
@@ -427,16 +438,18 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
       this.rowIdToCategory = (id) => id.substring(0, id.length - 14);
       this.rowIdToCategory = this.options.rowIdToCategory
         ? (id) => {
-          const idMethods = getMethodsMap(id);
-          const fnString = this.options.rowIdToCategory.fn;
-          if (!Object.keys(idMethods).includes(fnString)) {
-            throw new Error(`${fnString} is not a valid method for id ${id} of type ${typeof id}`)
+            const idMethods = getMethodsMap(id);
+            const fnString = this.options.rowIdToCategory.fn;
+            if (!Object.keys(idMethods).includes(fnString)) {
+              throw new Error(
+                `${fnString} is not a valid method for id ${id} of type ${typeof id}`
+              );
+            }
+            return idMethods[fnString].apply(
+              id,
+              this.options.rowIdToCategory.args
+            );
           }
-          return idMethods[fnString].apply(
-            id,
-            this.options.rowIdToCategory.args
-          )
-        }
         : identity;
     }
 
@@ -457,10 +470,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
 
       const labels = this.rowSelections.length
         ? this.rowSelections.map((rowIndex) =>
-          this.tilesetInfo.row_infos?.[rowIndex] === undefined
-            ? '?'
-            : this.rowIdToCategory(this.tilesetInfo.row_infos?.[rowIndex].id)
-        )
+            this.tilesetInfo.row_infos?.[rowIndex] === undefined
+              ? '?'
+              : this.rowIdToCategory(this.tilesetInfo.row_infos?.[rowIndex].id)
+          )
         : this.tilesetInfo.row_infos.map(({ id }) => this.rowIdToCategory(id));
 
       this.removeRowLabels();
@@ -472,11 +485,11 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
           indicator.height = this.rowLabelSize;
           indicator.tint = this.rowCategories[label]
             ? HGC.utils.colorToHex(
-              this.rowCategories[label].axisLabelColor ||
-              DEFAULT_COLOR_MAP[
-              this.rowCategories[label].index % DEFAULT_COLOR_MAP.length
-              ]
-            )
+                this.rowCategories[label].axisLabelColor ||
+                  DEFAULT_COLOR_MAP[
+                    this.rowCategories[label].index % DEFAULT_COLOR_MAP.length
+                  ]
+              )
             : 0x808080;
           return indicator;
         });
@@ -488,12 +501,12 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
               align: this.rowLabelAlign === 'right' ? 'right' : 'left',
               fill: this.rowCategories[label]
                 ? HGC.utils.colorToHex(
-                  this.rowCategories[label].axisLabelColor ||
-                  DEFAULT_COLOR_MAP_DARK[
-                  this.rowCategories[label].index %
-                  DEFAULT_COLOR_MAP_DARK.length
-                  ]
-                )
+                    this.rowCategories[label].axisLabelColor ||
+                      DEFAULT_COLOR_MAP_DARK[
+                        this.rowCategories[label].index %
+                          DEFAULT_COLOR_MAP_DARK.length
+                      ]
+                  )
                 : 0x808080,
             })
         );
@@ -573,10 +586,12 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
       for (let i = 0; i < numRows; i++) {
         for (let j = 0; j < TILE_SIZE; j += binSizePx) {
           const meanValue = meanNan(
-            Array.from(tile.tileData.dense.subarray(
-              i * TILE_SIZE + j,
-              i * TILE_SIZE + j + binSizePx
-            ))
+            Array.from(
+              tile.tileData.dense.subarray(
+                i * TILE_SIZE + j,
+                i * TILE_SIZE + j + binSizePx
+              )
+            )
           );
           tile.tileData.valuesByRow[i].push(meanValue);
           tile.tileData.maxValueByRow[i] =
@@ -659,11 +674,18 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
         .range([0, actualTrackHeight + this.rowPadding]);
     }
 
-    tilesToData(tiles: HiGlassTile[], { markArea, maxRows = Infinity, rowHeight }: {
-      markArea: boolean;
-      maxRows: number;
-      rowHeight: number;
-    }) {
+    tilesToData(
+      tiles: HiGlassTile[],
+      {
+        markArea,
+        maxRows = Infinity,
+        rowHeight,
+      }: {
+        markArea: boolean;
+        maxRows: number;
+        rowHeight: number;
+      }
+    ) {
       if (!tiles.length) return [];
 
       const numRows = Math.min(maxRows, getNumRows(tiles));
@@ -812,9 +834,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
         return [
           Math.floor(visibleTrackHeight / numRows),
           Math.floor(visibleTrackHeight / numRows),
-        ]
+        ];
       } else {
-        return [this.rowHeight, this.rowHeight + this.rowPadding]
+        return [this.rowHeight, this.rowHeight + this.rowPadding];
       }
     }
 
@@ -835,11 +857,14 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
       const tiles = Object.values(this.fetchedTiles);
       const [rowHeight] = this.getRowHeight(numRows);
 
-      const [positionsFloatArr, colorIndices, offsetSigns] = this.tilesToData(tiles, {
-        maxRows: numRows,
-        markArea: this.markArea,
-        rowHeight,
-      });
+      const [positionsFloatArr, colorIndices, offsetSigns] = this.tilesToData(
+        tiles,
+        {
+          maxRows: numRows,
+          markArea: this.markArea,
+          rowHeight,
+        }
+      );
       const positions = Array.from(positionsFloatArr);
 
       const numPointsPerRow = getNumPointsPerRow(
@@ -1083,16 +1108,16 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
 
         const color = this.rowCategories[label]
           ? this.rowCategories[label].axisLabelColor ||
-          DEFAULT_COLOR_MAP_DARK[
-          this.rowCategories[label].index % DEFAULT_COLOR_MAP_DARK.length
-          ]
+            DEFAULT_COLOR_MAP_DARK[
+              this.rowCategories[label].index % DEFAULT_COLOR_MAP_DARK.length
+            ]
           : '#666666';
 
         const background = this.rowCategories[label]
           ? this.rowCategories[label].axisLabelColor ||
-          DEFAULT_COLOR_MAP_LIGHT[
-          this.rowCategories[label].index % DEFAULT_COLOR_MAP_LIGHT.length
-          ]
+            DEFAULT_COLOR_MAP_LIGHT[
+              this.rowCategories[label].index % DEFAULT_COLOR_MAP_LIGHT.length
+            ]
           : '#ffffff';
 
         return `<div style="margin: -0.25rem; padding: 0 0.25rem; background: ${background}"><strong style="color: ${color};">${label}:</strong> ${value}</div>`;
@@ -1220,7 +1245,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, context: Co
         l.setAttribute('d', d);
         l.setAttribute('fill', fill);
         l.setAttribute('stroke', this.options.markColor || 'black');
-        l.setAttribute('stroke-width', ((this.options.markSize || 2) / 8).toString());
+        l.setAttribute(
+          'stroke-width',
+          ((this.options.markSize || 2) / 8).toString()
+        );
 
         output.appendChild(l);
       }
