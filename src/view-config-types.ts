@@ -376,6 +376,9 @@ export type RidgePlotTrackOptions = {
   markOpacity?: number;
   markSize?: number;
   rowLabelAlign?: 'left' | 'right';
+  reverseYAxis?: boolean;
+  /** Technically a string enum, but not sure what it is. Barely any references, and likely no uses of it */
+  selectRowsAggregationMethod?: string;
 };
 
 export enum RidgePlotTrackLabelStyle {

@@ -11,8 +11,11 @@ declare module '@higlass/types' {
 }
 
 declare module '@higlass/common' {
+  import type { ScaleContinuousNumeric } from 'd3-scale';
+
   type ColorRGBA = [number, number, number, number];
   type ColorRGB = [number, number, number]
+  type Scale = ScaleContinuousNumeric<number, number>;
 
   type TilesetInfo = {
       min_pos: number[];
@@ -30,16 +33,11 @@ declare module '@higlass/common' {
       datatype?: string
       name?: string
       shape: number[]
-  } & (
-      {
-            resolutions: number[];
-            row_infos: RowInfo[]
-        }
-      | {
-            max_width: number;
+      resolutions?: number[];
+            row_infos?: RowInfo[]
+            max_width?: number;
             bins_per_dimension?: number;
-        }
-  );
+  }
   type RowInfo = {
     id: string;
   }
@@ -76,8 +74,7 @@ declare module '@higlass/libraries' {
 }
 
 declare module '@higlass/services' {
-  import type { ScaleContinuousNumeric } from 'd3-scale';
-  import type { TilesetInfo } from '@higlass/common';
+  import type { Scale, TilesetInfo } from '@higlass/common';
 
   export const tileProxy: {
       calculateResolution(tilesetInfo: TilesetInfo, zoomLevel: number): number;
@@ -90,7 +87,7 @@ declare module '@higlass/services' {
       ): [tilePosition: number, positionInTile: number];
       calculateTiles(
           zoomLevel: number,
-          scale: ScaleContinuousNumeric<number, number>,
+          scale: Scale,
           minX: number,
           maxX: number,
           maxZoom: number,
@@ -98,19 +95,19 @@ declare module '@higlass/services' {
       ): number[];
       calculateTilesFromResolution(
           resolution: number,
-          scale: ScaleContinuousNumeric<number, number>,
+          scale: Scale,
           minX: number,
           maxX: number,
           pixelsPerTile?: number
       ): number[];
       calculateTileWidth(tilesetInfo: TilesetInfo, zoomLevel: number, binsPerTile: number): number;
       calculateZoomLevel(
-          scale: ScaleContinuousNumeric<number, number>,
+          scale: Scale,
           minX: number,
           maxX: number,
           binsPerTile?: number
       ): number;
-      calculateZoomLevelFromResolutions(resolutions: number[], scale: ScaleContinuousNumeric<number, number>): number;
+      calculateZoomLevelFromResolutions(resolutions: number[], scale: Scale): number;
       // fetchTilesDebounced();
       // json();
       // text();
@@ -123,12 +120,9 @@ declare module '@higlass/tracks' {
   type Track = any;
   export const BarTrack: Track;
 
-  import type { ScaleContinuousNumeric } from 'd3-scale';
-  import type { ColorRGBA, TilesetInfo } from '@higlass/common';
+  import type { ColorRGBA, Scale, TilesetInfo } from '@higlass/common';
   import type { HiGlassTile } from 'higlass';
   import type * as PIXI from 'pixi.js';
-
-  type Scale = ScaleContinuousNumeric<number, number>;
 
   type Handler = (data: any) => void;
 
@@ -465,9 +459,12 @@ declare module '@higlass/tracks' {
   export class HorizontalLine1DPixiTrack<Options extends TrackOptions> extends HorizontalTiled1DPixiTrack<Options> {
     constructor(context: Context<Options>, options: Options);
     stopHover(): void;
-    getMouseOverHtml(trackX: any): string;
-    renderTile(tile: any): void;
-    drawTile(tile: any): void;
+    /**
+     * @param _trackY Unused. Added manually for extensibility of subclasses.
+     */
+    getMouseOverHtml(trackX: number, _trackY: number): string;
+    renderTile(tile: HiGlassTile): void;
+    drawTile(tile: HiGlassTile): void;
     valueScale: Scale;
     zoomed(newXScale: Scale, newYScale: Scale): void;
     superSVG(): any[];
@@ -528,8 +525,7 @@ declare module '@higlass/tracks' {
 }
 
 declare module '@higlass/utils' {
-  import type { ScaleContinuousNumeric } from 'd3-scale';
-  import type { ColorRGBA, ColorRGB, TilesetInfo} from '@higlass/common';
+  import type { Scale, ColorRGBA, ColorRGB, TilesetInfo} from '@higlass/common';
 
   type ChromInfo<Name extends string = string> = {
       cumPositions: { id?: number; pos: number; chr: string }[];
@@ -573,7 +569,7 @@ declare module '@higlass/utils' {
   export const trackUtils: {
       calculate1DVisibleTiles(
           tilesetInfo: TilesetInfo,
-          scale: ScaleContinuousNumeric<number, number>
+          scale: Scale
       ): [zoomLevel: number, x: number][];
   };
 }
