@@ -24,7 +24,6 @@ declare module '@higlass/common' {
       assembly?: string;
       chrom_names?: string;
       chrom_sizes?: string;
-      // max_width?: number;
       header?: string;
       version?: number;
       coordSystem?: string;
@@ -32,7 +31,7 @@ declare module '@higlass/common' {
       name?: string
       shape: number[]
   } & (
-      | {
+      {
             resolutions: number[];
             row_infos: RowInfo[]
         }
@@ -609,7 +608,7 @@ declare module 'higlass' {
   type HiGlassTileData = {
     binXPos: number[];
     coarseShape: number[];
-    dense: number[];
+    dense: Float32Array;
     denseDataExtrema: DenseDataExtrema1D
     dtype: string
     maxNonZero: number

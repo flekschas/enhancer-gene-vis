@@ -127,7 +127,7 @@ const getMax = (fetchedTiles: { [key: string]: HiGlassTile }) =>
     -Infinity
   );
 
-const getNumRows = (fetchedTiles: { [key: string]: HiGlassTile }) =>
+const getNumRows = (fetchedTiles: { [key: string]: HiGlassTile } | HiGlassTile[]) =>
   Object.values(fetchedTiles)[0].tileData.coarseShape[0];
 
 const getRowMaxs = (fetchedTiles: { [key: string]: HiGlassTile }) =>
@@ -215,6 +215,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
     rowLabelSize!: number;
     rowCategories!: CategoryNameToDnaAccessibilityCategoryMap;
     rowIdToCategory!: (id: string) => string;
+    rowLabels?: PIXI.Sprite[];
+    rowScale!: ScaleContinuousNumeric<number, number>;
 
     constructor(
       context: Context<RidgePlotTrackOptions>,
@@ -438,19 +440,20 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
     }
 
     updateRowLabels() {
-      if (!this.tilesetInfo || !this.tilesetInfo.row_infos) return;
+      if (!this.tilesetInfo || !('row_infos' in this.tilesetInfo) || !this.tilesetInfo.row_infos) return;
+      const rowInfos = this.tilesetInfo.row_infos;
 
       const labels = this.rowSelections.length
         ? this.rowSelections.map((rowIndex) =>
-          this.tilesetInfo.row_infos[rowIndex] === undefined
+          rowInfos[rowIndex] === undefined
             ? '?'
-            : this.rowIdToCategory(this.tilesetInfo.row_infos[rowIndex].id)
+            : this.rowIdToCategory(rowInfos[rowIndex].id)
         )
-        : this.tilesetInfo.row_infos.map(({ id }) => this.rowIdToCategory(id));
+        : rowInfos.map(({ id }) => this.rowIdToCategory(id));
 
       this.removeRowLabels();
 
-      if (this.showRowLabels === 'indicator') {
+      if (this.showRowLabels === RidgePlotTrackLabelStyle.INDICATOR) {
         this.rowLabels = labels.map((label) => {
           const indicator = new PIXI.Sprite(PIXI.Texture.WHITE);
           indicator.width = this.rowLabelSize / 2;
@@ -465,7 +468,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
             : 0x808080;
           return indicator;
         });
-      } else if (this.showRowLabels === 'text') {
+      } else if (this.showRowLabels === RidgePlotTrackLabelStyle.TEXT) {
         this.rowLabels = labels.map(
           (label) =>
             new PIXI.Text(label, {
@@ -486,7 +489,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
     }
 
     drawLabel() {
-      if (this.showRowLabels === 'hidden') {
+      if (this.showRowLabels === RidgePlotTrackLabelStyle.HIDDEN) {
         if (this.rowLabels) {
           while (this.pAxis.children.length) {
             this.pAxis.removeChildAt(0);
@@ -523,7 +526,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
       });
     }
 
-    rerender(newOptions) {
+    rerender(newOptions: RidgePlotTrackOptions) {
       this.options = newOptions;
       this.updateOptions();
       this.updateExistingGraphics();
@@ -544,24 +547,24 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
       const binSizeBpHalf = binSizeBp / 2;
 
       // Determine bin boundaries
-      tile.tileData.binXPos = Array(this.markResolution).fill();
+      tile.tileData.binXPos = Array(this.markResolution).fill(undefined);
       for (let i = 0; i <= this.markResolution; i++) {
         tile.tileData.binXPos[i] = tileX + binSizeBp * i + binSizeBpHalf;
       }
 
       // 1. Coarsify the dense matrix according to `this.markResolution`
       tile.tileData.valuesByRow = Array(numRows)
-        .fill()
+        .fill(undefined)
         .map(() => []);
       tile.tileData.maxValueByRow = Array(numRows).fill(-Infinity);
 
       for (let i = 0; i < numRows; i++) {
         for (let j = 0; j < TILE_SIZE; j += binSizePx) {
           const meanValue = meanNan(
-            tile.tileData.dense.subarray(
+            Array.from(tile.tileData.dense.subarray(
               i * TILE_SIZE + j,
               i * TILE_SIZE + j + binSizePx
-            )
+            ))
           );
           tile.tileData.valuesByRow[i].push(meanValue);
           tile.tileData.maxValueByRow[i] =
@@ -644,19 +647,28 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
         .range([0, actualTrackHeight + this.rowPadding]);
     }
 
-    tilesToData(tiles, { markArea, maxRows = Infinity, rowHeight } = {}) {
+    // type TilesToDataFnOpts = {
+    //   markArea?: boolean;
+    //   maxRows?: number;
+    //   rowHeight?: number;
+    // }
+    tilesToData(tiles: HiGlassTile[], { markArea, maxRows = Infinity, rowHeight }: {
+      markArea?: boolean;
+      maxRows?: number;
+      rowHeight?: number;
+    } = {}) {
       if (!tiles.length) return [];
 
       const numRows = Math.min(maxRows, getNumRows(tiles));
 
-      const positionsByRow = Array(numRows)
-        .fill()
+      const positionsByRow: number[][] = Array(numRows)
+        .fill(undefined)
         .map(() => []);
-      const colorIndicesByRow = Array(numRows)
-        .fill()
+      const colorIndicesByRow: number[][] = Array(numRows)
+        .fill(undefined)
         .map(() => []);
-      const offsetSignsByRow = Array(numRows)
-        .fill()
+      const offsetSignsByRow: number[][] = Array(numRows)
+        .fill(undefined)
         .map(() => []);
 
       tiles.forEach((tile) => {
@@ -712,7 +724,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
       ];
     }
 
-    toLineIndices(numRows, numPointsPerRow, markArea) {
+    toLineIndices(numRows: number, numPointsPerRow: number, markArea: boolean) {
       const verticesPerLine = markArea ? 12 : 6;
       const verticesPerPoint = markArea ? 4 : 2;
       const indices = new Uint32Array(
@@ -794,7 +806,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
         : [this.rowHeight, this.rowHeight + this.rowPadding];
     }
 
-    getTrackHeight(numRows, rowHeight) {
+    getTrackHeight(numRows: number, rowHeight: number) {
       const [, visibleTrackHeight] = this.dimensions;
 
       return this.rowHeight === 'auto'
@@ -807,9 +819,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(HGC: HGC, ...args) {
         .domain([...this.xScale().domain()])
         .range([...this.xScale().range()]);
 
+      const numRows = getNumRows(this.fetchedTiles);
       const tiles = Object.values(this.fetchedTiles);
-
-      const numRows = getNumRows(tiles);
       const [rowHeight] = this.getRowHeight(numRows);
 
       const [positions, colorIndices, offsetSigns] = this.tilesToData(tiles, {

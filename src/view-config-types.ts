@@ -387,6 +387,7 @@ export enum RidgePlotTrackLabelStyle {
 export type DnaAccessibilityCategory = {
   label: string;
   color?: string;
+  axisLabelColor?: string;
   background?: string;
   index: number;
 };
