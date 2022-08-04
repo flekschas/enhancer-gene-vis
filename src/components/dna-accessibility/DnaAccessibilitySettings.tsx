@@ -16,7 +16,7 @@ import {
   useDnaAccessRowNorm,
 } from '../../state/dna-accessibility-state';
 import { capitalizeFirstLetter } from '../../utils/string';
-import { DnaAccessibilityLabelStyle } from '../../view-config-types';
+import { RidgePlotTrackLabelStyle } from '../../view-config-types';
 
 const useStyles = makeStyles((theme) => ({
   iconRadioLegend: {
@@ -36,7 +36,7 @@ const DnaAccessibilitySettings = React.memo(
     const [dnaAccessRowNorm, setDnaAccessRowNorm] = useDnaAccessRowNorm();
 
     const changeDnaAccessLabelStyle = (
-      value: DnaAccessibilityLabelStyle
+      value: RidgePlotTrackLabelStyle
     ) => () => {
       setDnaAccessLabelStyle(value);
     };
@@ -75,7 +75,7 @@ const DnaAccessibilitySettings = React.memo(
               name="dnaAccessLabelStyle"
               value={dnaAccessLabelStyle}
             >
-              {Object.values(DnaAccessibilityLabelStyle).map((label) => (
+              {Object.values(RidgePlotTrackLabelStyle).map((label) => (
                 <FormControlLabel
                   key={label}
                   label={capitalizeFirstLetter(label)}

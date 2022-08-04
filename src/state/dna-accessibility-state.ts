@@ -6,15 +6,15 @@ import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
-import { DnaAccessibilityLabelStyle } from '../view-config-types';
+import { RidgePlotTrackLabelStyle } from '../view-config-types';
 import { getDefault } from './utils';
 
-export const dnaAccessLabelStyleState: RecoilState<DnaAccessibilityLabelStyle> = atom(
+export const dnaAccessLabelStyleState: RecoilState<RidgePlotTrackLabelStyle> = atom(
   {
     key: 'dnaAccessLabelStyle',
-    default: getDefault<DnaAccessibilityLabelStyle>(
+    default: getDefault<RidgePlotTrackLabelStyle>(
       'dal',
-      DnaAccessibilityLabelStyle.INDICATOR,
+      RidgePlotTrackLabelStyle.INDICATOR,
       identity
     ),
   }
