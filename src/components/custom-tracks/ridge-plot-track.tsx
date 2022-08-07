@@ -10,7 +10,7 @@ import { ColorRGB, ColorRGBA, RowInfo, Scale } from '@higlass/common';
 import { Context } from '@higlass/tracks';
 import { HGC } from '@higlass/types';
 import { line } from 'd3';
-import { HiGlassTile } from 'higlass';
+import { HiGlassTile, HiGlassTileData } from 'higlass';
 import { TrackDefinitionConfig } from 'higlass-register';
 import { Graphics } from 'pixi.js';
 
@@ -26,6 +26,15 @@ import {
   RidgePlotTrackOptions,
   RidgePlotTrackRowAggregationMode,
 } from '../../view-config-types';
+
+type AugmentedTile = HiGlassTile & {
+  tileData: AugmentedTileData;
+};
+type AugmentedTileData = HiGlassTileData & {
+  binXPos: number[];
+  valuesByRow: number[][];
+  maxValueByRow: number[];
+};
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 
@@ -137,7 +146,7 @@ const getNumRows = (
   fetchedTiles: { [key: string]: HiGlassTile } | HiGlassTile[]
 ) => Object.values(fetchedTiles)[0].tileData.coarseShape[0];
 
-const getRowMaxs = (fetchedTiles: { [key: string]: HiGlassTile }) =>
+const getRowMaxs = (fetchedTiles: { [key: string]: AugmentedTile }) =>
   maxVector(
     Object.values(fetchedTiles).map((tile) => tile.tileData.maxValueByRow)
   );
@@ -203,16 +212,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     .HorizontalLine1DPixiTrack<RidgePlotTrackOptions> {
     pLoading: PIXI.Graphics;
     loadIndicator: PIXI.Text;
+    // Properties set via corresponding options
     selectRowsAggregationMode!: RidgePlotTrackRowAggregationMode;
-    selectRowsAggregationFn!: (arr: number[]) => number;
-    // Set in setOptions
     markArea!: boolean;
-    markAreaColor!: string;
     markColor!: number;
-    markColorRgbNorm!: ColorRGB;
-    markColorTex!: PIXI.Texture;
-    markColorTexRes!: number;
-    markNumColors!: number;
     markOpacity!: number;
     markSize!: number;
     markResolution!: number;
@@ -225,16 +228,21 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     rowLabelSize!: number;
     rowCategories!: CategoryNameToDnaAccessibilityCategoryMap;
     rowIdToCategory!: (id: string) => string;
+    // Properties tracking additional state
+    selectRowsAggregationFn!: (arr: number[]) => number;
+    markColorRgbNorm!: ColorRGB;
+    markColorTex!: PIXI.Texture;
+    markColorTexRes!: number;
+    markNumColors!: number;
     rowLabels?: PIXI.Sprite[];
     rowScale!: Scale;
     drawnAtScale!: Scale;
-    labelSize?: number;
     colorIndexScale!: Scale;
+    colorIndexScaleByRow?: (value: number, row: number) => number;
+    rowColorIndexScales?: { [key: number]: Scale };
     lineGraphics?: PIXI.Graphics;
     rowValueScales?: { [key: number]: Scale };
-    rowColorIndexScales?: { [key: number]: Scale };
     valueScaleByRow?: (value: number, row: number) => number;
-    colorIndexScaleByRow?: (value: number, row: number) => number;
     /** Never seems to be set */
     axisAlign?: string;
 
@@ -251,17 +259,17 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       this.pMasked.addChild(this.pLoading);
 
       this.loadIndicator = new PIXI.Text('Loading data...', {
-        fontSize: this.labelSize || 10,
+        fontSize: 10,
         fill: 0x808080,
       });
       this.pLoading.addChild(this.loadIndicator);
     }
 
-    initTile(tile: HiGlassTile) {
-      this.coarsifyTileValues(tile);
+    override initTile(tile: HiGlassTile) {
+      this.coarsifyTileValues(tile as AugmentedTile);
     }
 
-    destroyTile() {}
+    override destroyTile() {}
 
     binsPerTile(): number {
       return this.tilesetInfo.bins_per_dimension || TILE_SIZE;
@@ -270,7 +278,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     /**
      * From HeatmapTiledPixiTrack
      */
-    getTilePosAndDimensions(
+    override getTilePosAndDimensions(
       zoomLevel: number,
       tilePos: number[],
       binsPerTileIn?: number
@@ -325,20 +333,16 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       this.selectRowsAggregationMode =
         this.options.selectRowsAggregationMode ||
         RidgePlotTrackRowAggregationMode.MEAN;
-
       switch (this.selectRowsAggregationMode) {
         case 'max':
           this.selectRowsAggregationFn = maxNan;
           break;
-
         case 'min':
           this.selectRowsAggregationFn = minNan;
           break;
-
         case 'sum':
           this.selectRowsAggregationFn = sumNan;
           break;
-
         case 'mean':
         default:
           this.selectRowsAggregationFn = meanNan;
@@ -346,11 +350,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       }
 
       this.markArea = !!this.options.markArea;
-
-      this.markAreaColor = 'grays';
-
       this.markColor = HGC.utils.colorToHex(this.options.markColor || 'black');
-
       this.markColorRgbNorm = this.options.markColor
         ? (HGC.utils
             .colorToRgba(this.options.markColor)
@@ -427,6 +427,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       this.rowLabelSize = this.options.rowLabelSize || 12;
 
       const oldRowCategories = this.rowCategories;
+      console.log(this.options.rowCategories);
       this.rowCategories = this.options.rowCategories || {};
       if (
         JSON.stringify(this.rowCategories) !== JSON.stringify(oldRowCategories)
@@ -513,7 +514,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       }
     }
 
-    drawLabel() {
+    override drawLabel() {
       if (this.showRowLabels === RidgePlotTrackLabelStyle.HIDDEN) {
         if (this.rowLabels) {
           while (this.pAxis.children.length) {
@@ -551,7 +552,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       });
     }
 
-    rerender(newOptions: RidgePlotTrackOptions) {
+    override rerender(newOptions: RidgePlotTrackOptions) {
       this.options = newOptions;
       this.updateOptions();
       this.updateExistingGraphics();
@@ -561,7 +562,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       return Object.values(this.fetchedTiles).length;
     }
 
-    coarsifyTileValues(tile: HiGlassTile) {
+    coarsifyTileValues(tile: AugmentedTile) {
       const { tileX, tileWidth } = this.getTilePosAndDimensions(
         tile.tileData.zoomLevel,
         tile.tileData.tilePos
@@ -619,9 +620,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     }
 
     updateTiles() {
-      Object.values(this.fetchedTiles).forEach(
-        this.coarsifyTileValues.bind(this)
-      );
+      Object.values(
+        this.fetchedTiles as { [key: string]: AugmentedTile }
+      ).forEach(this.coarsifyTileValues.bind(this));
     }
 
     updateScales() {
@@ -646,7 +647,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         .clamp(true);
 
       if (this.rowNormalization) {
-        const rowMaxs = getRowMaxs(this.fetchedTiles);
+        const rowMaxs = getRowMaxs(
+          this.fetchedTiles as { [key: string]: AugmentedTile }
+        );
         this.rowValueScales = {};
         this.rowColorIndexScales = {};
         for (let i = 0; i < numRows; i++) {
@@ -675,7 +678,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     }
 
     tilesToData(
-      tiles: HiGlassTile[],
+      tiles: AugmentedTile[],
       {
         markArea,
         maxRows = Infinity,
@@ -854,7 +857,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         .range([...this.xScale().range()]);
 
       const numRows = getNumRows(this.fetchedTiles);
-      const tiles = Object.values(this.fetchedTiles);
+      const tiles = Object.values(this.fetchedTiles) as AugmentedTile[];
       const [rowHeight] = this.getRowHeight(numRows);
 
       const [positionsFloatArr, colorIndices, offsetSigns] = this.tilesToData(
@@ -949,7 +952,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     }
 
     // Called whenever a new tile comes in
-    updateExistingGraphics() {
+    override updateExistingGraphics() {
       this.updateLoadIndicator();
       if (!this.hasFetchedTiles()) return;
       this.updateScales();
@@ -968,18 +971,18 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       }
     }
 
-    refreshTiles() {
+    override refreshTiles() {
       super.refreshTiles();
       this.updateLoadIndicator();
     }
 
-    setPosition(newPosition: [number, number]) {
+    override setPosition(newPosition: [number, number]) {
       super.setPosition(newPosition);
 
       [this.pMain.position.x, this.pMain.position.y] = this.position;
     }
 
-    zoomed(newXScale: Scale, newYScale: Scale) {
+    override zoomed(newXScale: Scale, newYScale: Scale) {
       this.xScale(newXScale);
       this.yScale(newYScale);
 
@@ -1029,7 +1032,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       );
       const rowSelection = this.rowSelections[rowIndex];
       const tileId = this.tileToLocalId([zoomLevel, Math.floor(tilePos)]);
-      const fetchedTile = this.fetchedTiles[tileId];
+      const fetchedTile = this.fetchedTiles[tileId] as AugmentedTile;
       const colIndex =
         Math.floor(posInTileX) / Math.floor(TILE_SIZE / this.markResolution);
 
@@ -1159,7 +1162,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         `translate(${this.position[0]}, ${this.position[1]})`
       );
 
-      const tiles = Object.values(this.fetchedTiles);
+      const tiles = Object.values(this.fetchedTiles) as AugmentedTile[];
 
       const numRows = getNumRows(tiles);
       const [rowHeight] = this.getRowHeight(numRows);
