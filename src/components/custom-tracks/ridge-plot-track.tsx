@@ -472,6 +472,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       if (
         JSON.stringify(this.rowCategories) !== JSON.stringify(oldRowCategories)
       ) {
+        this.updateRowSelectionIndices();
         this.updateRowLabels();
         this.drawLabel();
       }
