@@ -361,7 +361,7 @@ export type RidgePlotTrackOptions = {
   rowHeight?: number;
   rowPadding?: number;
   rowNormalization?: boolean;
-  rowSelections?: number[];
+  rowSelections?: string[];
   rowIdToCategory: {
     fn: string;
     args: [string, string];

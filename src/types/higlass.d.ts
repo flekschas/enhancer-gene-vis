@@ -199,13 +199,21 @@ declare module '@higlass/tracks' {
   export class _Track {
     /* Properites */
     id: string;
+
     _xScale: Scale;
+
     _yScale: Scale;
+
     _refXScale: Scale;
+
     _refYScale: Scale;
+
     position: [number, number];
+
     dimensions: [number, number];
+
     options: TrackOptions;
+
     pubSubs: Subscription[];
     /* Constructor */
     constructor(props: { id: string; pubSub: PubSub; getTheme?: () => string });
@@ -250,25 +258,45 @@ declare module '@higlass/tracks' {
   export class PixiTrack<Options extends TrackOptions> extends _Track {
     /* Properties */
     delayDrawing: boolean;
+
     scene: PIXI.Graphics;
+
     pBase: PIXI.Graphics;
+
     pMasked: PIXI.Graphics;
+
     pMask: PIXI.Graphics;
+
     pMain: PIXI.Graphics;
+
     pBorder: PIXI.Graphics;
+
     pBackground: PIXI.Graphics;
+
     pForeground: PIXI.Graphics;
+
     pLabel: PIXI.Graphics;
+
     pMobile: PIXI.Graphics;
+
     pAxis: PIXI.Graphics;
+
     pMouseOver: PIXI.Graphics;
+
     options: Options;
+
     labelTextFontFamily: string;
+
     labelTextFontSize: number;
+
     labelXOffset: number;
+
     labelText: PIXI.Text;
+
     errorText: PIXI.Text;
+
     prevOptions: string;
+
     flipText?: boolean; // Property never assigned https://github.com/higlass/higlass/blob/develop/app/scripts/PixiTrack.js
     /* Constructor */
     constructor(context: Context<Options>, options: Options);
@@ -290,33 +318,61 @@ declare module '@higlass/tracks' {
   > extends PixiTrack<Options> {
     constructor(context: Context<Options>, options: Options);
     renderVersion: number;
+
     visibleTiles: Set<any>;
+
     visibleTileIds: Set<string>;
+
     renderingTiles: Set<any>;
+
     fetching: Set<any>;
+
     scale: {};
+
     fetchedTiles: { [key: string]: HiGlassTile };
+
     tileGraphics: {};
+
     maxZoom: number;
+
     medianVisibleValue: any;
+
     backgroundTaskScheduler: import('./utils/background-task-scheduler').BackgroundTaskScheduler;
+
     continuousScaling: boolean;
+
     valueScaleMin: number;
+
     fixedValueScaleMin: number;
+
     valueScaleMax: number;
+
     fixedValueScaleMax: number;
+
     listeners: {};
+
     animate: any;
+
     onValueScaleChanged: any;
+
     prevValueScale: any;
+
     dataFetcher: any;
+
     tilesetInfo: TilesetInfo;
+
     uuid: any;
+
     trackNotFoundText: PIXI.Text;
+
     refreshTilesDebounced: Function;
+
     tilesetUid: any;
+
     server: any;
+
     chromInfo: any;
+
     setError(error: any): void;
     errorTextText: any;
     setFixedValueScaleMin(value: any): void;
@@ -421,8 +477,11 @@ declare module '@higlass/tracks' {
   > extends TiledPixiTrack<Options> {
     constructor(context: Context<Options>, options: Options);
     onMouseMoveZoom: any;
+
     isValueScaleLocked: any;
+
     getLockGroupExtrema: any;
+
     initTile(tile: any): void;
     tileToLocalId(tile: any): string;
     tileToRemoteId(tile: any): string;
@@ -430,6 +489,7 @@ declare module '@higlass/tracks' {
     setVisibleTiles(tilePositions: any): void;
     calculateVisibleTiles(): void;
     zoomLevel: any;
+
     getTilePosAndDimensions(
       zoomLevel: any,
       tilePos: any,
@@ -468,6 +528,7 @@ declare module '@higlass/tracks' {
     getDataAtPos(relPos: number): number;
     mouseMoveHandler({ x, y }?: { x: any; y: any }): void;
     mouseX: any;
+
     mouseY: any;
     mouseMoveZoomHandler(): void;
     zoomed(...args: any[]): void;
@@ -478,8 +539,11 @@ declare module '@higlass/tracks' {
   > extends Tiled1DPixiTrack<Options> {
     constructor(context: Context<Options>, options: Options);
     constIndicator: PIXI.Graphics;
+
     axis: AxisPixi;
+
     isShowGlobalMousePosition: any;
+
     hideMousePosition: Function;
     rerender(options: any, force: any): void;
     calculateZoomLevel(): any;
@@ -613,6 +677,7 @@ declare module '@higlass/utils' {
   export class DenseDataExtrema1D {
     constructor(arr: ArrayLike<number | null>);
     minNonZeroInTile: number;
+
     maxNonZeroInTile: number;
   }
   export const trackUtils: {

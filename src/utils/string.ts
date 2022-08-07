@@ -3,7 +3,7 @@ export function capitalizeFirstLetter(s: string) {
 }
 
 export function getMethodsMap(obj: any): { [key: string]: Function } {
-  let properties = new Set<string>();
+  const properties = new Set<string>();
   let currentObj = obj;
   do {
     Object.getOwnPropertyNames(currentObj).map((item) => properties.add(item));
