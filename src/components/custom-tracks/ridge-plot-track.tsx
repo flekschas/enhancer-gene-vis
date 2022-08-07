@@ -203,16 +203,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     .HorizontalLine1DPixiTrack<RidgePlotTrackOptions> {
     pLoading: PIXI.Graphics;
     loadIndicator: PIXI.Text;
+    // Properties set via corresponding options
     selectRowsAggregationMode!: RidgePlotTrackRowAggregationMode;
-    selectRowsAggregationFn!: (arr: number[]) => number;
-    // Set in setOptions
     markArea!: boolean;
-    markAreaColor!: string;
     markColor!: number;
-    markColorRgbNorm!: ColorRGB;
-    markColorTex!: PIXI.Texture;
-    markColorTexRes!: number;
-    markNumColors!: number;
     markOpacity!: number;
     markSize!: number;
     markResolution!: number;
@@ -225,16 +219,21 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     rowLabelSize!: number;
     rowCategories!: CategoryNameToDnaAccessibilityCategoryMap;
     rowIdToCategory!: (id: string) => string;
+    // Properties tracking additional state
+    selectRowsAggregationFn!: (arr: number[]) => number;
+    markColorRgbNorm!: ColorRGB;
+    markColorTex!: PIXI.Texture;
+    markColorTexRes!: number;
+    markNumColors!: number;
     rowLabels?: PIXI.Sprite[];
     rowScale!: Scale;
     drawnAtScale!: Scale;
-    labelSize?: number;
     colorIndexScale!: Scale;
+    colorIndexScaleByRow?: (value: number, row: number) => number;
+    rowColorIndexScales?: { [key: number]: Scale };
     lineGraphics?: PIXI.Graphics;
     rowValueScales?: { [key: number]: Scale };
-    rowColorIndexScales?: { [key: number]: Scale };
     valueScaleByRow?: (value: number, row: number) => number;
-    colorIndexScaleByRow?: (value: number, row: number) => number;
     /** Never seems to be set */
     axisAlign?: string;
 
@@ -251,7 +250,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       this.pMasked.addChild(this.pLoading);
 
       this.loadIndicator = new PIXI.Text('Loading data...', {
-        fontSize: this.labelSize || 10,
+        fontSize: 10,
         fill: 0x808080,
       });
       this.pLoading.addChild(this.loadIndicator);
@@ -325,20 +324,16 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       this.selectRowsAggregationMode =
         this.options.selectRowsAggregationMode ||
         RidgePlotTrackRowAggregationMode.MEAN;
-
       switch (this.selectRowsAggregationMode) {
         case 'max':
           this.selectRowsAggregationFn = maxNan;
           break;
-
         case 'min':
           this.selectRowsAggregationFn = minNan;
           break;
-
         case 'sum':
           this.selectRowsAggregationFn = sumNan;
           break;
-
         case 'mean':
         default:
           this.selectRowsAggregationFn = meanNan;
@@ -346,11 +341,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       }
 
       this.markArea = !!this.options.markArea;
-
-      this.markAreaColor = 'grays';
-
       this.markColor = HGC.utils.colorToHex(this.options.markColor || 'black');
-
       this.markColorRgbNorm = this.options.markColor
         ? (HGC.utils
             .colorToRgba(this.options.markColor)
@@ -551,7 +542,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       });
     }
 
-    rerender(newOptions: RidgePlotTrackOptions) {
+    override rerender(newOptions: RidgePlotTrackOptions) {
       this.options = newOptions;
       this.updateOptions();
       this.updateExistingGraphics();
