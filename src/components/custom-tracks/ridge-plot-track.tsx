@@ -1,3 +1,10 @@
+/**
+ * @fileoverview
+ * HiGlass component that renders a 1D ridge plot, useful for visualizing
+ * DNA accessibility data.
+ *
+ * Reads data from the rendered ViewConfig.
+ */
 import {
   identity,
   maxNan,
@@ -211,38 +218,71 @@ const createRidgePlotTrack = function createRidgePlotTrack(
   class RidgePlotTrack extends HGC.tracks
     .HorizontalLine1DPixiTrack<RidgePlotTrackOptions> {
     pLoading: PIXI.Graphics;
+
     loadIndicator: PIXI.Text;
+
     // Properties set via corresponding options
     selectRowsAggregationMode!: RidgePlotTrackRowAggregationMode;
+
     markArea!: boolean;
+
     markColor!: number;
+
     markOpacity!: number;
+
     markSize!: number;
+
     markResolution!: number;
+
     rowHeight!: number | 'auto';
+
     rowPadding!: number;
+
     rowNormalization!: boolean;
-    rowSelections!: number[];
+
+    rowSelections!: string[];
+
     showRowLabels!: RidgePlotTrackLabelStyle;
+
     rowLabelAlign!: 'left' | 'right';
+
     rowLabelSize!: number;
+
     rowCategories!: CategoryNameToDnaAccessibilityCategoryMap;
+
     rowIdToCategory!: (id: string) => string;
+
     // Properties tracking additional state
     selectRowsAggregationFn!: (arr: number[]) => number;
+
     markColorRgbNorm!: ColorRGB;
+
     markColorTex!: PIXI.Texture;
+
     markColorTexRes!: number;
+
     markNumColors!: number;
+
+    rowSelectionIndices!: number[];
+
     rowLabels?: PIXI.Sprite[];
+
     rowScale!: Scale;
+
     drawnAtScale!: Scale;
+
     colorIndexScale!: Scale;
+
     colorIndexScaleByRow?: (value: number, row: number) => number;
+
     rowColorIndexScales?: { [key: number]: Scale };
+
     lineGraphics?: PIXI.Graphics;
+
     rowValueScales?: { [key: number]: Scale };
+
     valueScaleByRow?: (value: number, row: number) => number;
+
     /** Never seems to be set */
     axisAlign?: string;
 
@@ -405,6 +445,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         oldMarkResolution !== this.markResolution ||
         oldRowSelections !== this.rowSelections
       ) {
+        this.updateRowSelectionIndices();
         this.updateTiles();
         this.updateRowLabels();
         this.drawLabel();
@@ -427,7 +468,6 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       this.rowLabelSize = this.options.rowLabelSize || 12;
 
       const oldRowCategories = this.rowCategories;
-      console.log(this.options.rowCategories);
       this.rowCategories = this.options.rowCategories || {};
       if (
         JSON.stringify(this.rowCategories) !== JSON.stringify(oldRowCategories)
@@ -454,6 +494,19 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         : identity;
     }
 
+    updateRowSelectionIndices() {
+      if (!this.tilesetInfo || !this.tilesetInfo.row_infos) return;
+      // TODO: Precompute and save as another property on object? This shouldn't change
+      // based on filter state, only based on the underlying tileset.
+      const indexMap: { [key: string]: number } = {};
+      this.tilesetInfo.row_infos.map((value: RowInfo, index: number) => {
+        indexMap[this.rowIdToCategory(value.id)] = index;
+      });
+      this.rowSelectionIndices = this.rowSelections.map(
+        (rowId) => indexMap[rowId]
+      );
+    }
+
     removeRowLabels() {
       while (this.pAxis.children.length) {
         this.pAxis.removeChildAt(0);
@@ -469,18 +522,10 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     updateRowLabels() {
       if (!this.tilesetInfo || !this.tilesetInfo.row_infos) return;
 
-      const labels = this.rowSelections.length
-        ? this.rowSelections.map((rowIndex) =>
-            this.tilesetInfo.row_infos?.[rowIndex] === undefined
-              ? '?'
-              : this.rowIdToCategory(this.tilesetInfo.row_infos?.[rowIndex].id)
-          )
-        : this.tilesetInfo.row_infos.map(({ id }) => this.rowIdToCategory(id));
-
       this.removeRowLabels();
 
       if (this.showRowLabels === RidgePlotTrackLabelStyle.INDICATOR) {
-        this.rowLabels = labels.map((label) => {
+        this.rowLabels = this.rowSelections.map((label) => {
           const indicator = new PIXI.Sprite(PIXI.Texture.WHITE);
           indicator.width = this.rowLabelSize / 2;
           indicator.height = this.rowLabelSize;
@@ -495,7 +540,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
           return indicator;
         });
       } else if (this.showRowLabels === RidgePlotTrackLabelStyle.TEXT) {
-        this.rowLabels = labels.map(
+        this.rowLabels = this.rowSelections.map(
           (label) =>
             new PIXI.Text(label, {
               fontSize: this.rowLabelSize,
@@ -603,11 +648,11 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       }
 
       // 2. Sort rows
-      if (this.rowSelections.length) {
-        tile.tileData.valuesByRow = this.rowSelections
+      if (this.rowSelectionIndices.length) {
+        tile.tileData.valuesByRow = this.rowSelectionIndices
           .map((rowIdx) => tile.tileData.valuesByRow[rowIdx])
           .filter(identity);
-        tile.tileData.maxValueByRow = this.rowSelections
+        tile.tileData.maxValueByRow = this.rowSelectionIndices
           .map((rowIdx) => tile.tileData.maxValueByRow[rowIdx])
           .filter(identity);
       }
@@ -838,9 +883,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(
           Math.floor(visibleTrackHeight / numRows),
           Math.floor(visibleTrackHeight / numRows),
         ];
-      } else {
-        return [this.rowHeight, this.rowHeight + this.rowPadding];
       }
+      return [this.rowHeight, this.rowHeight + this.rowPadding];
     }
 
     getTrackHeight(numRows: number, rowHeight: number) {
@@ -1030,7 +1074,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       const rowIndex = Math.floor(
         Math.max(0, (trackY + this.rowPadding) / rowStepHeight)
       );
-      const rowSelection = this.rowSelections[rowIndex];
+      const rowSelection = this.rowSelectionIndices[rowIndex];
       const tileId = this.tileToLocalId([zoomLevel, Math.floor(tilePos)]);
       const fetchedTile = this.fetchedTiles[tileId] as AugmentedTile;
       const colIndex =

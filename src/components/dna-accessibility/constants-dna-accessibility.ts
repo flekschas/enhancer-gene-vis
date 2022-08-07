@@ -139,7 +139,6 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY: ViewConfig = {
               rowHeight: 24,
               rowPadding: -6,
               rowNormalization: true,
-              rowSelections: DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,
               rowIdToCategory: {
                 fn: 'replace',
                 args: ['.accessibility', ''],
@@ -150,6 +149,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY: ViewConfig = {
               showMousePosition: true,
               showGlobalMousePosition: true,
               mousePositionColor: 'black',
+              // rowSelections set automatically via DnaAccessibility
             },
           },
         ],

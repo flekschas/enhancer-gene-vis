@@ -1,3 +1,11 @@
+/**
+ * @fileoverview
+ * Renders the DNA accessibility of all cell samples in a stratified fashion
+ * using ridge plots.
+ *
+ * Modifications to the RidgePlotTrack are done by editing the track's options
+ * in the ViewConfig.
+ */
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import Grid from '@material-ui/core/Grid';
@@ -26,10 +34,7 @@ import {
 import { focusRegionAbsWithAssembly } from '../../state/focus-state';
 import { variantTracksState } from '../../state/variant-track-state';
 
-import {
-  DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION,
-  DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY,
-} from './constants-dna-accessibility';
+import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from './constants-dna-accessibility';
 import useDebounce from '../../hooks/use-debounce';
 
 import {
@@ -86,15 +91,12 @@ const updateViewConfigDnaAccessRowNorm =
   };
 
 const updateViewConfigRowSelection =
-  (selection: boolean[]) => (viewConfig: ViewConfig) => {
+  (selection: string[]) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
       'dna-accessibility'
     ) as RidgePlotTrack;
-    track.options.rowSelections =
-      DEFAULT_DNA_ACCESSIBILITY_ROW_SELECTION.filter(
-        (rowId, i) => selection[i]
-      );
+    track.options.rowSelections = selection;
     return viewConfig;
   };
 

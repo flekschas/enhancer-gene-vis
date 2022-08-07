@@ -31,7 +31,7 @@ export const sampleWithName = memoize((name: string) =>
 export const sampleSelectionState = selector({
   key: 'sampleSelection',
   get: ({ get }) =>
-    samples(get(stratificationState)).map(
+    samples(get(stratificationState)).filter(
       (name) => get(sampleWithName(name)).checked
     ),
 });
