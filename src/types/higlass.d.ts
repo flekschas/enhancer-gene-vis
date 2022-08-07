@@ -651,13 +651,11 @@ declare module 'higlass' {
   };
 
   type HiGlassTileData = {
-    binXPos: number[];
     coarseShape: number[];
     dense: Float32Array;
     denseDataExtrema: DenseDataExtrema1D;
     dtype: string;
     maxNonZero: number;
-    maxValueByRow: number[];
     minNonZero: number;
     server: string;
     shape: number[];
@@ -665,7 +663,6 @@ declare module 'higlass' {
     tilePos: number[];
     tilePositionId: string;
     tilesetUid: string;
-    valuesByRow: number[][];
     zoomLevel: number;
   };
 
