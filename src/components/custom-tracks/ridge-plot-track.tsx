@@ -10,7 +10,7 @@ import { ColorRGB, ColorRGBA, RowInfo, Scale } from '@higlass/common';
 import { Context } from '@higlass/tracks';
 import { HGC } from '@higlass/types';
 import { line } from 'd3';
-import { HiGlassTile } from 'higlass';
+import { HiGlassTile, HiGlassTileData } from 'higlass';
 import { TrackDefinitionConfig } from 'higlass-register';
 import { Graphics } from 'pixi.js';
 
@@ -26,6 +26,15 @@ import {
   RidgePlotTrackOptions,
   RidgePlotTrackRowAggregationMode,
 } from '../../view-config-types';
+
+type AugmentedTile = HiGlassTile & {
+  tileData: AugmentedTileData;
+}
+type AugmentedTileData = HiGlassTileData & {
+  binXPos: number[];
+  valuesByRow: number[][];
+  maxValueByRow: number[];
+}
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 
@@ -137,7 +146,7 @@ const getNumRows = (
   fetchedTiles: { [key: string]: HiGlassTile } | HiGlassTile[]
 ) => Object.values(fetchedTiles)[0].tileData.coarseShape[0];
 
-const getRowMaxs = (fetchedTiles: { [key: string]: HiGlassTile }) =>
+const getRowMaxs = (fetchedTiles: { [key: string]: AugmentedTile }) =>
   maxVector(
     Object.values(fetchedTiles).map((tile) => tile.tileData.maxValueByRow)
   );
@@ -257,7 +266,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     }
 
     initTile(tile: HiGlassTile) {
-      this.coarsifyTileValues(tile);
+      this.coarsifyTileValues(tile as AugmentedTile);
     }
 
     destroyTile() {}
@@ -418,6 +427,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       this.rowLabelSize = this.options.rowLabelSize || 12;
 
       const oldRowCategories = this.rowCategories;
+      console.log(this.options.rowCategories);
       this.rowCategories = this.options.rowCategories || {};
       if (
         JSON.stringify(this.rowCategories) !== JSON.stringify(oldRowCategories)
@@ -552,7 +562,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       return Object.values(this.fetchedTiles).length;
     }
 
-    coarsifyTileValues(tile: HiGlassTile) {
+    coarsifyTileValues(tile: AugmentedTile) {
       const { tileX, tileWidth } = this.getTilePosAndDimensions(
         tile.tileData.zoomLevel,
         tile.tileData.tilePos
@@ -610,7 +620,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     }
 
     updateTiles() {
-      Object.values(this.fetchedTiles).forEach(
+      Object.values(this.fetchedTiles as {[key: string]: AugmentedTile}).forEach(
         this.coarsifyTileValues.bind(this)
       );
     }
@@ -637,7 +647,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         .clamp(true);
 
       if (this.rowNormalization) {
-        const rowMaxs = getRowMaxs(this.fetchedTiles);
+        const rowMaxs = getRowMaxs(this.fetchedTiles as {[key: string]: AugmentedTile});
         this.rowValueScales = {};
         this.rowColorIndexScales = {};
         for (let i = 0; i < numRows; i++) {
@@ -666,7 +676,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     }
 
     tilesToData(
-      tiles: HiGlassTile[],
+      tiles: AugmentedTile[],
       {
         markArea,
         maxRows = Infinity,
@@ -845,7 +855,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         .range([...this.xScale().range()]);
 
       const numRows = getNumRows(this.fetchedTiles);
-      const tiles = Object.values(this.fetchedTiles);
+      const tiles = Object.values(this.fetchedTiles) as AugmentedTile[];
       const [rowHeight] = this.getRowHeight(numRows);
 
       const [positionsFloatArr, colorIndices, offsetSigns] = this.tilesToData(
@@ -1020,7 +1030,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       );
       const rowSelection = this.rowSelections[rowIndex];
       const tileId = this.tileToLocalId([zoomLevel, Math.floor(tilePos)]);
-      const fetchedTile = this.fetchedTiles[tileId];
+      const fetchedTile = this.fetchedTiles[tileId] as AugmentedTile;
       const colIndex =
         Math.floor(posInTileX) / Math.floor(TILE_SIZE / this.markResolution);
 
@@ -1150,7 +1160,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         `translate(${this.position[0]}, ${this.position[1]})`
       );
 
-      const tiles = Object.values(this.fetchedTiles);
+      const tiles = Object.values(this.fetchedTiles) as AugmentedTile[];
 
       const numRows = getNumRows(tiles);
       const [rowHeight] = this.getRowHeight(numRows);
