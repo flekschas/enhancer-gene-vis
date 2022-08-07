@@ -29,12 +29,12 @@ import {
 
 type AugmentedTile = HiGlassTile & {
   tileData: AugmentedTileData;
-}
+};
 type AugmentedTileData = HiGlassTileData & {
   binXPos: number[];
   valuesByRow: number[][];
   maxValueByRow: number[];
-}
+};
 
 const FLOAT_BYTES = Float32Array.BYTES_PER_ELEMENT;
 
@@ -265,11 +265,11 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       this.pLoading.addChild(this.loadIndicator);
     }
 
-    initTile(tile: HiGlassTile) {
+    override initTile(tile: HiGlassTile) {
       this.coarsifyTileValues(tile as AugmentedTile);
     }
 
-    destroyTile() {}
+    override destroyTile() {}
 
     binsPerTile(): number {
       return this.tilesetInfo.bins_per_dimension || TILE_SIZE;
@@ -278,7 +278,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     /**
      * From HeatmapTiledPixiTrack
      */
-    getTilePosAndDimensions(
+    override getTilePosAndDimensions(
       zoomLevel: number,
       tilePos: number[],
       binsPerTileIn?: number
@@ -514,7 +514,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       }
     }
 
-    drawLabel() {
+    override drawLabel() {
       if (this.showRowLabels === RidgePlotTrackLabelStyle.HIDDEN) {
         if (this.rowLabels) {
           while (this.pAxis.children.length) {
@@ -620,9 +620,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     }
 
     updateTiles() {
-      Object.values(this.fetchedTiles as {[key: string]: AugmentedTile}).forEach(
-        this.coarsifyTileValues.bind(this)
-      );
+      Object.values(
+        this.fetchedTiles as { [key: string]: AugmentedTile }
+      ).forEach(this.coarsifyTileValues.bind(this));
     }
 
     updateScales() {
@@ -647,7 +647,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         .clamp(true);
 
       if (this.rowNormalization) {
-        const rowMaxs = getRowMaxs(this.fetchedTiles as {[key: string]: AugmentedTile});
+        const rowMaxs = getRowMaxs(
+          this.fetchedTiles as { [key: string]: AugmentedTile }
+        );
         this.rowValueScales = {};
         this.rowColorIndexScales = {};
         for (let i = 0; i < numRows; i++) {
@@ -950,7 +952,7 @@ const createRidgePlotTrack = function createRidgePlotTrack(
     }
 
     // Called whenever a new tile comes in
-    updateExistingGraphics() {
+    override updateExistingGraphics() {
       this.updateLoadIndicator();
       if (!this.hasFetchedTiles()) return;
       this.updateScales();
@@ -969,18 +971,18 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       }
     }
 
-    refreshTiles() {
+    override refreshTiles() {
       super.refreshTiles();
       this.updateLoadIndicator();
     }
 
-    setPosition(newPosition: [number, number]) {
+    override setPosition(newPosition: [number, number]) {
       super.setPosition(newPosition);
 
       [this.pMain.position.x, this.pMain.position.y] = this.position;
     }
 
-    zoomed(newXScale: Scale, newYScale: Scale) {
+    override zoomed(newXScale: Scale, newYScale: Scale) {
       this.xScale(newXScale);
       this.yScale(newYScale);
 
