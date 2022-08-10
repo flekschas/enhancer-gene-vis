@@ -17,7 +17,7 @@ import SettingsIcon from '@material-ui/icons/Settings';
 import CheckboxList from '../checkbox/CheckboxList';
 import Logo from '../../Logo';
 import VariantsSettings from '../track-settings/VariantsSettings';
-import EnhancerRegionSettings from '../track-settings/EnhancerRegionSettings';
+import BackgroundDataSettings from '../track-settings/BackgroundDataSettings';
 import Welcome from '../../Welcome';
 import { useChromInfo } from '../../ChromInfoProvider';
 import { useShowModal } from '../../ModalProvider';
@@ -33,7 +33,7 @@ import { sampleFilterState, sampleWithName } from '../../state/filter-state';
 import {
   useShowWelcome,
   showVariantsSettingsState,
-  showEnhancerRegionsSettingsState,
+  showBackgroundDataSettingsState,
   WelcomeIntroState,
 } from '../../state/app-settings-state';
 
@@ -176,8 +176,8 @@ const AppSidebar = React.memo(function AppSidebar() {
   const [showVariantsSettings, setShowVariantsSettings] = useRecoilState(
     showVariantsSettingsState
   );
-  const [showEnhancerRegionsSettings, setShowEnhancerRegionsSettings] =
-    useRecoilState(showEnhancerRegionsSettingsState);
+  const [showBackgroundDataSettings, setShowBackgroundDataSettings] =
+    useRecoilState(showBackgroundDataSettingsState);
   const stratification = useRecoilValue(stratificationState);
 
   const higlassEnhancerRegions = useRecoilValue(higlassEnhancerRegionsState);
@@ -281,13 +281,13 @@ const AppSidebar = React.memo(function AppSidebar() {
     setShowVariantsSettings(true);
   }, [setShowVariantsSettings]);
 
-  const closeEnhancerRegionsSettings = useCallback(() => {
-    setShowEnhancerRegionsSettings(false);
-  }, [setShowEnhancerRegionsSettings]);
+  const closeBackgroundDataSettings = useCallback(() => {
+    setShowBackgroundDataSettings(false);
+  }, [setShowBackgroundDataSettings]);
 
-  const openEnhancerRegionsSettings = useCallback(() => {
-    setShowEnhancerRegionsSettings(true);
-  }, [setShowEnhancerRegionsSettings]);
+  const openBackgroundDataSettings = useCallback(() => {
+    setShowBackgroundDataSettings(true);
+  }, [setShowBackgroundDataSettings]);
 
   useEffect(() => {
     if (showVariantsSettings) {
@@ -298,12 +298,12 @@ const AppSidebar = React.memo(function AppSidebar() {
   }, [showWelcome, showVariantsSettings, showModal, closeVariantsSettings]);
 
   useEffect(() => {
-    if (showEnhancerRegionsSettings) {
-      showModal(EnhancerRegionSettings, closeEnhancerRegionsSettings);
+    if (showBackgroundDataSettings) {
+      showModal(BackgroundDataSettings, closeBackgroundDataSettings);
     } else if (!showWelcome) {
       showModal();
     }
-  }, [showWelcome, showEnhancerRegionsSettings, showModal, closeEnhancerRegionsSettings]);
+  }, [showWelcome, showBackgroundDataSettings, showModal, closeBackgroundDataSettings]);
 
   const mergeSvgs = (enhancerSvg, dnaAccessSvg, enhancerGeneSvg) => {
     const {
@@ -468,7 +468,7 @@ const AppSidebar = React.memo(function AppSidebar() {
                 disableElevation
                 size="small"
                 startIcon={<SettingsIcon />}
-                onClick={openEnhancerRegionsSettings}
+                onClick={openBackgroundDataSettings}
               >
                 Edit Enhancer Regions
               </Button>

@@ -120,6 +120,7 @@ export function TrackSettingsFieldSet<T extends TrackSettingsState>({
   };
 
   const fileChangeHandler = (file: File) => {
+    console.log(file);
     setState((currState) => ({
       ...currState,
       file,

@@ -268,6 +268,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
 
 export const updateViewConfigEnhancerRegionTracks =
   (trackConfig: EnhancerGeneTrackInfo) => (viewConfig: ViewConfig) => {
+    console.log(trackConfig);
     const combinedTrack = getTrackByUid(
       viewConfig,
       CombinedTrackUid.ARCS_AND_BARS
@@ -275,8 +276,15 @@ export const updateViewConfigEnhancerRegionTracks =
     if (combinedTrack.type === TrackType.COMBINED) {
       const { contents } = combinedTrack;
       const updatedTrack = getUpdatedEnhancerGeneTrack(trackConfig);
+      console.log(updatedTrack);
       replaceTrackByType(contents, TrackType.ARCS_1D, updatedTrack);
+      replaceTrackByType(
+        contents,
+        TrackType.STACKED_BAR,
+        getUpdatedEnhancerGeneBarTrack(trackConfig)
+      );
     }
+    console.log(viewConfig);
     return viewConfig;
   };
 
@@ -292,7 +300,25 @@ export function getUpdatedEnhancerGeneTrack(
   return enhancerGeneArcTrack;
 }
 
-export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
+export function getUpdatedEnhancerGeneBarTrack(
+  trackConfig: EnhancerGeneTrackInfo
+) {
+  const enhancerGeneArcTrack = deepClone(
+    DEFAULT_ENHANCER_GENE_STACKED_BAR_TRACK
+  );
+  enhancerGeneArcTrack.server = trackConfig.server;
+  enhancerGeneArcTrack.tilesetUid = trackConfig.tilesetUid;
+  enhancerGeneArcTrack.uid = `stacked-bars-${trackConfig.tilesetUid}`;
+  enhancerGeneArcTrack.options.startField = trackConfig.enhancerStartField;
+  enhancerGeneArcTrack.options.endField = trackConfig.tssStartField;
+  return enhancerGeneArcTrack;
+}
+
+export function getTrackByUid(
+  viewConfig: ViewConfig,
+  uid: string,
+  exact = false
+): Track {
   const topTracks = viewConfig.views[0].tracks.top;
   if (!topTracks) {
     throw new Error('No tracks found in top track layout');
@@ -305,7 +331,10 @@ export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
       return track;
     })
     .flat();
-  const trackCandidate = topTracksFlattened.find((track) => track.uid === uid);
+  console.log(topTracksFlattened);
+  const trackCandidate = exact
+    ? topTracksFlattened.find((track) => track.uid === uid)
+    : topTracksFlattened.find((track) => track.uid.includes(uid));
   if (!trackCandidate) {
     throw new Error(`No track found with uid: ${uid}`);
   }
