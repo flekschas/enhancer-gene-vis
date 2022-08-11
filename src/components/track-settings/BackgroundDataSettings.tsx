@@ -58,16 +58,8 @@ const enum EnhancerRegionTrackSettingsStateProperty {
   ENHANCER_START_FIELD = 'enhancerStartField',
   OFFSET_FIELD = 'offsetField',
   TSS_START_FIELD = 'tssStartField',
-  // TSS_END_FIELD = 'tssEndField',
   IMPORTANCE_FIELD = 'importanceField',
 }
-
-type EnhancerRegionTrackSettingsState = TrackSettingsState & {
-  [EnhancerRegionTrackSettingsStateProperty.ENHANCER_START_FIELD]?: number;
-  [EnhancerRegionTrackSettingsStateProperty.OFFSET_FIELD]?: number;
-  [EnhancerRegionTrackSettingsStateProperty.TSS_START_FIELD]?: number;
-  [EnhancerRegionTrackSettingsStateProperty.IMPORTANCE_FIELD]?: number;
-};
 
 const additionalTrackFields = {
   [EnhancerRegionTrackSettingsStateProperty.ENHANCER_START_FIELD]: {
@@ -88,6 +80,37 @@ const additionalTrackFields = {
   },
 };
 
+// const enhancerRegionTrackToFieldSet = function (
+//   track: EnhancerGeneTrackInfo
+// ): EnhancerRegionTrackSettingsState {
+//   console.log('!!!!!!!!!!!!!!');
+//   console.log(track);
+//   return {
+//     server: track.server,
+//     tilesetUid: track.tilesetUid,
+//     file: track.file,
+//     label: track.label,
+//     enhancerStartField: track.enhancerStartField,
+//     offsetField: track.offsetField,
+//     tssStartField: track.tssStartField,
+//     importanceField: track.importanceField,
+//   };
+// };
+
+// const enhancerRegionFieldSetToTrack = function (
+//   fieldset: EnhancerRegionTrackSettingsState
+// ): EnhancerGeneTrackInfo {
+//   return {
+//     server: fieldset.server!,
+//     tilesetUid: fieldset.tilesetUid!,
+//     offsetField: fieldset.offsetField!,
+//     enhancerStartField: fieldset.enhancerStartField!,
+//     tssStartField: fieldset.tssStartField!,
+//     importanceField: fieldset.importanceField!,
+//     label: fieldset.label!,
+//   };
+// };
+
 type BackgroundDataSettingsProps = {
   closeHandler: () => void;
 };
@@ -105,6 +128,9 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   );
   const enhancerRegionTrackServer = useRef<LocalBedDataServer | null>(null);
   const currEnhancerRegionTracks = useRef(enhancerRegionTrack);
+  const currEnhancerRegionTrackSettingsState = useRef(
+    currEnhancerRegionTracks.current
+  );
 
   function saveHandler() {
     const newEnhancerRegionTrack = deepClone(tmpEnhancerRegionTrack);
@@ -138,18 +164,19 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   }
 
   const changeTmpEnhancerRegionTracks = useCallback(
-    (newTrackConfig: EnhancerRegionTrackSettingsState) => {
+    (newTrackConfig: EnhancerGeneTrackInfo) => {
       console.log('trying');
-      const newTrackInfo: EnhancerGeneTrackInfo = {
-        server: newTrackConfig.server!,
-        tilesetUid: newTrackConfig.tilesetUid!,
-        offsetField: newTrackConfig.offsetField!,
-        enhancerStartField: newTrackConfig.enhancerStartField!,
-        tssStartField: newTrackConfig.tssStartField!,
-        importanceField: newTrackConfig.importanceField!,
-        label: newTrackConfig.label!,
-      };
-      setTmpEnhancerRegionTrack(newTrackInfo);
+      console.log(newTrackConfig);
+      // newTrackConfig.enhancerStartField = undefined;
+      // newTrackConfig.tssStartField = undefined;
+      // newTrackConfig.offsetField = undefined;
+      // newTrackConfig.importanceField = undefined;
+      newTrackConfig.tssStartField = 2;
+      newTrackConfig.enhancerStartField = 1;
+      newTrackConfig.importanceField = 5;
+      console.log(newTrackConfig);
+      setTmpEnhancerRegionTrack(newTrackConfig);
+      currEnhancerRegionTrackSettingsState.current = newTrackConfig;
       setChanged(true);
     },
     []
@@ -194,7 +221,7 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
       <div className={classes.trackList}>
         <TrackSettingsFieldSet
           additionalFields={additionalTrackFields}
-          config={currEnhancerRegionTracks.current}
+          config={currEnhancerRegionTrackSettingsState.current}
           onChange={changeTmpEnhancerRegionTracks}
         />
       </div>

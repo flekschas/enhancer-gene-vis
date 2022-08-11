@@ -60,6 +60,7 @@ import {
   enhancerRegionsHideUnfocusedState,
   useEnhancerRegionsShowInfos,
   enhancerRegionsTrackState,
+  EnhancerGeneTrackInfo,
 } from '../../state/enhancer-region-state';
 import { variantTracksState } from '../../state/variant-track-state';
 
@@ -183,16 +184,18 @@ const updateViewConfigFilter =
   (viewConfig: ViewConfig) => {
     const arcTrack = getTrackByUid(
       viewConfig,
-      'arcs'
+      'eg-arcs'
     ) as OneDimensionalArcTrack;
+    console.log(arcTrack);
     arcTrack.options.filter = {
       set: selectedSamples,
       field: sampleField,
     };
     const barTrack = getTrackByUid(
       viewConfig,
-      'stacked-bars'
+      /^stacked-bars/
     ) as StackedBarTrack;
+    console.log(barTrack);
     barTrack.options.filter = {
       set: selectedSamples,
       field: sampleField,
@@ -219,6 +222,23 @@ const updateViewConfigMatrixHeight =
     return viewConfig;
   };
 
+const updateViewConfigEnhancerRegions =
+  (enhancerRegionsTrack: EnhancerGeneTrackInfo) => (viewConfig: ViewConfig) => {
+    const arcTrack = getTrackByUid(
+      viewConfig,
+      'eg-arcs'
+    ) as OneDimensionalArcTrack;
+    arcTrack.server = enhancerRegionsTrack.server;
+    arcTrack.tilesetUid = enhancerRegionsTrack.tilesetUid;
+    const barTrack = getTrackByUid(
+      viewConfig,
+      'stacked-bars',
+      /** exact */ false
+    ) as StackedBarTrack;
+    barTrack.server = enhancerRegionsTrack.server;
+    barTrack.tilesetUid = enhancerRegionsTrack.tilesetUid;
+  };
+
 const updateViewConfigStratification =
   (stratification: Stratification) => (viewConfig: ViewConfig) => {
     const stratifiedTrack = getTrackByUid(
@@ -229,7 +249,7 @@ const updateViewConfigStratification =
 
     const stackedBarTrack = getTrackByUid(
       viewConfig,
-      'stacked-bars'
+      /^stacked-bars/
     ) as StackedBarTrack;
     stackedBarTrack.options.stratification = stratification;
     return viewConfig;
@@ -348,6 +368,7 @@ const EnhancerRegion = React.memo((_props) => {
       selectedSamples,
       numSamples,
       stratification,
+      enhancerTrackConfig,
     ]
   );
 

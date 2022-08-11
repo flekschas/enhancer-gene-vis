@@ -28,13 +28,14 @@ import {
 } from './utils';
 
 export type EnhancerGeneTrackInfo = {
-  server: string;
-  tilesetUid: string;
-  offsetField: number;
-  enhancerStartField: number;
-  tssStartField: number;
-  tssEndField: number;
-  importanceField: number;
+  file?: File;
+  server?: string;
+  tilesetUid?: string;
+  offsetField?: number;
+  enhancerStartField?: number;
+  tssStartField?: number;
+  tssEndField?: number;
+  importanceField?: number;
   label: string;
 };
 
@@ -62,7 +63,7 @@ export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
 };
 export const DEFAULT_ENHANCER_GENE_ARC_TRACK: OneDimensionalArcTrack = {
   type: TrackType.ARCS_1D,
-  uid: 'arcs',
+  uid: 'eg-arcs',
   server: 'https://resgen.io/api/v1',
   tilesetUid: EG_TILE_UID,
   height: 72,
@@ -130,7 +131,7 @@ export function enhancerRegionTrackEncoder(
 
   if (!track.tilesetUid || !serverAbbr) {
     throw new Error(
-      `Invalid variant track encoder argument, track must have tilesetUid and valid server: ${track}`
+      `Invalid enhancer region track encoder argument, track must have tilesetUid and valid server: ${track}`
     );
   }
 

@@ -19,7 +19,7 @@ export const showVariantsSettingsState: RecoilState<boolean> = atom<boolean>({
   default: false,
 });
 
-export const showEnhancerRegionsSettingsState: RecoilState<boolean> =
+export const showBackgroundDataSettingsState: RecoilState<boolean> =
   atom<boolean>({
     key: 'showEnhancerRegionsSettings',
     default: false,

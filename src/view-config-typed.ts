@@ -291,12 +291,15 @@ export const updateViewConfigEnhancerRegionTracks =
 export function getUpdatedEnhancerGeneTrack(
   trackConfig: EnhancerGeneTrackInfo
 ) {
+  console.log('!');
+  console.log(trackConfig);
   const enhancerGeneArcTrack = deepClone(DEFAULT_ENHANCER_GENE_ARC_TRACK);
   enhancerGeneArcTrack.server = trackConfig.server;
   enhancerGeneArcTrack.tilesetUid = trackConfig.tilesetUid;
-  enhancerGeneArcTrack.uid = `arcs-${trackConfig.tilesetUid}`;
+  enhancerGeneArcTrack.uid = `eg-arcs-${trackConfig.tilesetUid}`;
   enhancerGeneArcTrack.options.startField = trackConfig.enhancerStartField;
   enhancerGeneArcTrack.options.endField = trackConfig.tssStartField;
+  enhancerGeneArcTrack.options.filter = undefined;
   return enhancerGeneArcTrack;
 }
 
@@ -331,10 +334,9 @@ export function getTrackByUid(
       return track;
     })
     .flat();
-  console.log(topTracksFlattened);
   const trackCandidate = exact
     ? topTracksFlattened.find((track) => track.uid === uid)
-    : topTracksFlattened.find((track) => track.uid.includes(uid));
+    : topTracksFlattened.find((track) => track.uid.match(uid));
   if (!trackCandidate) {
     throw new Error(`No track found with uid: ${uid}`);
   }
