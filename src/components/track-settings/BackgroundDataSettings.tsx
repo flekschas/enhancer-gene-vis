@@ -14,8 +14,8 @@ import {
   useEnhancerRegionsTrack,
 } from '../../state/enhancer-region-state';
 import {
+  TrackConfigCustomFields,
   TrackSettingsFieldSet,
-  TrackSettingsState,
 } from './TrackSettingsFieldSet';
 import { ABC_SCORE_COLUMN, LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
 import { deepClone } from '@flekschas/utils';
@@ -28,14 +28,14 @@ const enum EnhancerRegionTrackSettingsStateProperty {
   IMPORTANCE_FIELD = 'importanceField',
 }
 
-const additionalTrackFields = {
-  [EnhancerRegionTrackSettingsStateProperty.ENHANCER_START_FIELD]: {
-    label: 'Enhancer Start Field',
-    default: ENHANCER_START_COLUMN,
-  },
+const additionalTrackFields: TrackConfigCustomFields = {
   [EnhancerRegionTrackSettingsStateProperty.OFFSET_FIELD]: {
     label: 'Chrom. Offset Field',
     default: TSS_CHROM_COLUMN,
+  },
+  [EnhancerRegionTrackSettingsStateProperty.ENHANCER_START_FIELD]: {
+    label: 'Enhancer Start Field',
+    default: ENHANCER_START_COLUMN,
   },
   [EnhancerRegionTrackSettingsStateProperty.TSS_START_FIELD]: {
     label: 'TSS Start Field',
@@ -101,7 +101,6 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   function saveHandler() {
     const newEnhancerRegionTrack = deepClone(tmpEnhancerRegionTrack);
 
-
     // TODO: Enable below section to handle local file uploads
     // Destroy old server
     // enhancerRegionTrackServer.current?.destroy();
@@ -133,16 +132,6 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
 
   const changeTmpEnhancerRegionTracks = useCallback(
     (newTrackConfig: EnhancerGeneTrackInfo) => {
-      console.log('trying');
-      console.log(newTrackConfig);
-      // newTrackConfig.enhancerStartField = undefined;
-      // newTrackConfig.tssStartField = undefined;
-      // newTrackConfig.offsetField = undefined;
-      // newTrackConfig.importanceField = undefined;
-      // newTrackConfig.tssStartField = 2;
-      // newTrackConfig.enhancerStartField = 1;
-      // newTrackConfig.importanceField = 5;
-      // console.log(newTrackConfig);
       setTmpEnhancerRegionTrack(newTrackConfig);
       currEnhancerRegionTracks.current = newTrackConfig;
       setChanged(true);

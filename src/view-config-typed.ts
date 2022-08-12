@@ -275,6 +275,11 @@ export const updateViewConfigEnhancerRegionTracks =
     if (combinedTrack.type === TrackType.COMBINED) {
       const { contents } = combinedTrack;
       const updatedTrack = getUpdatedEnhancerGeneTrack(trackConfig);
+      // TODO: Remove comment when proper filtering option is added, till then, required to toggle for new dataset.
+      // updatedTrack.options.filter = {
+      //   set: ['Atrial_CMs'],
+      //   field: 6
+      // };
       replaceTrackByType(contents, TrackType.ARCS_1D, updatedTrack);
     }
     return viewConfig;
