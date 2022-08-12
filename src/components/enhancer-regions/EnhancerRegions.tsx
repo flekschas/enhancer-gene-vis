@@ -60,6 +60,7 @@ import {
   enhancerRegionsHideUnfocusedState,
   useEnhancerRegionsShowInfos,
   enhancerRegionsTrackState,
+  enhancerRegionsArcStrokeOpacityState,
 } from '../../state/enhancer-region-state';
 import { variantTracksState } from '../../state/variant-track-state';
 
@@ -219,6 +220,16 @@ const updateViewConfigMatrixHeight =
     return viewConfig;
   };
 
+const updateViewConfigArcTrackOpacity =
+  (opacity: number) => (viewConfig: ViewConfig) => {
+    const arcTrack = getTrackByUid(
+      viewConfig,
+      'arcs'
+    ) as OneDimensionalArcTrack;
+    arcTrack.options.strokeOpacity = opacity;
+    return viewConfig;
+  };
+
 const updateViewConfigStratification =
   (stratification: Stratification) => (viewConfig: ViewConfig) => {
     const stratifiedTrack = getTrackByUid(
@@ -255,6 +266,7 @@ const EnhancerRegion = React.memo((_props) => {
   const hideUnfocused = useRecoilValue(enhancerRegionsHideUnfocusedState);
   const variantYScale = useRecoilValue(variantYScaleState);
   const colorEncoding = useRecoilValue(enhancerRegionsColorEncodingState);
+  const arcTrackOpacity = useRecoilValue(enhancerRegionsArcStrokeOpacityState);
   const focusRegionAbs = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
   const xDomainStartAbs = useRecoilValue(
     xDomainStartAbsWithAssembly(chromInfo)
@@ -323,6 +335,7 @@ const EnhancerRegion = React.memo((_props) => {
         updateViewConfigFocusRegion(focusRegionAbs, [2, 4]),
         updateViewConfigFocusStyle(hideUnfocused),
         updateViewConfigColorEncoding(colorEncoding),
+        updateViewConfigArcTrackOpacity(arcTrackOpacity),
         updateViewConfigVariantYScale(variantYScale),
         updateViewConfigXDomain(xDomainStartAbs, xDomainEndAbs, {
           // TODO: Check if calling the shouldSkipUpdatingXDomain function is breaking things later?
@@ -344,6 +357,7 @@ const EnhancerRegion = React.memo((_props) => {
       focusRegionAbs,
       hideUnfocused,
       colorEncoding,
+      arcTrackOpacity,
       variantYScale,
       selectedSamples,
       numSamples,

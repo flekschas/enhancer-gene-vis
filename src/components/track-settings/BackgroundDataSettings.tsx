@@ -170,7 +170,6 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   }
 
   function saveNewStratification() {
-    console.log(tmpStratification);
     if (tmpStratification) {
       setStratification(tmpStratification);
     }
