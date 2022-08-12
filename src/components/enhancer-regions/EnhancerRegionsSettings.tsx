@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
+import Slider from '@material-ui/core/Slider';
 import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked';
 import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
 import FormControl from '@material-ui/core/FormControl';
@@ -14,6 +15,7 @@ import { useVariantYScale } from '../../state';
 import {
   useEnhancerRegionsHideUnfocused,
   useEnhancerRegionsColorEncoding,
+  useEnhancerRegionsArcTrackOpacity,
 } from '../../state/enhancer-region-state';
 import { OpacityEncoding } from '../../view-config-types';
 
@@ -50,6 +52,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   const [variantYScale, setVariantYScale] = useVariantYScale();
   const [hideUnfocused, setHideUnfocused] = useEnhancerRegionsHideUnfocused();
   const [colorEncoding, setColorEncoding] = useEnhancerRegionsColorEncoding();
+  const [arcOpacity, setArcOpacity] = useEnhancerRegionsArcTrackOpacity();
 
   const hideUnfocusedChangeHandler = useCallback(
     (event) => {
@@ -70,6 +73,13 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
       setColorEncoding(value);
     },
     [setColorEncoding]
+  );
+
+  const changeArcTrackOpacity = useCallback(
+    (_event: React.ChangeEvent<{}>, value: number | number[]) => {
+      setArcOpacity(Array.isArray(value) ? value[0] : value);
+    },
+    [setArcOpacity]
   );
 
   const classes = useStyles();
@@ -153,6 +163,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
           >
             {colorEncodingSettings.map((renderInfo) => (
               <FormControlLabel
+                key={renderInfo.label}
                 label={renderInfo.label}
                 value={renderInfo.type}
                 // className={classes.iconRadio}
@@ -175,6 +186,20 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
             ))}
           </RadioGroup>
         </FormControl>
+      </Box>
+      <Box>
+        <FormLabel component="legend" className={classes.iconRadioLegend}>
+          Arc Stroke Opacity
+        </FormLabel>
+        <Slider
+          key="arcTrackOpacitySlider"
+          value={arcOpacity}
+          valueLabelDisplay="auto"
+          max={1}
+          min={0}
+          step={0.01}
+          onChange={changeArcTrackOpacity}
+        ></Slider>
       </Box>
     </>
   );

@@ -9,6 +9,14 @@ export const booleanQueryStringEncoder: QueryStringEncoder<boolean> = (v) =>
   v.toString();
 export const booleanQueryStringDecoder: QueryStringDecoder<boolean> = (v) =>
   v === undefined ? undefined : v === 'true';
+export const numericQueryStringEncoder: QueryStringEncoder<number> = (v) => {
+  const str = v.toString();
+  return str.replace('.', 'd');
+};
+export const numericQueryStringDecoder: QueryStringDecoder<number> = (v) => {
+  const str = v.replace('d', '.');
+  return parseFloat(str);
+};
 
 /**
  * Subscribes to changes to an atom, and provides a function to synchronously

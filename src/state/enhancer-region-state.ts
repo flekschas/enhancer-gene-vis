@@ -9,6 +9,8 @@ import {
 import {
   booleanQueryStringDecoder,
   booleanQueryStringEncoder,
+  numericQueryStringDecoder,
+  numericQueryStringEncoder,
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
@@ -44,6 +46,7 @@ const enum EnhancerRegionQueryKey {
   HIDE_UNFOCUSED = 'erhu',
   COLOR_ENCODING = 'erc',
   TRACK = 'ert',
+  ARC_STROKE_OPACITY = 'erso',
 }
 
 export const DEFAULT_ENHANCER_REGION_SERVER_ABBR = TrackSourceAbbr.RG;
@@ -51,6 +54,7 @@ export const ENHANCER_START_COLUMN: number = 1; // V2 & V3
 export const TSS_CHROM_COLUMN: number = EG_TILE_V3 ? 0 : 3;
 export const TSS_START_COLUMN: number = 4; // V2 & V3
 export const TSS_END_COLUMN: number = EG_TILE_V3 ? 4 : 5;
+export const DEFAULT_ARC_TRACK_OPACITY = 0.05;
 export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
   server: 'https://resgen.io/api/v1',
   tilesetUid: EG_TILE_UID,
@@ -71,7 +75,7 @@ export const DEFAULT_ENHANCER_GENE_ARC_TRACK: OneDimensionalArcTrack = {
     labelPosition: 'hidden',
     strokeColor: '#808080',
     strokeWidth: 1,
-    strokeOpacity: 0.05,
+    strokeOpacity: DEFAULT_ARC_TRACK_OPACITY,
     arcStyle: 'circle',
     startField: ENHANCER_START_COLUMN,
     endField: TSS_START_COLUMN,
@@ -222,6 +226,15 @@ export const enhancerRegionsShowInfoState: RecoilState<boolean> = atom({
   ),
 });
 
+export const enhancerRegionsArcStrokeOpacityState: RecoilState<number> = atom({
+  key: 'enhancerRegionsArcStrokeOpacity',
+  default: getDefault(
+    EnhancerRegionQueryKey.ARC_STROKE_OPACITY,
+    DEFAULT_ARC_TRACK_OPACITY,
+    numericQueryStringDecoder
+  ),
+});
+
 export const useEnhancerRegionsTrack = () =>
   useRecoilQueryString(
     EnhancerRegionQueryKey.TRACK,
@@ -272,4 +285,17 @@ export const useEnhancerRegionsColorEncodingSyncher = () =>
     EnhancerRegionQueryKey.COLOR_ENCODING,
     enhancerRegionsColorEncodingState,
     identity
+  );
+
+export const useEnhancerRegionsArcTrackOpacity = () =>
+  useRecoilQueryString(
+    EnhancerRegionQueryKey.ARC_STROKE_OPACITY,
+    enhancerRegionsArcStrokeOpacityState,
+    numericQueryStringEncoder
+  );
+export const useEnhancerRegionsArcTrackOpacitySyncher = () =>
+  useRecoilQueryStringSyncher(
+    EnhancerRegionQueryKey.ARC_STROKE_OPACITY,
+    enhancerRegionsArcStrokeOpacityState,
+    numericQueryStringEncoder
   );
