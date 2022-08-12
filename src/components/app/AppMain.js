@@ -40,6 +40,7 @@ import {
   useEnhancerRegionsHideUnfocusedSyncher,
   useEnhancerRegionsColorEncodingSyncher,
   useEnhancerRegionsTrackSyncher,
+  useEnhancerRegionsArcTrackOpacitySyncher,
 } from '../../state/enhancer-region-state';
 import {
   useEnhancerGenesShowInfosSyncher,
@@ -118,6 +119,7 @@ const AppMain = React.memo(function AppMain() {
   useEnhancerRegionsShowInfosSyncher();
   useEnhancerRegionsHideUnfocusedSyncher();
   useEnhancerRegionsColorEncodingSyncher();
+  useEnhancerRegionsArcTrackOpacitySyncher();
   useEnhancerGenesShowInfosSyncher();
   useEnhancerGenesPaddingSyncher();
   useEnhancerGenesCellEncodingSyncher();
