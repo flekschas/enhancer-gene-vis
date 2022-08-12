@@ -77,10 +77,14 @@ export type TrackSettingsState = {
   label?: string;
 };
 
+export type TrackConfigCustomFields = {
+  [key: string]: { label: string; default: any };
+};
+
 type TrackConfigProps<T> = {
   config: T;
   onChange: (config: T) => void;
-  additionalFields: { [key: string]: { label: string; default: any } };
+  additionalFields: TrackConfigCustomFields;
 };
 export function TrackSettingsFieldSet<T extends TrackSettingsState>({
   config,

@@ -17,7 +17,7 @@ import SettingsIcon from '@material-ui/icons/Settings';
 import CheckboxList from '../checkbox/CheckboxList';
 import Logo from '../../Logo';
 import VariantsSettings from '../track-settings/VariantsSettings';
-import EnhancerRegionSettings from '../track-settings/EnhancerRegionSettings';
+import BackgroundDataSettings from '../track-settings/BackgroundDataSettings';
 import Welcome from '../../Welcome';
 import { useChromInfo } from '../../ChromInfoProvider';
 import { useShowModal } from '../../ModalProvider';
@@ -299,7 +299,7 @@ const AppSidebar = React.memo(function AppSidebar() {
 
   useEffect(() => {
     if (showEnhancerRegionsSettings) {
-      showModal(EnhancerRegionSettings, closeEnhancerRegionsSettings);
+      showModal(BackgroundDataSettings, closeEnhancerRegionsSettings);
     } else if (!showWelcome) {
       showModal();
     }
