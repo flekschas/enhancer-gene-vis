@@ -15,7 +15,7 @@ import { useVariantYScale } from '../../state';
 import {
   useEnhancerRegionsHideUnfocused,
   useEnhancerRegionsColorEncoding,
-  useEnahncerRegionsArcTrackOpacity,
+  useEnhancerRegionsArcTrackOpacity,
 } from '../../state/enhancer-region-state';
 import { OpacityEncoding } from '../../view-config-types';
 
@@ -52,7 +52,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
   const [variantYScale, setVariantYScale] = useVariantYScale();
   const [hideUnfocused, setHideUnfocused] = useEnhancerRegionsHideUnfocused();
   const [colorEncoding, setColorEncoding] = useEnhancerRegionsColorEncoding();
-  const [arcOpacity, setArcOpacity] = useEnahncerRegionsArcTrackOpacity();
+  const [arcOpacity, setArcOpacity] = useEnhancerRegionsArcTrackOpacity();
 
   const hideUnfocusedChangeHandler = useCallback(
     (event) => {
@@ -189,7 +189,7 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
       </Box>
       <Box>
         <Slider
-          key='arcTrackOpacitySlider'
+          key="arcTrackOpacitySlider"
           value={arcOpacity}
           valueLabelDisplay="on"
           max={1}

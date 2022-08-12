@@ -54,7 +54,7 @@ export const ENHANCER_START_COLUMN: number = 1; // V2 & V3
 export const TSS_CHROM_COLUMN: number = EG_TILE_V3 ? 0 : 3;
 export const TSS_START_COLUMN: number = 4; // V2 & V3
 export const TSS_END_COLUMN: number = EG_TILE_V3 ? 4 : 5;
-export const DEFAULT_ARC_TRACK_OPACITY = 0.05
+export const DEFAULT_ARC_TRACK_OPACITY = 0.05;
 export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
   server: 'https://resgen.io/api/v1',
   tilesetUid: EG_TILE_UID,
@@ -287,13 +287,13 @@ export const useEnhancerRegionsColorEncodingSyncher = () =>
     identity
   );
 
-export const useEnahncerRegionsArcTrackOpacity = () =>
+export const useEnhancerRegionsArcTrackOpacity = () =>
   useRecoilQueryString(
     EnhancerRegionQueryKey.ARC_STROKE_OPACITY,
     enhancerRegionsArcStrokeOpacityState,
     numericQueryStringEncoder
   );
-export const useEnahncerRegionsArcTrackOpacitySyncher = () =>
+export const useEnhancerRegionsArcTrackOpacitySyncher = () =>
   useRecoilQueryStringSyncher(
     EnhancerRegionQueryKey.ARC_STROKE_OPACITY,
     enhancerRegionsArcStrokeOpacityState,
