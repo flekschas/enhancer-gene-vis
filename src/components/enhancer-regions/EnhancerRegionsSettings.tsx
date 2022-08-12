@@ -188,10 +188,13 @@ const EnhancerRegionsInfo = React.memo(function EnhancerRegionsInfo() {
         </FormControl>
       </Box>
       <Box>
+        <FormLabel component="legend" className={classes.iconRadioLegend}>
+          Arc Stroke Opacity
+        </FormLabel>
         <Slider
           key="arcTrackOpacitySlider"
           value={arcOpacity}
-          valueLabelDisplay="on"
+          valueLabelDisplay="auto"
           max={1}
           min={0}
           step={0.01}
