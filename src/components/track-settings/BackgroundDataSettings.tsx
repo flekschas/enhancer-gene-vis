@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import yaml from 'js-yaml';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import StratificationSubsettings from './stratification-subsettings';
+// import StratificationSubsettings from './stratification-subsettings';
 import createLocalBedDataServer, {
   LocalBedDataServer,
 } from '../../local-data-handlers/local-bed-data-server';
@@ -20,7 +21,14 @@ import {
 import { ABC_SCORE_COLUMN, LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
 import { deepClone } from '@flekschas/utils';
 import { useChromInfo } from '../../ChromInfoProvider';
+import { useRecoilState } from 'recoil';
+import { stratificationState } from '../../state/stratification-state';
+import { Stratification } from '../../view-config-types';
+import FileInput from '../FileInput';
 
+/**
+ * Keep in sync with EnhancerGeneTrackInfo properties
+ */
 const enum EnhancerRegionTrackSettingsStateProperty {
   ENHANCER_START_FIELD = 'enhancerStartField',
   OFFSET_FIELD = 'offsetField',
@@ -98,7 +106,14 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   const enhancerRegionTrackServer = useRef<LocalBedDataServer | null>(null);
   const currEnhancerRegionTracks = useRef(enhancerRegionTrack);
 
+  const [stratificationConfig, setStratificationConfig] = useState<File>();
+  const [stratification, setStratification] =
+    useRecoilState(stratificationState);
+  const [tmpStratification, setTmpStratification] =
+    useState<Stratification | null>(null);
+
   function saveHandler() {
+    saveNewStratification();
     const newEnhancerRegionTrack = deepClone(tmpEnhancerRegionTrack);
 
     // TODO: Enable below section to handle local file uploads
@@ -138,6 +153,29 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
     },
     []
   );
+
+  function handleNewStratificationConfig(newStratificationConfig: File) {
+    const reader = new FileReader();
+    reader.addEventListener('load', (event) => {
+      const result = event.target?.result;
+      if (result) {
+        const config = yaml.load(result as string) as Stratification;
+        setTmpStratification(config);
+        if (JSON.stringify(config) !== JSON.stringify(stratification)) {
+          setChanged(true);
+        }
+      }
+    });
+    reader.readAsText(newStratificationConfig);
+    setStratificationConfig(newStratificationConfig);
+  }
+
+  function saveNewStratification() {
+    console.log(tmpStratification);
+    if (tmpStratification) {
+      setStratification(tmpStratification);
+    }
+  }
 
   return (
     <>
@@ -182,7 +220,16 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
           onChange={changeTmpEnhancerRegionTracks}
         />
       </div>
-      <StratificationSubsettings />
+      <p>
+        Upload a cell stratification file to categorize cell types. YAML files
+        are currently accepted.
+      </p>
+      <FileInput
+        file={stratificationConfig}
+        accept=".yaml"
+        onChange={handleNewStratificationConfig}
+        onClear={() => {}}
+      />
       <Typography align="center">
         <Button
           className={classes.buttonNormal}
