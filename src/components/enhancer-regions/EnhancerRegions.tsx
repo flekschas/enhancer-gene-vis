@@ -348,6 +348,7 @@ const EnhancerRegion = React.memo((_props) => {
       selectedSamples,
       numSamples,
       stratification,
+      enhancerTrackConfig,
     ]
   );
 

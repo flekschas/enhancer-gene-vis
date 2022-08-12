@@ -28,6 +28,7 @@ import {
 } from './utils';
 
 export type EnhancerGeneTrackInfo = {
+  file?: File;
   server: string;
   tilesetUid: string;
   offsetField: number;
@@ -137,6 +138,7 @@ export function enhancerRegionTrackEncoder(
   return [
     track.tilesetUid,
     serverAbbr,
+    track.enhancerStartField,
     track.tssStartField,
     track.tssEndField,
     track.offsetField,
@@ -158,6 +160,7 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
   const [
     tilesetUid,
     serverAbbr = DEFAULT_ENHANCER_REGION_SERVER_ABBR,
+    enhancerStartField = ENHANCER_START_COLUMN,
     offsetField = TSS_CHROM_COLUMN,
     startField = TSS_START_COLUMN,
     endField = TSS_END_COLUMN,
@@ -172,6 +175,7 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
   return {
     server,
     tilesetUid,
+    enhancerStartField: parseInt(enhancerStartField.toString(), 10),
     tssStartField: parseInt(startField.toString(), 10),
     tssEndField: parseInt(endField.toString(), 10),
     offsetField: parseInt(offsetField.toString(), 10),
