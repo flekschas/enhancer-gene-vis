@@ -28,6 +28,7 @@ import {
 } from './utils';
 
 export type EnhancerGeneTrackInfo = {
+  file?: File;
   server: string;
   tilesetUid: string;
   offsetField: number;
