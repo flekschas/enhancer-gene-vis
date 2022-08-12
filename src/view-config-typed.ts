@@ -1,4 +1,3 @@
-import { deepClone } from '@flekschas/utils';
 import { EG_TILE_UID, ABC_SCORE_COLUMN, GENE_NAME_COLUMN } from './constants';
 import { DEFAULT_STRATIFICATION } from './state/stratification-state';
 import {
@@ -7,7 +6,12 @@ import {
   EnhancerGeneTrackInfo,
 } from './state/enhancer-region-state';
 import { DEFAULT_VARIANT_TRACK_DEF } from './state/variant-track-state';
-import { ViewConfig, TrackType, Track } from './view-config-types';
+import {
+  ViewConfig,
+  TrackType,
+  Track,
+  OneDimensionalArcTrack,
+} from './view-config-types';
 
 /**
  * Should only contain UIDs for "constant" tracks such as combined type tracks.
@@ -272,29 +276,28 @@ export const updateViewConfigEnhancerRegionTracks =
       viewConfig,
       CombinedTrackUid.ARCS_AND_BARS
     );
+    // Purely a safeguard / way for Typescript to narrow the Track type.
     if (combinedTrack.type === TrackType.COMBINED) {
       const { contents } = combinedTrack;
-      const updatedTrack = getUpdatedEnhancerGeneTrack(trackConfig);
-      // TODO: Remove comment when proper filtering option is added, till then, required to toggle for new dataset.
-      // updatedTrack.options.filter = {
-      //   set: ['Atrial_CMs'],
-      //   field: 6
-      // };
+      const updatedTrack = getUpdatedEnhancerGeneTrack(
+        getTrackByUid(viewConfig, 'arcs') as OneDimensionalArcTrack,
+        trackConfig
+      );
       replaceTrackByType(contents, TrackType.ARCS_1D, updatedTrack);
     }
     return viewConfig;
   };
 
 export function getUpdatedEnhancerGeneTrack(
+  track: OneDimensionalArcTrack,
   trackConfig: EnhancerGeneTrackInfo
 ) {
-  const enhancerGeneArcTrack = deepClone(DEFAULT_ENHANCER_GENE_ARC_TRACK);
-  enhancerGeneArcTrack.server = trackConfig.server;
-  enhancerGeneArcTrack.tilesetUid = trackConfig.tilesetUid;
-  enhancerGeneArcTrack.uid = `arcs-${trackConfig.tilesetUid}`;
-  enhancerGeneArcTrack.options.startField = trackConfig.enhancerStartField;
-  enhancerGeneArcTrack.options.endField = trackConfig.tssStartField;
-  return enhancerGeneArcTrack;
+  track.server = trackConfig.server;
+  track.tilesetUid = trackConfig.tilesetUid;
+  track.uid = `arcs-${trackConfig.tilesetUid}`;
+  track.options.startField = trackConfig.enhancerStartField;
+  track.options.endField = trackConfig.tssStartField;
+  return track;
 }
 
 export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
