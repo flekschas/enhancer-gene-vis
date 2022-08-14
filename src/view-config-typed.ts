@@ -11,6 +11,7 @@ import {
   TrackType,
   Track,
   OneDimensionalArcTrack,
+  StackedBarTrack,
 } from './view-config-types';
 
 /**
@@ -279,16 +280,22 @@ export const updateViewConfigEnhancerRegionTracks =
     // Purely a safeguard / way for Typescript to narrow the Track type.
     if (combinedTrack.type === TrackType.COMBINED) {
       const { contents } = combinedTrack;
-      const updatedTrack = getUpdatedEnhancerGeneTrack(
+      const updatedArcTrack = getUpdatedEnhancerRegionArcTrack(
         getTrackByUid(viewConfig, 'arcs') as OneDimensionalArcTrack,
         trackConfig
       );
-      replaceTrackByType(contents, TrackType.ARCS_1D, updatedTrack);
+      replaceTrackByType(contents, TrackType.ARCS_1D, updatedArcTrack);
+
+      const updatedBarTrack = getUpdatedEnhancerRegionBarTrack(
+        getTrackByUid(viewConfig, 'stacked-bars') as StackedBarTrack,
+        trackConfig
+      );
+      replaceTrackByType(contents, TrackType.STACKED_BAR, updatedBarTrack);
     }
     return viewConfig;
   };
 
-export function getUpdatedEnhancerGeneTrack(
+export function getUpdatedEnhancerRegionArcTrack(
   track: OneDimensionalArcTrack,
   trackConfig: EnhancerGeneTrackInfo
 ) {
@@ -297,6 +304,20 @@ export function getUpdatedEnhancerGeneTrack(
   track.uid = `arcs-${trackConfig.tilesetUid}`;
   track.options.startField = trackConfig.enhancerStartField;
   track.options.endField = trackConfig.tssStartField;
+  return track;
+}
+
+export function getUpdatedEnhancerRegionBarTrack(
+  track: StackedBarTrack,
+  trackConfig: EnhancerGeneTrackInfo
+) {
+  track.server = trackConfig.server;
+  track.tilesetUid = trackConfig.tilesetUid;
+  // track.uid = `stacked-bars-${trackConfig.tilesetUid}`;
+  track.options.offsetField = trackConfig.offsetField;
+  track.options.startField = trackConfig.tssStartField;
+  track.options.endField = trackConfig.tssEndField;
+  track.options.importanceField = trackConfig.importanceField;
   return track;
 }
 

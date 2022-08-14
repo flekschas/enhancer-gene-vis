@@ -165,9 +165,9 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
     tilesetUid,
     serverAbbr = DEFAULT_ENHANCER_REGION_SERVER_ABBR,
     enhancerStartField = ENHANCER_START_COLUMN,
-    offsetField = TSS_CHROM_COLUMN,
     startField = TSS_START_COLUMN,
     endField = TSS_END_COLUMN,
+    offsetField = TSS_CHROM_COLUMN,
     importanceField = ABC_SCORE_COLUMN,
     label,
   ] = v.split(':');
