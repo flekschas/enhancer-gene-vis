@@ -10,12 +10,14 @@ import {
   EnhancerGeneTrackInfo,
   ENHANCER_START_COLUMN,
   TSS_CHROM_COLUMN,
+  TSS_END_COLUMN,
   TSS_START_COLUMN,
   useEnhancerRegionsTrack,
 } from '../../state/enhancer-region-state';
 import {
   TrackConfigCustomFields,
   TrackSettingsFieldSet,
+  TrackSettingsState,
 } from './TrackSettingsFieldSet';
 import { ABC_SCORE_COLUMN, LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
 import { deepClone } from '@flekschas/utils';
@@ -25,30 +27,41 @@ import { stratificationState } from '../../state/stratification-state';
 import { Stratification } from '../../view-config-types';
 import FileInput from '../FileInput';
 
-/**
- * Keep in sync with EnhancerGeneTrackInfo properties
- */
-const enum EnhancerRegionTrackSettingsStateProperty {
+const enum BeddbFileField {
   ENHANCER_START_FIELD = 'enhancerStartField',
   OFFSET_FIELD = 'offsetField',
   TSS_START_FIELD = 'tssStartField',
+  TSS_END_FIELD = 'tssEndField',
   IMPORTANCE_FIELD = 'importanceField',
+  // TODO: Add sample field column and remove from cell stratification yaml
 }
 
+type BeddbFile = TrackSettingsState & {
+  [BeddbFileField.ENHANCER_START_FIELD]: number;
+  [BeddbFileField.OFFSET_FIELD]: number;
+  [BeddbFileField.TSS_START_FIELD]: number;
+  [BeddbFileField.TSS_END_FIELD]: number;
+  [BeddbFileField.IMPORTANCE_FIELD]: number;
+};
+
 const additionalTrackFields: TrackConfigCustomFields = {
-  [EnhancerRegionTrackSettingsStateProperty.OFFSET_FIELD]: {
+  [BeddbFileField.OFFSET_FIELD]: {
     label: 'Chrom. Offset Field',
     default: TSS_CHROM_COLUMN,
   },
-  [EnhancerRegionTrackSettingsStateProperty.ENHANCER_START_FIELD]: {
+  [BeddbFileField.ENHANCER_START_FIELD]: {
     label: 'Enhancer Start Field',
     default: ENHANCER_START_COLUMN,
   },
-  [EnhancerRegionTrackSettingsStateProperty.TSS_START_FIELD]: {
+  [BeddbFileField.TSS_START_FIELD]: {
     label: 'TSS Start Field',
     default: TSS_START_COLUMN,
   },
-  [EnhancerRegionTrackSettingsStateProperty.IMPORTANCE_FIELD]: {
+  [BeddbFileField.TSS_END_FIELD]: {
+    label: 'TSS End Field',
+    default: TSS_END_COLUMN,
+  },
+  [BeddbFileField.IMPORTANCE_FIELD]: {
     label: 'Importance Field',
     default: ABC_SCORE_COLUMN,
   },
@@ -144,14 +157,32 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
     setEnhancerRegionTrack(newEnhancerRegionTrack);
   }
 
+  useEffect(() => {
+    currEnhancerRegionTracks.current = enhancerRegionTrack;
+  }, [enhancerRegionTrack]);
+
   const changeTmpEnhancerRegionTracks = useCallback(
-    (newTrackConfig: EnhancerGeneTrackInfo) => {
-      setTmpEnhancerRegionTrack(newTrackConfig);
-      currEnhancerRegionTracks.current = newTrackConfig;
+    (newTrackConfig: BeddbFile) => {
+      const newEgRegionTrack = beddbToEnhancerGeneTrackInfo(newTrackConfig);
+      setTmpEnhancerRegionTrack(newEgRegionTrack);
       setChanged(true);
     },
     []
   );
+
+  function beddbToEnhancerGeneTrackInfo(beddbFile: BeddbFile) {
+    const newEgTrack = deepClone(enhancerRegionTrack);
+    // TODO: Fix these to not use non-null assertion when EnhancerRegionTrackInfo no longer requires it
+    newEgTrack.server = beddbFile.server!;
+    newEgTrack.tilesetUid = beddbFile.tilesetUid!;
+    newEgTrack.file = beddbFile.file;
+    newEgTrack.enhancerStartField = beddbFile.enhancerStartField;
+    newEgTrack.importanceField = beddbFile.importanceField;
+    newEgTrack.offsetField = beddbFile.offsetField;
+    newEgTrack.tssEndField = beddbFile.tssEndField;
+    newEgTrack.tssStartField = beddbFile.tssStartField;
+    return newEgTrack;
+  }
 
   function handleNewStratificationConfig(newStratificationConfig: File) {
     const reader = new FileReader();
@@ -187,7 +218,7 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
       >
         Edit Data Tracks
       </Typography>
-      <h3>Enhancer Regions (Arcs+Bars Track)</h3>
+      <h3>Enhancer Regions</h3>
       <p id="description">
         Enhancer regions can be loaded from a remote{' '}
         <code>

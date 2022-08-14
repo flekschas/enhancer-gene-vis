@@ -275,7 +275,7 @@ export type StackedBarTrackOptions = {
   endField: number;
   importanceField: number;
   importanceDomain: [number, number];
-  focusRegion: [number, number];
+  focusRegion?: [number, number];
   name: string;
   stratification: Stratification;
   showMousePosition: boolean;
