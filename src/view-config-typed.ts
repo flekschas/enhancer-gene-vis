@@ -12,6 +12,7 @@ import {
   Track,
   OneDimensionalArcTrack,
   StackedBarTrack,
+  StratifiedBedTrack,
 } from './view-config-types';
 
 /**
@@ -270,56 +271,6 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
     },
   ],
 };
-
-export const updateViewConfigEnhancerRegionTracks =
-  (trackConfig: EnhancerGeneTrackInfo) => (viewConfig: ViewConfig) => {
-    const combinedTrack = getTrackByUid(
-      viewConfig,
-      CombinedTrackUid.ARCS_AND_BARS
-    );
-    // Purely a safeguard / way for Typescript to narrow the Track type.
-    if (combinedTrack.type === TrackType.COMBINED) {
-      const { contents } = combinedTrack;
-      const updatedArcTrack = getUpdatedEnhancerRegionArcTrack(
-        getTrackByUid(viewConfig, 'arcs') as OneDimensionalArcTrack,
-        trackConfig
-      );
-      replaceTrackByType(contents, TrackType.ARCS_1D, updatedArcTrack);
-
-      const updatedBarTrack = getUpdatedEnhancerRegionBarTrack(
-        getTrackByUid(viewConfig, 'stacked-bars') as StackedBarTrack,
-        trackConfig
-      );
-      replaceTrackByType(contents, TrackType.STACKED_BAR, updatedBarTrack);
-    }
-    return viewConfig;
-  };
-
-export function getUpdatedEnhancerRegionArcTrack(
-  track: OneDimensionalArcTrack,
-  trackConfig: EnhancerGeneTrackInfo
-) {
-  track.server = trackConfig.server;
-  track.tilesetUid = trackConfig.tilesetUid;
-  track.uid = `arcs-${trackConfig.tilesetUid}`;
-  track.options.startField = trackConfig.enhancerStartField;
-  track.options.endField = trackConfig.tssStartField;
-  return track;
-}
-
-export function getUpdatedEnhancerRegionBarTrack(
-  track: StackedBarTrack,
-  trackConfig: EnhancerGeneTrackInfo
-) {
-  track.server = trackConfig.server;
-  track.tilesetUid = trackConfig.tilesetUid;
-  // track.uid = `stacked-bars-${trackConfig.tilesetUid}`;
-  track.options.offsetField = trackConfig.offsetField;
-  track.options.startField = trackConfig.tssStartField;
-  track.options.endField = trackConfig.tssEndField;
-  track.options.importanceField = trackConfig.importanceField;
-  return track;
-}
 
 export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
   const topTracks = viewConfig.views[0].tracks.top;
