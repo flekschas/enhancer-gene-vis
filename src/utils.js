@@ -49,17 +49,6 @@ export const download = (filename, stringOrBlob) => {
   }
 };
 
-export const toAbsPosition = (position, chromInfo) => {
-  let absPosition;
-  if (position.indexOf && position.indexOf(':') >= 0) {
-    const [chrom, pos] = position.split(':');
-    absPosition = chromInfo.chrPositions[chrom].pos + +pos;
-  } else {
-    absPosition = +position;
-  }
-  return absPosition;
-};
-
 export const toFixed = (number, decimals, forced) => {
   let string = number.toFixed(decimals);
   if (!forced) {

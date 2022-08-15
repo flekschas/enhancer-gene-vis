@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import EnhancerGenesInfo from './EnhancerGenesInfo';
 import EnhancerGenesHelp from './EnhancerGenesHelp';
 import EnhancerGenesSettings from './EnhancerGenesSettings';
-import EnhancerGenesPlot from './EnhancerGenesPlot';
+import EnhancerGenesPlot from './EnhancerGenesPlotCopy';
 import TitleBar from '../../TitleBar';
 
 import { focusRegionState } from '../../state/focus-state';

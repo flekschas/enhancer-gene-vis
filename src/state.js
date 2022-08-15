@@ -16,13 +16,13 @@ import {
 } from './utils/query-string';
 
 import {
-  toAbsPosition,
   chrPosUrlDecoder,
   chrPosUrlEncoder,
   chrRangePosUrlEncoder,
 } from './utils';
+import {
+  toAbsPosition,} from './utils/chrom-utils';
 
-import { samples, stratificationState } from './state/stratification-state';
 import {
   DEFAULT_X_DOMAIN_START,
   DEFAULT_X_DOMAIN_END,

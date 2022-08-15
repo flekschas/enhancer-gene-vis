@@ -91,17 +91,19 @@ export type TrackLabelPosition = 'topLeft' | 'topRight' | 'hidden';
 
 export type Alignment = 'left' | 'right';
 
-export type Track =
-  | CombinedTrack
-  | ViewportProjectionTrack
-  | HorizontalGeneAnnotationTrack
-  | TranscriptionStartSiteTrack
-  | PointAnnotationTrack
-  | OneDimensionalArcTrack
-  | StackedBarTrack
-  | StratifiedBedTrack
-  | HorizontalChromosomeLabelTrack
-  | RidgePlotTrack;
+export type Track = TrackCommon &
+  (
+    | CombinedTrack
+    | ViewportProjectionTrack
+    | HorizontalGeneAnnotationTrack
+    | TranscriptionStartSiteTrack
+    | PointAnnotationTrack
+    | OneDimensionalArcTrack
+    | StackedBarTrack
+    | StratifiedBedTrack
+    | HorizontalChromosomeLabelTrack
+    | RidgePlotTrack
+  );
 
 export type TrackCommon = {
   uid: string;

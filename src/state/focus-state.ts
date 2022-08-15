@@ -5,9 +5,9 @@ import {
   isChrRange,
   chrRangePosUrlDecoder,
   chrRangePosEncoder,
-  toAbsPosition,
   chrRangePosUrlEncoder,
 } from '../utils';
+import { toAbsPosition } from '../utils/chrom-utils';
 import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
@@ -109,7 +109,7 @@ export const focusGeneEndWithAssembly = memoize(
 
 export const focusRegionAbsWithAssembly = memoize(
   (chromInfo) =>
-    selector({
+    selector<[number, number]|null>({
       key: `focusRegionAbs-${chromInfo.totalLength}`,
       get: ({ get }) => {
         const focusRegionOption = get(focusRegionOptionState);

@@ -1,5 +1,5 @@
 import { identity, range } from '@flekschas/utils';
-import { axisRight, scaleLinear, scaleLog, select } from 'd3';
+import { axisRight, scaleLinear, scaleLog, select, Selection } from 'd3';
 import React, {
   useCallback,
   useEffect,
@@ -25,6 +25,7 @@ import {
   focusRegionStrState,
 } from '../../state/focus-state';
 import {
+  EnhancerGeneCellEncodingType,
   enhancerGenesCellEncodingState,
   enhancerGenesPaddingState,
   enhancerGenesSvgState,
@@ -33,6 +34,7 @@ import {
   stratificationState,
   sampleIdx,
   sampleGroupSelectionSizesState,
+  Stratification,
 } from '../../state/stratification-state';
 
 import {
@@ -46,6 +48,62 @@ import { scaleBand } from '../../utils';
 import usePrevious from '../../hooks/use-previous';
 
 import './EnhancerGenesPlot.css';
+import { CombinedTrack } from '../../view-config-types';
+import { BeddbTile, TilesetInfo } from '@higlass/common';
+import { ClassNameMap } from '@material-ui/styles';
+
+type EgPlotData = {
+  categoryAggregation: EgPlotCategoryAggregationData;
+  genes: EgPlotGeneAggregationData;
+  genesDownstreamByDist: EgPlotGeneAggregationValue[];
+  genesUpstreamByDist: EgPlotGeneAggregationValue[];
+  maxAbsDistance: number;
+  maxScore: number;
+  minAbsDistance: number;
+};
+
+type EgPlotCategoryAggregationData = {
+  [key: string]: EgPlotCategoryAggregationValue;
+};
+
+type EgPlotCategoryAggregationValue = {
+  category: EgPlotCategoryAggregationCategory;
+  numEnhancers: number;
+  row?: number;
+};
+
+type EgPlotCategoryAggregationCategory = {
+  index: number;
+  name: string;
+  size: number;
+};
+
+type EgPlotGeneAggregationData = { [key: string]: EgPlotGeneAggregationValue };
+
+type EgPlotGeneAggregationValue = {
+  absDistance: number;
+  isDownstream: boolean;
+  name: string;
+  position: number;
+  relDistance?: number;
+  samplesByCategory: {
+    [key: string]: EgPlotGeneAggregationSampleCategoryValue;
+  };
+};
+
+type EgPlotGeneAggregationSampleCategoryValue =
+  EgPlotGeneAggregationSampleCategory[] & {
+    maxScore: number;
+    size: number;
+    maxScoreSample?: EgPlotGeneAggregationSampleCategory;
+  };
+
+type EgPlotGeneAggregationSampleCategory = {
+  gene: string;
+  sample: string;
+  sampleCategory: string;
+  score: number;
+};
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -81,23 +139,29 @@ const useTooltipStyles = DEFAULT_COLOR_MAP_LIGHT.map((color, i) =>
   }))
 );
 
-const { server, tilesetUid: uuid } =
-  DEFAULT_VIEW_CONFIG_ENHANCER.views[0].tracks.top[3].contents[1];
+const { server, tilesetUid: uuid } = (
+  DEFAULT_VIEW_CONFIG_ENHANCER.views![0].tracks.top![3] as CombinedTrack
+).contents[1];
 
-const fetchTiles = async (tileIds) => {
+const fetchTiles = async (tileIds: string[]) => {
   const response = await fetch(
     `${server}/tiles/?${tileIds.map((tileId) => `d=${tileId}`).join('&')}`
   );
-  return response.json();
+  return response.json() as Promise<{ [key: string]: BeddbTile[] }>;
 };
 
-const getMinTileSize = (tilesetInfo) =>
-  tilesetInfo.max_width / 2 ** tilesetInfo.max_zoom;
+// TODO: Remove non-null assertion from max_width
+const getMinTileSize = (tilesetInfo: TilesetInfo) =>
+  tilesetInfo.max_width! / 2 ** tilesetInfo.max_zoom;
 
-const filterIntervalsByRange = (tile, absRange) =>
-  tile.filter(
+const filterIntervalsByRange = (
+  tile: BeddbTile[],
+  absRange: [number, number]
+) => {
+  return tile.filter(
     (interval) => interval.xEnd >= absRange[0] && interval.xStart < absRange[1]
   );
+};
 
 // From https://observablehq.com/@d3/beeswarm
 const dodge = (data, radius, yScale) => {
@@ -149,21 +213,30 @@ const dodge = (data, radius, yScale) => {
 };
 
 const plotEnhancerGeneConnections = (
-  node,
-  width,
-  data,
-  stratification,
+  node: SVGElement,
+  width: number,
+  data: EgPlotData,
+  stratification: Stratification,
   {
-    geneCellEncoding = 'distribution',
+    geneCellEncoding = EnhancerGeneCellEncodingType.DISTRIBUTION,
     prevGeneCellEncoding,
     genePadding = false,
     showTooltip = identity,
     tooltipClasses = [],
     position = '',
     focusRegion = null,
+  }: {
+    geneCellEncoding?: EnhancerGeneCellEncodingType;
+    prevGeneCellEncoding?: EnhancerGeneCellEncodingType;
+    genePadding?: boolean;
+    showTooltip?: Function;
+    tooltipClasses?: ClassNameMap[];
+    position?: string;
+    // focusRegion?: FocusRegion,
   } = {}
 ) => {
   if (!width || !data) return;
+  console.log(data);
 
   const svg = select(node);
   const categories = getCategories(stratification);
@@ -184,7 +257,7 @@ const plotEnhancerGeneConnections = (
   svg.attr('viewbox', `0 0 ${width} ${height}`).attr('height', height);
 
   const maxCatgorySize = Object.values(data.categoryAggregation).reduce(
-    (max, cat) => Math.max(max, cat.numEnhancers),
+    (max: number, cat) => Math.max(max, cat.numEnhancers),
     0
   );
 
@@ -323,8 +396,8 @@ const plotEnhancerGeneConnections = (
   };
 
   const plotArray = (
-    selection,
-    numCols,
+    selection: Selection<SVGGElement, any, any, any>,
+    numCols: number,
     {
       instanceCache = {},
       onMouseEnter = identity,
@@ -334,8 +407,8 @@ const plotEnhancerGeneConnections = (
   ) => {
     const cellSize = bandwidth / numCols;
 
-    const indexToX = (index) => (index % numCols) * cellSize;
-    const indexToY = (index) => Math.floor(index / numCols) * cellSize;
+    const indexToX = (index: number) => (index % numCols) * cellSize;
+    const indexToY = (index: number) => Math.floor(index / numCols) * cellSize;
 
     instanceCache.current = selection
       .attr(
@@ -858,12 +931,14 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   const genePadding = useRecoilValue(enhancerGenesPaddingState);
   const stratification = useRecoilValue(stratificationState);
 
-  const [plotEl, setPlotEl] = useRecoilState(enhancerGenesSvgState);
+  const [plotEl, setPlotEl] = useRecoilState<SVGElement | null>(
+    enhancerGenesSvgState
+  );
 
-  const [tile, setTile] = useState(null);
-  const [isLoadingTile, setIsLoadingTile] = useState(null);
-  const [tilesetInfo, setTilesetInfo] = useState(null);
-  const [width, setWidth] = useState(null);
+  const [tile, setTile] = useState<BeddbTile[] | null>(null);
+  const [isLoadingTile, setIsLoadingTile] = useState<boolean | null>(null);
+  const [tilesetInfo, setTilesetInfo] = useState<TilesetInfo | null>(null);
+  const [width, setWidth] = useState<number|null>(null);
   const prevWidth = usePrevious(width);
   const prevGeneCellEncoding = usePrevious(geneCellEncoding);
 
@@ -898,7 +973,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
         ids.push(`${uuid}.${zoomLevel}.${xPos}`);
         return ids;
       },
-      []
+      [] as string[]
     );
 
     setIsLoadingTile(true);
@@ -924,15 +999,15 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   // Derived State
   const isInit = useMemo(() => !!tilesetInfo, [tilesetInfo]);
 
-  const data = useMemo(
+  const data: EgPlotData = useMemo(
     () => {
       if (!tile) return undefined;
 
       let maxScore = 0;
       let minAbsDistance = Infinity;
       let maxAbsDistance = 0;
-      const genes = {};
-      const categoryAggregation = {};
+      const genes: EgPlotGeneAggregationData = {};
+      const categoryAggregation: EgPlotCategoryAggregationData = {};
 
       Object.entries(categories).forEach(([name, category]) => {
         categoryAggregation[name] = {
@@ -941,7 +1016,10 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
         };
       });
 
-      const distComparator = (a, b) => a.absDistance - b.absDistance;
+      const distComparator = (
+        a: EgPlotGeneAggregationValue,
+        b: EgPlotGeneAggregationValue
+      ) => a.absDistance - b.absDistance;
       const genesUpstreamByDist = new TinyQueue([], distComparator);
       const genesDownstreamByDist = new TinyQueue([], distComparator);
 
@@ -950,6 +1028,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
 
         // Exclude samples that have been deselected
         if (!sampleSelection[sampleIdx(stratification)[sample]]) return;
+        if (!relPosition) return;
 
         const geneName = entry.fields[GENE_NAME_COLUMN];
 
@@ -967,10 +1046,11 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
           };
 
           Object.values(categories).forEach(({ name, size }) => {
-            genes[geneName].samplesByCategory[name] = [];
-            genes[geneName].samplesByCategory[name].maxScore = 0;
-            genes[geneName].samplesByCategory[name].size =
-              sampleGroupSelectionSizes[name];
+            // TODO: Remove any assertion once type is fixed
+            const value = [] as any;
+            value.maxScore = 0;
+            value.size = sampleGroupSelectionSizes[name];
+            genes[geneName].samplesByCategory[name] = value;
           });
 
           minAbsDistance = Math.min(minAbsDistance, absDistance);
@@ -1004,24 +1084,28 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
         categoryAggregation[sampleCat].numEnhancers++;
       });
 
-      const genesDownstreamByDistArr = [];
+      const genesDownstreamByDistArr: EgPlotGeneAggregationValue[] = [];
       while (genesDownstreamByDist.length)
-        genesDownstreamByDistArr.push(genesDownstreamByDist.pop());
+        // Safe non-null assertion since checking for length
+        genesDownstreamByDistArr.push(genesDownstreamByDist.pop()!);
 
-      const genesUpstreamByDistArr = [];
+      const genesUpstreamByDistArr: EgPlotGeneAggregationValue[] = [];
       while (genesUpstreamByDist.length)
-        genesUpstreamByDistArr.push(genesUpstreamByDist.pop());
+        // Safe non-null assertion since checking for length
+        genesUpstreamByDistArr.push(genesUpstreamByDist.pop()!);
 
       genesDownstreamByDistArr.forEach((gene, i) => {
         const prevGene = genesDownstreamByDistArr[i - 1];
         gene.relDistance =
-          gene.position - ((prevGene && prevGene.position) || relPosition);
+          // TODO: Check if non-null assertion on relPosition can be removed
+          gene.position - ((prevGene && prevGene.position) || relPosition!);
       });
 
       genesUpstreamByDistArr.forEach((gene, i) => {
         const prevGene = genesDownstreamByDistArr[i - 1];
         gene.relDistance =
-          ((prevGene && prevGene.position) || relPosition) - gene.position;
+          // TODO: Check if non-null assertion on relPosition can be removed
+          ((prevGene && prevGene.position) || relPosition!) - gene.position;
       });
 
       return {
@@ -1047,7 +1131,8 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
         const response = await fetch(`${server}/tileset_info/?d=${uuid}`);
         const results = await response.json();
 
-        if (results[uuid]) setTilesetInfo(results[uuid]);
+        // TODO: Remove non-null assertions
+        if (results[uuid!]) setTilesetInfo(results[uuid!]);
       })();
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1082,14 +1167,14 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
     [plotEl]
   );
 
-  const tooltipClasses = [];
+  const tooltipClasses: ClassNameMap<"tooltip" | "arrow">[] = [];
   for (let i = 0; i < useTooltipStyles.length; i++) {
     tooltipClasses.push(useTooltipStyles[i]());
   }
 
   useEffect(
     () => {
-      plotEnhancerGeneConnections(plotEl, width, data, stratification, {
+      plotEnhancerGeneConnections(plotEl!, width!, data, stratification, {
         geneCellEncoding,
         prevGeneCellEncoding,
         genePadding,
