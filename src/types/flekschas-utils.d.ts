@@ -73,4 +73,13 @@ declare module '@flekschas/utils' {
    * @return {number} The sum
    */
   export function sumNan(arr: number[]): number;
+  
+  /**
+   * A function to created a range array
+   * @param   {number}  start  Start of the range (included)
+   * @param   {number}  end  End of the range (excluded)
+   * @param   {number}  stepSize  Increase per step
+   * @return  {array}  Range array
+   */
+   export function range(start: number, end: number, stepSize: number = 1): number[];
 }
