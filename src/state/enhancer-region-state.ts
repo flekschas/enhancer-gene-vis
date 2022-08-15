@@ -5,6 +5,7 @@ import {
   BIOSAMPLE_COLUMN,
   EG_TILE_UID,
   EG_TILE_V3,
+  GENE_NAME_COLUMN,
 } from '../constants';
 import {
   booleanQueryStringDecoder,
@@ -35,6 +36,7 @@ export type EnhancerGeneTrackInfo = {
   tilesetUid: string;
   offsetField: number;
   enhancerStartField: number;
+  geneNameField: number;
   tssStartField: number;
   tssEndField: number;
   importanceField: number;
@@ -63,6 +65,7 @@ export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
   tssStartField: TSS_START_COLUMN,
   tssEndField: TSS_END_COLUMN,
   importanceField: ABC_SCORE_COLUMN,
+  geneNameField: GENE_NAME_COLUMN,
   label: 'Enhancer regions',
 };
 export const DEFAULT_ENHANCER_GENE_ARC_TRACK: OneDimensionalArcTrack = {
@@ -146,6 +149,7 @@ export function enhancerRegionTrackEncoder(
     track.tssStartField,
     track.tssEndField,
     track.offsetField,
+    track.geneNameField,
     track.importanceField,
     track.label,
   ].join(':');
@@ -168,6 +172,7 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
     startField = TSS_START_COLUMN,
     endField = TSS_END_COLUMN,
     offsetField = TSS_CHROM_COLUMN,
+    geneNameField = GENE_NAME_COLUMN,
     importanceField = ABC_SCORE_COLUMN,
     label,
   ] = v.split(':');
@@ -183,6 +188,7 @@ function enhancerRegionTrackDecoder(v?: string): EnhancerGeneTrackInfo {
     tssStartField: parseInt(startField.toString(), 10),
     tssEndField: parseInt(endField.toString(), 10),
     offsetField: parseInt(offsetField.toString(), 10),
+    geneNameField: parseInt(geneNameField.toString(), 10),
     importanceField: parseInt(importanceField.toString(), 10),
     label,
   } as EnhancerGeneTrackInfo;

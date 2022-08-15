@@ -61,6 +61,7 @@ import {
   useEnhancerRegionsShowInfos,
   enhancerRegionsTrackState,
   enhancerRegionsArcStrokeOpacityState,
+  EnhancerGeneTrackInfo,
 } from '../../state/enhancer-region-state';
 import { variantTracksState } from '../../state/variant-track-state';
 
@@ -76,7 +77,6 @@ import { IGNORED_FOCUS_ELEMENTS } from '../../constants';
 import {
   DEFAULT_VIEW_CONFIG_ENHANCER,
   getTrackByUid,
-  updateViewConfigEnhancerRegionTracks,
 } from '../../view-config-typed';
 
 import { chrRangePosEncoder } from '../../utils';
@@ -155,6 +155,63 @@ const useStyles = makeStyles((theme) => ({
     animation: '0.75s ease 5s 1 running forwards fadeout',
   },
 }));
+
+function updateViewConfigEnhancerRegionTracks(
+  trackConfig: EnhancerGeneTrackInfo
+) {
+  return (viewConfig: ViewConfig) => {
+    getUpdatedEnhancerRegionArcTrack(
+      getTrackByUid(viewConfig, 'arcs') as OneDimensionalArcTrack,
+      trackConfig
+    );
+    getUpdatedEnhancerRegionBarTrack(
+      getTrackByUid(viewConfig, 'stacked-bars') as StackedBarTrack,
+      trackConfig
+    );
+    getUpdatedEnhancerStratifiedBedTrack(
+      getTrackByUid(viewConfig, 'indicatorByCellTypes') as StratifiedBedTrack,
+      trackConfig
+    );
+    return viewConfig;
+  };
+}
+
+function getUpdatedEnhancerRegionArcTrack(
+  track: OneDimensionalArcTrack,
+  trackConfig: EnhancerGeneTrackInfo
+) {
+  track.server = trackConfig.server;
+  track.tilesetUid = trackConfig.tilesetUid;
+  track.uid = `arcs-${trackConfig.tilesetUid}`;
+  track.options.startField = trackConfig.enhancerStartField;
+  track.options.endField = trackConfig.tssStartField;
+  return track;
+}
+
+function getUpdatedEnhancerRegionBarTrack(
+  track: StackedBarTrack,
+  trackConfig: EnhancerGeneTrackInfo
+) {
+  track.server = trackConfig.server;
+  track.tilesetUid = trackConfig.tilesetUid;
+  // track.uid = `stacked-bars-${trackConfig.tilesetUid}`;
+  track.options.offsetField = trackConfig.offsetField;
+  track.options.startField = trackConfig.tssStartField;
+  track.options.endField = trackConfig.tssEndField;
+  track.options.importanceField = trackConfig.importanceField;
+  return track;
+}
+
+function getUpdatedEnhancerStratifiedBedTrack(
+  track: StratifiedBedTrack,
+  trackConfig: EnhancerGeneTrackInfo
+) {
+  track.server = trackConfig.server;
+  track.tilesetUid = trackConfig.tilesetUid;
+  track.options.geneField = trackConfig.geneNameField;
+  track.options.importanceField = trackConfig.importanceField;
+  return track;
+}
 
 const updateViewConfigFocusStyle =
   (hideUnfocused: boolean) => (viewConfig: ViewConfig) => {
