@@ -20,8 +20,7 @@ import {
   chrPosUrlEncoder,
   chrRangePosUrlEncoder,
 } from './utils';
-import {
-  toAbsPosition,} from './utils/chrom-utils';
+import { toAbsPosition } from './utils/chrom-utils';
 
 import {
   DEFAULT_X_DOMAIN_START,

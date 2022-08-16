@@ -1,4 +1,4 @@
-import { ChromInfo } from "@higlass/types";
+import { ChromInfo } from '@higlass/types';
 
 export const toAbsPosition = (position: string, chromInfo: ChromInfo) => {
   let absPosition;

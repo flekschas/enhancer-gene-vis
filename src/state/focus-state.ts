@@ -109,7 +109,7 @@ export const focusGeneEndWithAssembly = memoize(
 
 export const focusRegionAbsWithAssembly = memoize(
   (chromInfo) =>
-    selector<[number, number]|null>({
+    selector<[number, number] | null>({
       key: `focusRegionAbs-${chromInfo.totalLength}`,
       get: ({ get }) => {
         const focusRegionOption = get(focusRegionOptionState);

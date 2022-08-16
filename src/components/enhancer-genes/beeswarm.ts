@@ -1,6 +1,7 @@
 interface ScoreProperty {
   score: number;
 }
+
 type DataNode<T> = {
   x: number;
   y: number;
@@ -20,7 +21,9 @@ export function dodge<T extends ScoreProperty>(
   // console.log(data);
   const radius2 = radius ** 2;
   const circles = data
-    .map((d) => ({ y: yScale(d.score), data: d, x: 0, next: null} as DataNode<T>))
+    .map(
+      (d) => ({ y: yScale(d.score), data: d, x: 0, next: null } as DataNode<T>)
+    )
     .sort((a, b) => a.y - b.y);
   const epsilon = 1e-3;
   let head: DataNode<T> | null = null;

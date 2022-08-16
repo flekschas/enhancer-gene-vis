@@ -61,13 +61,13 @@ declare module '@higlass/common' {
      * Represents a row in the bed file matching fields in tilesetInfo.
      * Generally, [chrOffset, start, end, geneName, tssStart, score, cellType]
      */
-    fields: string[]
-    importance: number
-    name: string
-    uid: string
-    xEnd: number
-    xStart: number
-  }
+    fields: string[];
+    importance: number;
+    name: string;
+    uid: string;
+    xEnd: number;
+    xStart: number;
+  };
 }
 
 declare module '@higlass/libraries' {

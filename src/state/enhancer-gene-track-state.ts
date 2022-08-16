@@ -51,10 +51,11 @@ export const enhancerGenesCellEncodingState: RecoilState<EnhancerGeneCellEncodin
   });
 
 // TODO: Determine type for this atom
-export const enhancerGenesSvgState: RecoilState<SVGElement|null> = atom<SVGElement|null>({
-  key: 'enhancerGenesSvg',
-  default: null,
-});
+export const enhancerGenesSvgState: RecoilState<SVGElement | null> =
+  atom<SVGElement | null>({
+    key: 'enhancerGenesSvg',
+    default: null,
+  });
 
 export const useEnhancerGenesShowInfos = () =>
   useRecoilQueryString(
