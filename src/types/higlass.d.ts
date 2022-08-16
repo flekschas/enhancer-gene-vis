@@ -54,6 +54,20 @@ declare module '@higlass/common' {
   type Tile = {
     tileData: TileData;
   };
+  // TODO: Clarify relationship to above Tile definition
+  type BeddbTile = {
+    chrOffset: number;
+    /**
+     * Represents a row in the bed file matching fields in tilesetInfo.
+     * Generally, [chrOffset, start, end, geneName, tssStart, score, cellType]
+     */
+    fields: string[];
+    importance: number;
+    name: string;
+    uid: string;
+    xEnd: number;
+    xStart: number;
+  };
 }
 
 declare module '@higlass/libraries' {

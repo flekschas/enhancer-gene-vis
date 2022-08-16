@@ -5,13 +5,13 @@
 
 import { Stratification } from '../../view-config-types';
 
-type Category = {
+export type Category = {
   name: string;
   size: number;
   index: number;
 };
 
-type CategoryAndIndex = {
+export type CategoryAndIndex = {
   category: Category;
   index: number;
 };
