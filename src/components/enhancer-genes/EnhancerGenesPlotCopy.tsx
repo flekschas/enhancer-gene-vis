@@ -1,5 +1,14 @@
 import { identity, range } from '@flekschas/utils';
-import { axisRight, scaleLinear, scaleLog, select, Selection } from 'd3';
+import {
+  axisRight,
+  BaseType,
+  NumberValue,
+  scaleLinear,
+  scaleLog,
+  select,
+  Selection,
+  ScaleContinuousNumeric,
+} from 'd3';
 import React, {
   useCallback,
   useEffect,
@@ -15,7 +24,11 @@ import { makeStyles } from '@material-ui/core/styles';
 
 import { useChromInfo } from '../../ChromInfoProvider';
 import { useShowTooltip } from '../../TooltipProvider';
-import { getCategories, getSamples } from './enhancer-gene-plot-helper';
+import {
+  Category,
+  getCategories,
+  getSamples,
+} from './enhancer-gene-plot-helper';
 
 import { sampleSelectionState } from '../../state/filter-state';
 import {
@@ -44,13 +57,14 @@ import {
   GENE_NAME_COLUMN,
 } from '../../constants';
 import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
-import { scaleBand } from '../../utils';
+import { scaleBand } from '../../utils/scale-band';
 import usePrevious from '../../hooks/use-previous';
 
 import './EnhancerGenesPlot.css';
 import { CombinedTrack } from '../../view-config-types';
 import { BeddbTile, TilesetInfo } from '@higlass/common';
 import { ClassNameMap } from '@material-ui/styles';
+import { dodge } from './beeswarm';
 
 type EgPlotData = {
   categoryAggregation: EgPlotCategoryAggregationData;
@@ -96,6 +110,7 @@ type EgPlotGeneAggregationSampleCategoryValue =
     maxScore: number;
     size: number;
     maxScoreSample?: EgPlotGeneAggregationSampleCategory;
+    row?: number;
   };
 
 type EgPlotGeneAggregationSampleCategory = {
@@ -163,55 +178,6 @@ const filterIntervalsByRange = (
   );
 };
 
-// From https://observablehq.com/@d3/beeswarm
-const dodge = (data, radius, yScale) => {
-  const radius2 = radius ** 2;
-  const circles = data
-    .map((d) => ({ y: yScale(d.score), data: d }))
-    .sort((a, b) => a.y - b.y);
-  const epsilon = 1e-3;
-  let head = null;
-  let tail = null;
-
-  // Returns true if circle ⟨x,y⟩ intersects with any circle in the queue.
-  function intersects(x, y) {
-    let a = head;
-    while (a) {
-      if (radius2 - epsilon > (a.x - x) ** 2 + (a.y - y) ** 2) {
-        return true;
-      }
-      a = a.next;
-    }
-    return false;
-  }
-
-  // Place each circle sequentially.
-  for (const b of circles) {
-    // Remove circles from the queue that can’t intersect the new circle b.
-    while (head && head.y < b.y - radius2) head = head.next;
-
-    // Choose the minimum non-intersecting tangent.
-    if (intersects((b.x = 0), b.y)) {
-      let a = head;
-      b.x = Infinity;
-      do {
-        const x = a.x + Math.sqrt(radius2 - (a.y - b.y) ** 2);
-        if (x < b.x && !intersects(x, b.y)) b.x = x;
-        a = a.next;
-      } while (a);
-    }
-
-    // Add b to the queue.
-    b.next = null;
-    // eslint-disable-next-line no-multi-assign
-    if (head === null) head = tail = b;
-    // eslint-disable-next-line no-multi-assign
-    else tail = tail.next = b;
-  }
-
-  return circles;
-};
-
 const plotEnhancerGeneConnections = (
   node: SVGElement,
   width: number,
@@ -223,6 +189,7 @@ const plotEnhancerGeneConnections = (
     genePadding = false,
     showTooltip = identity,
     tooltipClasses = [],
+    classes = undefined,
     position = '',
     focusRegion = null,
   }: {
@@ -231,12 +198,12 @@ const plotEnhancerGeneConnections = (
     genePadding?: boolean;
     showTooltip?: Function;
     tooltipClasses?: ClassNameMap[];
+    classes?: ClassNameMap;
     position?: string;
-    // focusRegion?: FocusRegion,
+    focusRegion?: any;
   } = {}
 ) => {
   if (!width || !data) return;
-  console.log(data);
 
   const svg = select(node);
   const categories = getCategories(stratification);
@@ -288,7 +255,7 @@ const plotEnhancerGeneConnections = (
       circleRadius + beeswarmPadding,
     ]);
 
-  const circleYScale = (v) => circleYScalePost(circleYScalePre(v));
+  const circleYScale = (v: NumberValue) => circleYScalePost(circleYScalePre(v));
 
   // ---------------------------------------------------------------------------
   // Gene setup
@@ -303,8 +270,8 @@ const plotEnhancerGeneConnections = (
     ...genesDownstream,
   ].reduce(
     (minMax, gene) => [
-      Math.min(minMax[0], gene.relDistance),
-      Math.max(minMax[1], gene.relDistance),
+      Math.min(minMax[0], gene.relDistance || Infinity),
+      Math.max(minMax[1], gene.relDistance || -Infinity),
     ],
     [Infinity, 0]
   );
@@ -314,7 +281,7 @@ const plotEnhancerGeneConnections = (
     .range(distPaddingRange);
 
   const genesUpstreamPadding = genePadding
-    ? genesUpstream.map((d) => Math.round(paddingScale(d.relDistance)))
+    ? genesUpstream.map((d) => Math.round(paddingScale(d.relDistance!)))
     : [];
   const genesUpstreamScale = scaleBand()
     .domain(genesUpstream.map((d) => d.name))
@@ -322,7 +289,7 @@ const plotEnhancerGeneConnections = (
     .paddingInner(genesUpstreamPadding);
 
   const genesDownstreamPadding = genePadding
-    ? genesDownstream.map((d) => Math.round(paddingScale(d.relDistance)))
+    ? genesDownstream.map((d) => Math.round(paddingScale(d.relDistance!)))
     : [];
   const genesDownstreamScale = scaleBand()
     .domain(genesDownstream.map((d) => d.name))
@@ -369,25 +336,39 @@ const plotEnhancerGeneConnections = (
     .domain([minVisibleAbsDist, maxVisibleAbsDist])
     .range([2, paddingBottom]);
 
-  const plotBeeswarm = (selection, { isRightAligned = false } = {}) => {
+  const plotBeeswarm = (
+    selection: Selection<
+      SVGElement | BaseType,
+      EgPlotGeneAggregationSampleCategoryValue,
+      SVGElement | BaseType,
+      EgPlotGeneAggregationValue
+    >,
+    { isRightAligned = false } = {}
+  ) => {
     selection
       .attr(
         'fill',
         (d, i) => DEFAULT_COLOR_MAP_DARK[i % DEFAULT_COLOR_MAP_DARK.length]
       )
       .selectAll('circle')
-      .data((d) => dodge(d, circleRadius * 2 + circlePadding, circleYScale))
-      .join('circle')
-      .attr('cx', (d) =>
-        isRightAligned
-          ? genesUpstreamScale.bandwidth() - (d.x + 2 * beeswarmPadding)
-          : d.x + circleRadius + beeswarmPadding
+      .data((d) =>
+        dodge<EgPlotGeneAggregationSampleCategory>(
+          d,
+          circleRadius * 2 + circlePadding,
+          circleYScale
+        )
       )
+      .join('circle')
+      .attr('cx', (d) => {
+        return isRightAligned
+          ? genesUpstreamScale.bandwidth() - (d.x + 2 * beeswarmPadding)
+          : d.x + circleRadius + beeswarmPadding;
+      })
       .attr('cy', (d) => d.y)
       .attr('r', circleRadius);
   };
 
-  const getArrayNumCols = (genes) => {
+  const getArrayNumCols = (genes: EgPlotGeneAggregationValue[]) => {
     const maxSize = Object.values(genes[0].samplesByCategory).reduce(
       (max, cat) => Math.max(max, cat.size),
       0
@@ -396,14 +377,33 @@ const plotEnhancerGeneConnections = (
   };
 
   const plotArray = (
-    selection: Selection<SVGGElement, any, any, any>,
+    selection: Selection<
+      BaseType | SVGGElement,
+      EgPlotGeneAggregationSampleCategoryValue,
+      BaseType | SVGGElement,
+      EgPlotGeneAggregationValue
+    >,
     numCols: number,
     {
-      instanceCache = {},
+      instanceCache = { current: null },
       onMouseEnter = identity,
       onMouseLeave = identity,
       tooltipTitleGetter = null,
-    } = {}
+    }: {
+      instanceCache: {
+        current: Selection<
+          BaseType | SVGGElement,
+          EgPlotGeneAggregationSampleCategory,
+          BaseType | SVGGElement,
+          EgPlotGeneAggregationSampleCategoryValue
+        > | null;
+      };
+      onMouseEnter: (d: EgPlotGeneAggregationSampleCategory) => any;
+      onMouseLeave: Function;
+      tooltipTitleGetter?:
+        | ((d: EgPlotGeneAggregationSampleCategory) => JSX.Element)
+        | null;
+    }
   ) => {
     const cellSize = bandwidth / numCols;
 
@@ -418,7 +418,9 @@ const plotEnhancerGeneConnections = (
       .selectAll('rect')
       .data(
         (d) => d,
-        (d) => `${d.gene}|${d.sample}`
+        // TODO: Type after figuring out how typing ValueFn from d3 works
+        ((d: EgPlotGeneAggregationSampleCategory) =>
+          `${d.gene}|${d.sample}`) as any
       )
       .join('rect')
       .attr('x', (d) => indexToX(samples[d.sample].index))
@@ -445,7 +447,7 @@ const plotEnhancerGeneConnections = (
       });
   };
 
-  const arrayTooltipTitleGetter = (d) => (
+  const arrayTooltipTitleGetter = (d: EgPlotGeneAggregationSampleCategory) => (
     <>
       The enhancer overlapping <strong>{position}</strong>
       {focusRegion ? ` (${focusRegion})` : ''} is predicted to regulate{' '}
@@ -454,26 +456,33 @@ const plotEnhancerGeneConnections = (
     </>
   );
 
-  const geneArrayInstances = {
+  const geneArrayInstances: {
+    [key in 'upstream' | 'downstream']: {
+      current: Selection<any, any, any, any> | null;
+    };
+  } = {
     upstream: { current: null },
     downstream: { current: null },
   };
 
-  const geneArrayInstanceMouseEnterHandler = (dHovering) => {
-    const opacity = (d) => (d.sample === dHovering.sample ? 1 : 0.2);
-    geneArrayInstances.upstream.current.attr('opacity', opacity);
-    geneArrayInstances.downstream.current.attr('opacity', opacity);
+  const geneArrayInstanceMouseEnterHandler = (
+    dHovering: EgPlotGeneAggregationSampleCategory
+  ) => {
+    const opacity = (d: EgPlotGeneAggregationSampleCategory) =>
+      d.sample === dHovering.sample ? 1 : 0.2;
+    geneArrayInstances.upstream.current?.attr('opacity', opacity);
+    geneArrayInstances.downstream.current?.attr('opacity', opacity);
   };
 
   const geneArrayInstanceMouseLeaveHandler = () => {
-    geneArrayInstances.upstream.current.attr('opacity', 1);
-    geneArrayInstances.downstream.current.attr('opacity', 1);
+    geneArrayInstances.upstream.current?.attr('opacity', 1);
+    geneArrayInstances.downstream.current?.attr('opacity', 1);
   };
 
-  const plotBox = (
-    selection,
-    valueScale,
-    valueGetter,
+  function plotBox<T extends { row?: number }, P>(
+    selection: Selection<BaseType | SVGGElement, T, BaseType | SVGGElement, P>,
+    valueScale: ScaleContinuousNumeric<number, number>,
+    valueGetter: (d: T) => number,
     {
       cellWidth = rowHeight,
       fillColor = DEFAULT_COLOR_MAP_LIGHT,
@@ -483,18 +492,27 @@ const plotEnhancerGeneConnections = (
       showZero = true,
       showTooltip: showTooltipOnMouseEnter = false,
       tooltipTitleGetter = null,
-    } = {}
-  ) => {
+    }: {
+      cellWidth?: number;
+      fillColor?: string[];
+      forceMaxSize?: boolean;
+      textColor?: string[];
+      showText?: boolean;
+      showZero?: boolean;
+      showTooltip?: boolean;
+      tooltipTitleGetter: any;
+    }
+  ) {
     const sizeGetter = forceMaxSize
       ? () => valueScale.range()[1]
-      : (d) => valueScale(valueGetter(d));
+      : (d: T) => valueScale(valueGetter(d));
 
     const bg = selection
       .selectAll('.bg')
       .data((d) => [d])
       .join('rect')
       .attr('class', 'bg')
-      .attr('fill', (d) => fillColor[d.row % fillColor.length])
+      .attr('fill', (d) => fillColor[d.row! % fillColor.length])
       .attr('x', (d) => (cellWidth - sizeGetter(d)) / 2)
       .attr('y', (d) => (rowHeight - sizeGetter(d)) / 2)
       .attr('width', sizeGetter)
@@ -509,7 +527,7 @@ const plotEnhancerGeneConnections = (
         showTooltip(bBox.x + bBox.width / 2, bBox.y, title, {
           arrow: true,
           placement: 'top',
-          classes: tooltipClasses[d.row % tooltipClasses.length],
+          classes: tooltipClasses[d.row! % tooltipClasses.length],
         });
       }).on('mouseleave', () => {
         showTooltip();
@@ -526,7 +544,7 @@ const plotEnhancerGeneConnections = (
         .data((d) => [d])
         .join('text')
         .attr('class', 'box-text')
-        .attr('fill', (d) => textColor[d.row % textColor.length])
+        .attr('fill', (d) => textColor[d.row! % textColor.length])
         .attr('style', style)
         .attr('dominant-baseline', 'middle')
         .attr('text-anchor', 'middle')
@@ -535,27 +553,31 @@ const plotEnhancerGeneConnections = (
         .attr('opacity', (d) => +(valueGetter(d) > 0 || showZero))
         .text((d) => valueGetter(d));
     }
-  };
+  }
 
-  const enhancerTooltipTitleGetter = (d) => (
+  const enhancerTooltipTitleGetter = (d: EgPlotCategoryAggregationValue) => (
     <>
       Found {d.numEnhancers} active enhancer overlapping {position} across all{' '}
-      {d.category.size} {Object.values(categories)[d.row].name} samples.
+      {d.category.size} {Object.values(categories)[d.row!].name} samples.
     </>
   );
 
-  const boxTooltipTitleGetter = (d) => (
+  const boxTooltipTitleGetter = (
+    d: EgPlotGeneAggregationSampleCategoryValue
+  ) => (
     <>
       <strong className="value">{d.length}</strong> active enhancers found
-      across {d.size} {Object.values(categories)[d.row].name} samples.
+      across {d.size} {Object.values(categories)[d.row!].name} samples.
     </>
   );
 
-  const boxScoreTooltipTitleGetter = (d) => (
+  const boxScoreTooltipTitleGetter = (
+    d: EgPlotGeneAggregationSampleCategoryValue
+  ) => (
     <>
-      The most likely active enhancer for {d.maxScoreSample.gene} has an ABC
+      The most likely active enhancer for {d.maxScoreSample?.gene} has an ABC
       score of <strong className="value">{d.maxScore.toFixed(3)}</strong> and is
-      found in {d.maxScoreSample.sample.replaceAll('_', ' ')} (Overall max. ABC
+      found in {d.maxScoreSample?.sample.replaceAll('_', ' ')} (Overall max. ABC
       score is {data.maxScore.toFixed(3)}).
     </>
   );
@@ -567,7 +589,12 @@ const plotEnhancerGeneConnections = (
     .attr('transform', `translate(${width / 2 - rowHeight / 2}, 0)`);
 
   // Draw background
-  const enhancerGCellG = enhancerG
+  const enhancerGCellG: Selection<
+    BaseType | SVGGElement,
+    EgPlotCategoryAggregationValue,
+    BaseType | SVGElement,
+    EgPlotCategoryAggregationValue
+  > = enhancerG
     .selectAll('.enhancer-gene-aggregate')
     .data(
       Object.values(data.categoryAggregation).map((d, i) => {
@@ -575,24 +602,29 @@ const plotEnhancerGeneConnections = (
         d.row = i;
         return d;
       }),
-      (d) => d.category.name
+      ((d: EgPlotCategoryAggregationValue) => d.category.name) as any
     )
     .join('g')
     .attr('class', 'enhancer-gene-aggregate')
     .attr('transform', (d, i) => `translate(0, ${i * rowHeight + paddingTop})`);
 
-  plotBox(enhancerGCellG, categorySizeScale, (d) => d.numEnhancers, {
-    fillColor: ['#fff'],
-    showTooltip: true,
-    tooltipTitleGetter: enhancerTooltipTitleGetter,
-    forceMaxSize: true,
-  });
+  plotBox<EgPlotCategoryAggregationValue, EgPlotCategoryAggregationValue>(
+    enhancerGCellG,
+    categorySizeScale,
+    (d) => d.numEnhancers,
+    {
+      fillColor: ['#fff'],
+      showTooltip: true,
+      tooltipTitleGetter: enhancerTooltipTitleGetter,
+      forceMaxSize: true,
+    }
+  );
 
   // Draw border
   svg
     .select('#enhancers')
     .selectAll('.enhancer-box-border')
-    .data(Object.values(categories), (d) => d.name)
+    .data(Object.values(categories), ((d: Category) => d.name) as any)
     .join('rect')
     .attr('class', 'enhancer-box-border')
     .attr('fill', 'none')
@@ -612,13 +644,15 @@ const plotEnhancerGeneConnections = (
   const genesUpstreamG = svg
     .select('#genes-upstream')
     .selectAll('.gene-upstream')
-    .data(genesUpstream, (d) => d.name)
+    .data(genesUpstream, ((d: EgPlotGeneAggregationValue) => d.name) as any)
     .join('g')
     .attr('class', 'gene-upstream')
     .attr(
       'transform',
       (d) =>
-        `translate(${genesUpstreamLeftPad + genesUpstreamScale(d.name)}, 0)`
+        `translate(${
+          genesUpstreamLeftPad + (genesUpstreamScale(d.name) ?? 0)
+        }, 0)`
     );
 
   // Draw labels
@@ -642,13 +676,14 @@ const plotEnhancerGeneConnections = (
   const genesUpstreamGCellG = genesUpstreamG
     .selectAll('.gene-upstream-cell')
     .data(
-      (d) =>
+      (d: EgPlotGeneAggregationValue) =>
         Object.values(d.samplesByCategory).map((item, i) => {
           // Little hacky but necessary unfortunately
           item.row = i;
           return item;
         }),
-      (d) => d.name
+      // TODO: Figure out how to type ValueFn from d3
+      ((d: EgPlotGeneAggregationValue) => d.name) as any
     )
     .join('g')
     .attr('class', 'gene-upstream-cell')
@@ -679,10 +714,13 @@ const plotEnhancerGeneConnections = (
 
       const valueGetter =
         geneCellEncoding === 'percent'
-          ? (d) => d.length / d.size
-          : (d) => d.length;
+          ? (d: EgPlotGeneAggregationSampleCategoryValue) => d.length / d.size
+          : (d: EgPlotGeneAggregationSampleCategoryValue) => d.length;
 
-      plotBox(genesUpstreamGCellG, valueScale, valueGetter, {
+      plotBox<
+        EgPlotGeneAggregationSampleCategoryValue,
+        EgPlotGeneAggregationValue
+      >(genesUpstreamGCellG, valueScale, valueGetter, {
         showText: false,
         cellWidth: genesUpstreamScale.bandwidth(),
         fillColor: DEFAULT_COLOR_MAP,
@@ -710,7 +748,7 @@ const plotEnhancerGeneConnections = (
   // Draw border
   genesUpstreamG
     .selectAll('.gene-upstream-border')
-    .data(Object.values(categories), (d) => d.name)
+    .data(Object.values(categories), ((d: Category) => d.name) as any)
     .join('rect')
     .attr('class', 'gene-upstream-border')
     .attr('fill', 'none')
@@ -746,7 +784,7 @@ const plotEnhancerGeneConnections = (
   const genesDownstreamG = svg
     .select('#genes-downstream')
     .selectAll('.gene-downstream')
-    .data(genesDownstream, (d) => d.name)
+    .data(genesDownstream, ((d: EgPlotGeneAggregationValue) => d.name) as any)
     .join('g')
     .attr('class', 'gene-downstream')
     .attr('transform', (d) => `translate(${genesDownstreamScale(d.name)}, 0)`);
@@ -773,7 +811,7 @@ const plotEnhancerGeneConnections = (
           item.row = i;
           return item;
         }),
-      (d) => d.name
+      ((d: EgPlotGeneAggregationValue) => d.name) as any
     )
     .join('g')
     .attr('class', 'gene-downstream-cell')
@@ -804,8 +842,8 @@ const plotEnhancerGeneConnections = (
 
       const valueGetter =
         geneCellEncoding === 'percent'
-          ? (d) => d.length / d.size
-          : (d) => d.length;
+          ? (d: EgPlotGeneAggregationSampleCategoryValue) => d.length / d.size
+          : (d: EgPlotGeneAggregationSampleCategoryValue) => d.length;
 
       plotBox(genesDownstreamGCellG, valueScale, valueGetter, {
         showText: false,
@@ -835,7 +873,7 @@ const plotEnhancerGeneConnections = (
   // Draw border
   genesDownstreamG
     .selectAll('.gene-downstream-border')
-    .data(Object.values(categories), (d) => d.name)
+    .data(Object.values(categories), ((d: Category) => d.name) as any)
     .join('rect')
     .attr('class', 'gene-downstream-border')
     .attr('fill', 'none')
@@ -871,7 +909,7 @@ const plotEnhancerGeneConnections = (
     distRange <= 1
       ? [minVisibleAbsDist, maxVisibleAbsDist]
       : Array(4)
-          .fill()
+          .fill(undefined)
           .map(
             (v, i) =>
               Math.ceil(minVisibleAbsDist / 1e5) * 1e5 + i * (distStep * 1e5)
@@ -888,13 +926,13 @@ const plotEnhancerGeneConnections = (
     .call(
       axisRight(distanceHeightScale)
         .tickSize(width)
-        .tickFormat(function geneDistanceAxisTickFormat(d) {
-          const s = (d / 1e6).toFixed(1);
-          return this.parentNode.nextSibling
+        .tickFormat(function geneDistanceAxisTickFormat(this: Element, d) {
+          const s = ((d as number) / 1e6).toFixed(1);
+          return this.parentNode?.nextSibling
             ? s
             : `${s} Mbp distance to enhancer`;
         })
-        .tickValues(tickValues)
+        .tickValues(tickValues) as any
     )
     .call((g) => g.select('.domain').remove())
     .call((g) =>
@@ -938,7 +976,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   const [tile, setTile] = useState<BeddbTile[] | null>(null);
   const [isLoadingTile, setIsLoadingTile] = useState<boolean | null>(null);
   const [tilesetInfo, setTilesetInfo] = useState<TilesetInfo | null>(null);
-  const [width, setWidth] = useState<number|null>(null);
+  const [width, setWidth] = useState<number | null>(null);
   const prevWidth = usePrevious(width);
   const prevGeneCellEncoding = usePrevious(geneCellEncoding);
 
@@ -999,7 +1037,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   // Derived State
   const isInit = useMemo(() => !!tilesetInfo, [tilesetInfo]);
 
-  const data: EgPlotData = useMemo(
+  const data: EgPlotData | undefined = useMemo(
     () => {
       if (!tile) return undefined;
 
@@ -1167,14 +1205,14 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
     [plotEl]
   );
 
-  const tooltipClasses: ClassNameMap<"tooltip" | "arrow">[] = [];
+  const tooltipClasses: ClassNameMap<'tooltip' | 'arrow'>[] = [];
   for (let i = 0; i < useTooltipStyles.length; i++) {
     tooltipClasses.push(useTooltipStyles[i]());
   }
 
   useEffect(
     () => {
-      plotEnhancerGeneConnections(plotEl!, width!, data, stratification, {
+      plotEnhancerGeneConnections(plotEl!, width!, data!, stratification, {
         geneCellEncoding,
         prevGeneCellEncoding,
         genePadding,
