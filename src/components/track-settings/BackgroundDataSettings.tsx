@@ -44,7 +44,7 @@ type BeddbFile = TrackSettingsState & {
   [BeddbFileField.IMPORTANCE_FIELD]: number;
 };
 
-const additionalTrackFields: TrackConfigCustomFields = {
+const ENHANCER_TRACK_FIELDS: TrackConfigCustomFields = {
   [BeddbFileField.OFFSET_FIELD]: {
     label: 'Chrom. Offset Field',
     default: TSS_CHROM_COLUMN,
@@ -244,9 +244,39 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
       </p>
       <div className={classes.trackList}>
         <TrackSettingsFieldSet
-          additionalFields={additionalTrackFields}
+          additionalFields={ENHANCER_TRACK_FIELDS}
           config={currEnhancerRegionTracks.current}
           onChange={changeTmpEnhancerRegionTracks}
+        />
+      </div>
+      <h3>DNA Accessibility</h3>
+      <p id="description">
+        DNA Accessibility tracks can be loaded from a remote{' '}
+        <code>
+          <a
+            href="https://docs.higlass.io/data_preparation.html#multivec-files"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            .multivec
+          </a>
+        </code> file. To access a remote file, please enter
+        the URL of the{' '}
+        <a
+          href="https://docs.higlass.io/higlass_server.html"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          HiGlass server
+        </a>{' '}
+        and the track ID. 
+      </p>
+      <div className={classes.trackList}>
+        <TrackSettingsFieldSet
+          additionalFields={{}}
+          config={currEnhancerRegionTracks.current}
+          onChange={changeTmpEnhancerRegionTracks}
+          allowLocalFile={false}
         />
       </div>
       <p>
