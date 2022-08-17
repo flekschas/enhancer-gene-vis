@@ -27,6 +27,8 @@ import {
 } from '../../state';
 import { sampleSelectionState } from '../../state/filter-state';
 import {
+  DnaAccessibilityTrackInfo,
+  dnaAccessibilityTrackState,
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,
   useDnaAccessShowInfos,
@@ -69,6 +71,17 @@ const useStyles = makeStyles((_theme) => ({
     flexGrow: 1,
   },
 }));
+
+const updateViewConfigDnaAccessibilityTrack =
+  (trackInfo: DnaAccessibilityTrackInfo) => (viewConfig: ViewConfig) => {
+    const track = getTrackByUid(
+      viewConfig,
+      'dna-accessibility'
+    ) as RidgePlotTrack;
+    track.server = trackInfo.server;
+    track.tilesetUid = trackInfo.tilesetUid;
+    track.options.name = trackInfo.label;
+  };
 
 const updateViewConfigDnaAccessLabelStyle =
   (labelStyle: RidgePlotTrackLabelStyle) => (viewConfig: ViewConfig) => {
@@ -116,6 +129,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
 
   const setHiglassDnaAccess = useSetRecoilState(higlassDnaAccessState);
 
+  const dnaAccessibilityTrackInfo = useRecoilValue(dnaAccessibilityTrackState);
   const sampleSelection = useRecoilValue(sampleSelectionState);
   const labelStyle = useRecoilValue(dnaAccessLabelStyleState);
   const rowNorm = useRecoilValue(dnaAccessRowNormState);
@@ -151,7 +165,8 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
         updateViewConfigDnaAccessRowNorm(rowNorm),
         updateViewConfigXDomain(...xDomainAbsDb, { force: true }),
         updateViewConfigRowSelection(sampleSelection),
-        updateViewConfigStratification(stratification)
+        updateViewConfigStratification(stratification),
+        updateViewConfigDnaAccessibilityTrack(dnaAccessibilityTrackInfo)
       )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -165,6 +180,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
       sampleSelection,
       rowNorm,
       stratification,
+      dnaAccessibilityTrackInfo,
     ]
   );
 
