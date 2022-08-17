@@ -56,15 +56,14 @@ import {
   DEFAULT_COLOR_MAP_LIGHT,
   GENE_NAME_COLUMN,
 } from '../../constants';
-import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
 import { scaleBand } from '../../utils/scale-band';
 import usePrevious from '../../hooks/use-previous';
 
 import './EnhancerGenesPlot.css';
-import { CombinedTrack } from '../../view-config-types';
 import { BeddbTile, TilesetInfo } from '@higlass/common';
 import { ClassNameMap } from '@material-ui/styles';
 import { dodge } from './beeswarm';
+import { enhancerRegionsTrackState } from '../../state/enhancer-region-state';
 
 type EgPlotData = {
   categoryAggregation: EgPlotCategoryAggregationData;
@@ -153,17 +152,6 @@ const useTooltipStyles = DEFAULT_COLOR_MAP_LIGHT.map((color, i) =>
     },
   }))
 );
-
-const { server, tilesetUid: uuid } = (
-  DEFAULT_VIEW_CONFIG_ENHANCER.views![0].tracks.top![3] as CombinedTrack
-).contents[1];
-
-const fetchTiles = async (tileIds: string[]) => {
-  const response = await fetch(
-    `${server}/tiles/?${tileIds.map((tileId) => `d=${tileId}`).join('&')}`
-  );
-  return response.json() as Promise<{ [key: string]: BeddbTile[] }>;
-};
 
 // TODO: Remove non-null assertion from max_width
 const getMinTileSize = (tilesetInfo: TilesetInfo) =>
@@ -957,6 +945,7 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
   const chromInfo = useChromInfo();
   const showTooltip = useShowTooltip();
 
+  const enhancerTrackConfig = useRecoilValue(enhancerRegionsTrackState);
   const sampleSelection = useRecoilValue(sampleSelectionState);
   const sampleGroupSelectionSizes = useRecoilValue(
     sampleGroupSelectionSizesState
@@ -982,6 +971,36 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
 
   const categories = getCategories(stratification);
   const samples = getSamples(stratification);
+
+  const [server, setServer] = useState<string | null>(null);
+  const [uuid, setUuid] = useState<string | null>(null);
+
+  const fetchTiles = async (tileIds: string[]) => {
+    const response = await fetch(
+      `${server}/tiles/?${tileIds.map((tileId) => `d=${tileId}`).join('&')}`
+    );
+    console.log(
+      `${server}/tiles/?${tileIds.map((tileId) => `d=${tileId}`).join('&')}`
+    );
+    return response.json() as Promise<{ [key: string]: BeddbTile[] }>;
+  };
+
+  // Hook to update data source
+  useEffect(() => {
+    setServer(enhancerTrackConfig.server);
+    setUuid(enhancerTrackConfig.tilesetUid);
+  }, [enhancerTrackConfig]);
+
+  // Hook to update tileset info when data source updates
+  useEffect(() => {
+    (async () => {
+      const response = await fetch(`${server}/tileset_info/?d=${uuid}`);
+      const results = await response.json();
+
+      // TODO: Remove non-null assertions
+      if (results[uuid!]) setTilesetInfo(results[uuid!]);
+    })();
+  }, [server, uuid]);
 
   useEffect(() => {
     // Determine highest resolution tiles
@@ -1160,21 +1179,6 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
     // when `relPosition` updates
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tile, sampleGroupSelectionSizes, sampleSelection]
-  );
-
-  // Initialization
-  useEffect(
-    () => {
-      (async () => {
-        const response = await fetch(`${server}/tileset_info/?d=${uuid}`);
-        const results = await response.json();
-
-        // TODO: Remove non-null assertions
-        if (results[uuid!]) setTilesetInfo(results[uuid!]);
-      })();
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
   );
 
   // Rendering
