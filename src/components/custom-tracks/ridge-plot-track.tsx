@@ -442,8 +442,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(
         this.options.showRowLabels || RidgePlotTrackLabelStyle.INDICATOR;
 
       if (
-        oldMarkResolution !== this.markResolution ||
-        oldRowSelections !== this.rowSelections
+        this.tilesetInfo &&
+        (oldMarkResolution !== this.markResolution ||
+          oldRowSelections !== this.rowSelections)
       ) {
         this.updateRowSelectionIndices();
         this.updateTiles();
@@ -500,8 +501,9 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       // TODO: Precompute and save as another property on object? This shouldn't change
       // based on filter state, only based on the underlying tileset.
       const indexMap: { [key: string]: number } = {};
-      this.tilesetInfo.row_infos.map((value: RowInfo, index: number) => {
-        indexMap[this.rowIdToCategory(value.id)] = index;
+      this.tilesetInfo.row_infos.map((rowInfo: RowInfo, index: number) => {
+        const value = typeof rowInfo === 'string' ? rowInfo : rowInfo.id;
+        indexMap[this.rowIdToCategory(value)] = index;
       });
       this.rowSelectionIndices = this.rowSelections.map(
         (rowId) => indexMap[rowId]
@@ -623,6 +625,8 @@ const createRidgePlotTrack = function createRidgePlotTrack(
       for (let i = 0; i <= this.markResolution; i++) {
         tile.tileData.binXPos[i] = tileX + binSizeBp * i + binSizeBpHalf;
       }
+
+      if (!this.rowSelectionIndices) this.updateRowSelectionIndices();
 
       // 1. Coarsify the dense matrix according to `this.markResolution`
       tile.tileData.valuesByRow = Array(numRows)

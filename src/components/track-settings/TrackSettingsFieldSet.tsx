@@ -85,11 +85,13 @@ type TrackConfigProps<T> = {
   config: T;
   onChange: (config: T) => void;
   additionalFields: TrackConfigCustomFields;
+  allowLocalFile?: boolean;
 };
 export function TrackSettingsFieldSet<T extends TrackSettingsState>({
   config,
   onChange,
   additionalFields,
+  allowLocalFile = true,
 }: TrackConfigProps<T>) {
   const [state, setState] = useState(config);
 
@@ -187,23 +189,29 @@ export function TrackSettingsFieldSet<T extends TrackSettingsState>({
             </Tooltip>
           </Grid>
         </Grid>
-        <Grid item>
-          <Typography className={classes.separator}>or</Typography>
-        </Grid>
-        <Grid item>
-          <Tooltip
-            classes={isRemote ? classesTooltipVisible : classesTooltipHidden}
-            title="Selecting a file will clear the server and tileset ID!"
-            placement="top"
-            arrow
-          >
-            <FileInput
-              file={state.file}
-              onChange={fileChangeHandler}
-              onClear={fileClearHandler}
-            />
-          </Tooltip>
-        </Grid>
+        {allowLocalFile && (
+          <>
+            <Grid item>
+              <Typography className={classes.separator}>or</Typography>
+            </Grid>
+            <Grid item>
+              <Tooltip
+                classes={
+                  isRemote ? classesTooltipVisible : classesTooltipHidden
+                }
+                title="Selecting a file will clear the server and tileset ID!"
+                placement="top"
+                arrow
+              >
+                <FileInput
+                  file={state.file}
+                  onChange={fileChangeHandler}
+                  onClear={fileClearHandler}
+                />
+              </Tooltip>
+            </Grid>
+          </>
+        )}
       </Grid>
       <Grid alignItems="center" container>
         <TextField

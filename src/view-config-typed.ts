@@ -272,7 +272,11 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
   ],
 };
 
-export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
+export function getTrackByUid(
+  viewConfig: ViewConfig,
+  uid: string,
+  byPrefix: boolean = false
+): Track {
   const topTracks = viewConfig.views[0].tracks.top;
   if (!topTracks) {
     throw new Error('No tracks found in top track layout');
@@ -285,7 +289,9 @@ export function getTrackByUid(viewConfig: ViewConfig, uid: string): Track {
       return track;
     })
     .flat();
-  const trackCandidate = topTracksFlattened.find((track) => track.uid === uid);
+  const trackCandidate = byPrefix
+    ? topTracksFlattened.find((track) => track.uid.startsWith(uid))
+    : topTracksFlattened.find((track) => track.uid === uid);
   if (!trackCandidate) {
     throw new Error(`No track found with uid: ${uid}`);
   }

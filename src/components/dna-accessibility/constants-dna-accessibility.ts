@@ -10,6 +10,7 @@ import { createCategoryMap } from './dna-accessibility-fns';
 export const DEFAULT_DNA_ACCESSIBILITY_ROW_CATEGORIES: CategoryNameToDnaAccessibilityCategoryMap =
   createCategoryMap(DEFAULT_STRATIFICATION);
 
+export const DEFAULT_DNA_ACCESSIBILITY_TRACK_UID = 'Uz1_tEABQf-uzktblvBKSQ';
 export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY: ViewConfig = {
   zoomFixed: false,
   editable: false,
@@ -112,7 +113,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY: ViewConfig = {
             // server: 'http://localhost:9876/api/v1',
             // tilesetUid: 'test',
             server: 'https://resgen.io/api/v1',
-            tilesetUid: 'Uz1_tEABQf-uzktblvBKSQ',
+            tilesetUid: DEFAULT_DNA_ACCESSIBILITY_TRACK_UID,
             // height: 403,
             height: 131 * (24 - 6) + 6,
             options: {
