@@ -76,18 +76,25 @@ const updateViewConfigDnaAccessibilityTrack =
   (trackInfo: DnaAccessibilityTrackInfo) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
-      'dna-accessibility'
+      'dna-accessibility',
+      /** byPrefix */ true
     ) as RidgePlotTrack;
+    const overlayInclusionArr = viewConfig.views[0].overlays[0].includes;
+    const currUidIndex = overlayInclusionArr.indexOf(track.uid);
     track.server = trackInfo.server;
     track.tilesetUid = trackInfo.tilesetUid;
     track.options.name = trackInfo.label;
+    track.uid = `dna-accessibility-${trackInfo.tilesetUid}`;
+    overlayInclusionArr.splice(currUidIndex, 1, track.uid);
+    return viewConfig;
   };
 
 const updateViewConfigDnaAccessLabelStyle =
   (labelStyle: RidgePlotTrackLabelStyle) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
-      'dna-accessibility'
+      'dna-accessibility',
+      /** byPrefix */ true
     ) as RidgePlotTrack;
     track.options.showRowLabels = labelStyle;
     return viewConfig;
@@ -97,7 +104,8 @@ const updateViewConfigDnaAccessRowNorm =
   (rowNorm: boolean) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
-      'dna-accessibility'
+      'dna-accessibility',
+      /** byPrefix */ true
     ) as RidgePlotTrack;
     track.options.rowNormalization = rowNorm;
     return viewConfig;
@@ -107,7 +115,8 @@ const updateViewConfigRowSelection =
   (selection: string[]) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
-      'dna-accessibility'
+      'dna-accessibility',
+      /** byPrefix */ true
     ) as RidgePlotTrack;
     track.options.rowSelections = selection;
     return viewConfig;
@@ -117,7 +126,8 @@ const updateViewConfigStratification =
   (stratification: Stratification) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
-      'dna-accessibility'
+      'dna-accessibility',
+      /** byPrefix */ true
     ) as RidgePlotTrack;
     const categoryMap = createCategoryMap(stratification);
     track.options.rowCategories = categoryMap;
@@ -158,6 +168,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
   const viewConfig = useMemo(
     () =>
       pipe(
+        updateViewConfigDnaAccessibilityTrack(dnaAccessibilityTrackInfo),
         updateViewConfigVariantTracks(variantTracks),
         updateViewConfigFocusRegion(focusRegionAbs, [2]),
         updateViewConfigVariantYScale(variantYScale),
@@ -165,8 +176,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
         updateViewConfigDnaAccessRowNorm(rowNorm),
         updateViewConfigXDomain(...xDomainAbsDb, { force: true }),
         updateViewConfigRowSelection(sampleSelection),
-        updateViewConfigStratification(stratification),
-        updateViewConfigDnaAccessibilityTrack(dnaAccessibilityTrackInfo)
+        updateViewConfigStratification(stratification)
       )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -198,7 +208,6 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
 
   // On every render
   const classes = useStyles();
-
   return (
     <Grid container direction="column" className={classes.root}>
       <TitleBar

@@ -26,6 +26,7 @@ import { useRecoilState } from 'recoil';
 import { stratificationState } from '../../state/stratification-state';
 import { Stratification } from '../../view-config-types';
 import FileInput from '../FileInput';
+import { DnaAccessibilityTrackInfo, useDnaAccessibilityTrack } from '../../state/dna-accessibility-state';
 
 const enum BeddbFileField {
   ENHANCER_START_FIELD = 'enhancerStartField',
@@ -118,6 +119,13 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   const enhancerRegionTrackServer = useRef<LocalBedDataServer | null>(null);
   const currEnhancerRegionTracks = useRef(enhancerRegionTrack);
 
+  const [dnaAccessibilityTrack, setDnaAccessibilityTrack] =
+    useDnaAccessibilityTrack();
+  const [tmpDnaAccessibilityTrack, setTmpDnaAccessibilityTrack] = useState(() =>
+    deepClone(dnaAccessibilityTrack)
+  );
+  const currDnaAccessibilityTrack = useRef(dnaAccessibilityTrack);
+
   const [stratificationConfig, setStratificationConfig] = useState<File>();
   const [stratification, setStratification] =
     useRecoilState(stratificationState);
@@ -127,39 +135,18 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   function saveHandler() {
     saveNewStratification();
     const newEnhancerRegionTrack = deepClone(tmpEnhancerRegionTrack);
-
-    // TODO: Enable below section to handle local file uploads
-    // Destroy old server
-    // enhancerRegionTrackServer.current?.destroy();
-
-    // if (newEnhancerRegionTrack.file) {
-    //   if (chromInfo === null || typeof chromInfo === 'boolean') {
-    //     throw new Error('No chrom info!');
-    //   }
-    //   const tilesetInfo = {
-    //     ...LOCAL_BED_TILESET_INFO_HG19,
-    //     name: newEnhancerRegionTrack.file,
-    //   };
-    //   console.log(tilesetInfo);
-    //   enhancerRegionTrackServer.current = createLocalBedDataServer(
-    //     newEnhancerRegionTrack.file,
-    //     newEnhancerRegionTrack.file.name,
-    //     chromInfo,
-    //     tilesetInfo,
-    //     {
-    //       header: true,
-    //       columnImportance: newEnhancerRegionTrack.importanceField,
-    //     }
-    //   );
-    //   console.log(enhancerRegionTrackServer);
-    // }
-    // console.log(newEnhancerRegionTrack);
     setEnhancerRegionTrack(newEnhancerRegionTrack);
+    const newDnaAccessibilityTrack = deepClone(tmpDnaAccessibilityTrack);
+    setDnaAccessibilityTrack(newDnaAccessibilityTrack);
   }
 
   useEffect(() => {
     currEnhancerRegionTracks.current = enhancerRegionTrack;
   }, [enhancerRegionTrack]);
+
+  useEffect(() => {
+    currDnaAccessibilityTrack.current = dnaAccessibilityTrack;
+  }, [dnaAccessibilityTrack]);
 
   const changeTmpEnhancerRegionTracks = useCallback(
     (newTrackConfig: BeddbFile) => {
@@ -169,6 +156,30 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
     },
     []
   );
+
+  const changeTmpDnaAccessibilityTrack = useCallback(
+    (newTrackConfig: TrackSettingsState) => {
+      const newDnaAccessibilityTrack = multivecToDnaAccessibilityTrackInfo(
+        newTrackConfig
+      );
+      if (!newDnaAccessibilityTrack) return;
+      setTmpDnaAccessibilityTrack(newDnaAccessibilityTrack);
+      setChanged(true);
+    },
+    []
+  );
+
+  function multivecToDnaAccessibilityTrackInfo(
+    newTrackConfig: TrackSettingsState
+  ): DnaAccessibilityTrackInfo | null {
+    const {server, tilesetUid, label} = newTrackConfig;
+    if (!server || !tilesetUid || !label) return null;
+    const track = deepClone(dnaAccessibilityTrack)
+    track.server = server;
+    track.tilesetUid = tilesetUid;
+    track.label = label;
+    return track;
+  }
 
   function beddbToEnhancerGeneTrackInfo(beddbFile: BeddbFile) {
     const newEgTrack = deepClone(enhancerRegionTrack);
@@ -260,8 +271,8 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
           >
             .multivec
           </a>
-        </code> file. To access a remote file, please enter
-        the URL of the{' '}
+        </code>{' '}
+        file. To access a remote file, please enter the URL of the{' '}
         <a
           href="https://docs.higlass.io/higlass_server.html"
           target="_blank"
@@ -269,13 +280,13 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
         >
           HiGlass server
         </a>{' '}
-        and the track ID. 
+        and the track ID.
       </p>
       <div className={classes.trackList}>
         <TrackSettingsFieldSet
           additionalFields={{}}
-          config={currEnhancerRegionTracks.current}
-          onChange={changeTmpEnhancerRegionTracks}
+          config={currDnaAccessibilityTrack.current}
+          onChange={changeTmpDnaAccessibilityTrack}
           allowLocalFile={false}
         />
       </div>
