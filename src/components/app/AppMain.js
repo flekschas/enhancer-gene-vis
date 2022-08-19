@@ -21,6 +21,7 @@ import {
   useVariantYScaleSyncher,
 } from '../../state';
 import {
+  useDnaAccessibilityTrackSyncher,
   useDnaAccessLabelStyleSyncher,
   useDnaAccessRowNormSyncher,
   useDnaAccessShowInfosSyncher,
@@ -109,13 +110,14 @@ const AppMain = React.memo(function AppMain() {
 
   // Initialize query strings
   useVariantTracksSyncher();
-  useEnhancerRegionsTrackSyncher();
   useShowWelcomeSyncher();
   useFocusGeneSyncher();
   useFocusRegionSyncher();
+  useDnaAccessibilityTrackSyncher();
   useDnaAccessLabelStyleSyncher();
   useDnaAccessRowNormSyncher();
   useDnaAccessShowInfosSyncher();
+  useEnhancerRegionsTrackSyncher();
   useEnhancerRegionsShowInfosSyncher();
   useEnhancerRegionsHideUnfocusedSyncher();
   useEnhancerRegionsColorEncodingSyncher();
