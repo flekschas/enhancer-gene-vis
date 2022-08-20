@@ -15,6 +15,7 @@ import {
   useRecoilQueryString,
   useRecoilQueryStringSyncher,
 } from '../utils/query-string';
+import { TrackUidPrefix } from '../utils/view-config';
 import {
   OneDimensionalArcTrack,
   OpacityEncoding,
@@ -70,7 +71,7 @@ export const DEFAULT_ENHANCER_GENE_INFO: EnhancerGeneTrackInfo = {
 };
 export const DEFAULT_ENHANCER_GENE_ARC_TRACK: OneDimensionalArcTrack = {
   type: TrackType.ARCS_1D,
-  uid: 'arcs',
+  uid: TrackUidPrefix.ARCS,
   server: 'https://resgen.io/api/v1',
   tilesetUid: EG_TILE_UID,
   height: 72,
@@ -100,7 +101,7 @@ export const DEFAULT_ENHANCER_GENE_STACKED_BAR_TRACK: StackedBarTrack = {
   // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
   tilesetUid: EG_TILE_UID,
   height: 72,
-  uid: 'stacked-bars',
+  uid: TrackUidPrefix.STACKED_BAR,
   options: {
     binSize: 4,
     axisAlign: 'right',

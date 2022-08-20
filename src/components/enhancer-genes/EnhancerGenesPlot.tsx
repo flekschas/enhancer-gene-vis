@@ -979,9 +979,6 @@ const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
     const response = await fetch(
       `${server}/tiles/?${tileIds.map((tileId) => `d=${tileId}`).join('&')}`
     );
-    console.log(
-      `${server}/tiles/?${tileIds.map((tileId) => `d=${tileId}`).join('&')}`
-    );
     return response.json() as Promise<{ [key: string]: BeddbTile[] }>;
   };
 

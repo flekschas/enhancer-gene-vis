@@ -1,4 +1,5 @@
 import { DEFAULT_STRATIFICATION } from '../../state/stratification-state';
+import { TrackOverlayUid, TrackUidPrefix } from '../../utils/view-config';
 import {
   CategoryNameToDnaAccessibilityCategoryMap,
   RidgePlotTrackLabelStyle,
@@ -108,7 +109,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY: ViewConfig = {
             ],
           },
           {
-            uid: 'dna-accessibility',
+            uid: TrackUidPrefix.DNA_ACCESSIBILITY,
             type: TrackType.RIDGE_PLOT,
             // server: 'http://localhost:9876/api/v1',
             // tilesetUid: 'test',
@@ -146,7 +147,7 @@ export const DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY: ViewConfig = {
       },
       overlays: [
         {
-          uid: 'region-focus',
+          uid: TrackOverlayUid.REGION_FOCUS,
           includes: ['genes', 'variants', 'dna-accessibility'],
           options: {
             extent: [],
