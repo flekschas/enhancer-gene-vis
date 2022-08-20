@@ -43,9 +43,11 @@ declare module '@higlass/common' {
     max_width?: number;
     bins_per_dimension?: number;
   };
-  type RowInfo = string | {
-    id: string;
-  };
+  type RowInfo =
+    | string
+    | {
+        id: string;
+      };
   type TileData = {
     dense: number[];
     shape: number[];
