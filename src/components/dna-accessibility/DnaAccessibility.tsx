@@ -52,7 +52,6 @@ import {
   RidgePlotTrack,
   ViewConfig,
 } from '../../view-config-types';
-import { getTrackByUid } from '../../view-config-typed';
 import {
   Stratification,
   stratificationState,
@@ -63,6 +62,7 @@ import {
   replaceUidInOverlayIncludes,
   TrackOverlayUid,
   TrackUidPrefix,
+  getTrackByUid,
 } from '../../utils/view-config';
 
 const useStyles = makeStyles((_theme) => ({

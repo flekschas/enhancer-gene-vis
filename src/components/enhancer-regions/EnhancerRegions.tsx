@@ -74,15 +74,13 @@ import {
 } from '../../view-config';
 
 import { IGNORED_FOCUS_ELEMENTS } from '../../constants';
-import {
-  DEFAULT_VIEW_CONFIG_ENHANCER,
-  getTrackByUid,
-} from '../../view-config-typed';
+import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
 import {
   getOverlayByUid,
   replaceUidInOverlayIncludes,
   TrackOverlayUid,
   TrackUidPrefix,
+  getTrackByUid,
 } from '../../utils/view-config';
 
 import { chrRangePosEncoder } from '../../utils';
