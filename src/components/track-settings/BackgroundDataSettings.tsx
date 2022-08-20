@@ -26,7 +26,10 @@ import { useRecoilState } from 'recoil';
 import { stratificationState } from '../../state/stratification-state';
 import { Stratification } from '../../view-config-types';
 import FileInput from '../FileInput';
-import { DnaAccessibilityTrackInfo, useDnaAccessibilityTrack } from '../../state/dna-accessibility-state';
+import {
+  DnaAccessibilityTrackInfo,
+  useDnaAccessibilityTrack,
+} from '../../state/dna-accessibility-state';
 
 const enum BeddbFileField {
   ENHANCER_START_FIELD = 'enhancerStartField',
@@ -138,6 +141,7 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
     setEnhancerRegionTrack(newEnhancerRegionTrack);
     const newDnaAccessibilityTrack = deepClone(tmpDnaAccessibilityTrack);
     setDnaAccessibilityTrack(newDnaAccessibilityTrack);
+    closeHandler();
   }
 
   useEffect(() => {
@@ -159,9 +163,8 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
 
   const changeTmpDnaAccessibilityTrack = useCallback(
     (newTrackConfig: TrackSettingsState) => {
-      const newDnaAccessibilityTrack = multivecToDnaAccessibilityTrackInfo(
-        newTrackConfig
-      );
+      const newDnaAccessibilityTrack =
+        multivecToDnaAccessibilityTrackInfo(newTrackConfig);
       if (!newDnaAccessibilityTrack) return;
       setTmpDnaAccessibilityTrack(newDnaAccessibilityTrack);
       setChanged(true);
@@ -172,9 +175,9 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   function multivecToDnaAccessibilityTrackInfo(
     newTrackConfig: TrackSettingsState
   ): DnaAccessibilityTrackInfo | null {
-    const {server, tilesetUid, label} = newTrackConfig;
+    const { server, tilesetUid, label } = newTrackConfig;
     if (!server || !tilesetUid || !label) return null;
-    const track = deepClone(dnaAccessibilityTrack)
+    const track = deepClone(dnaAccessibilityTrack);
     track.server = server;
     track.tilesetUid = tilesetUid;
     track.label = label;
