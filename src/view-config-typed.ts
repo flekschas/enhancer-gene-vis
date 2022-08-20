@@ -14,6 +14,7 @@ import {
   StackedBarTrack,
   StratifiedBedTrack,
 } from './view-config-types';
+import { TrackOverlayUid, TrackUidPrefix } from './utils/view-config';
 
 /**
  * Should only contain UIDs for "constant" tracks such as combined type tracks.
@@ -161,7 +162,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
             // tilesetUid: 'AaJojHeORzKyiag1pSlAag', // bed
             tilesetUid: EG_TILE_UID,
             height: 413,
-            uid: 'indicatorByCellTypes',
+            uid: TrackUidPrefix.STRATIFIED_BED,
             options: {
               axisAlign: 'right',
               legendAlign: 'left',
@@ -196,12 +197,12 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
       },
       overlays: [
         {
-          uid: 'region-focus',
+          uid: TrackOverlayUid.REGION_FOCUS,
           includes: [
             'genes-tss-viewport',
             'variants',
             'arcs-stacked-bars',
-            'indicatorByCellTypes',
+            TrackUidPrefix.STRATIFIED_BED,
           ],
           options: {
             extent: [[1680373143 + 81046453, 1680373143 + 81046454]],
@@ -229,13 +230,13 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
           },
         },
         {
-          uid: 'tss-overlays',
+          uid: TrackOverlayUid.TSS,
           includes: [
             'chroms',
             'genes-tss-viewport',
             'variants',
             'arcs-stacked-bars',
-            'indicatorByCellTypes',
+            TrackUidPrefix.STRATIFIED_BED,
           ],
           options: {
             extent: [],
@@ -254,7 +255,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
         {
           uid: 'tss-overlays-meta',
           type: 'annotation-overlay',
-          overlaysTrack: 'tss-overlays',
+          overlaysTrack: TrackOverlayUid.TSS,
           options: {
             annotationTracks: ['tss'],
           },
@@ -275,7 +276,7 @@ export const DEFAULT_VIEW_CONFIG_ENHANCER: ViewConfig = {
 export function getTrackByUid(
   viewConfig: ViewConfig,
   uid: string,
-  byPrefix: boolean = false
+  byPrefix: boolean = true
 ): Track {
   const topTracks = viewConfig.views[0].tracks.top;
   if (!topTracks) {

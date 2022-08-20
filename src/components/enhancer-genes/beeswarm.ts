@@ -17,8 +17,6 @@ export function dodge<T extends ScoreProperty>(
   radius: number,
   yScale: Function
 ) {
-  console.log(data);
-  // console.log(data);
   const radius2 = radius ** 2;
   const circles = data
     .map(

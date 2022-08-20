@@ -78,6 +78,12 @@ import {
   DEFAULT_VIEW_CONFIG_ENHANCER,
   getTrackByUid,
 } from '../../view-config-typed';
+import {
+  getOverlayByUid,
+  replaceUidInOverlayIncludes,
+  TrackOverlayUid,
+  TrackUidPrefix,
+} from '../../utils/view-config';
 
 import { chrRangePosEncoder } from '../../utils';
 
@@ -161,15 +167,19 @@ function updateViewConfigEnhancerRegionTracks(
 ) {
   return (viewConfig: ViewConfig) => {
     getUpdatedEnhancerRegionArcTrack(
-      getTrackByUid(viewConfig, 'arcs') as OneDimensionalArcTrack,
+      getTrackByUid(viewConfig, TrackUidPrefix.ARCS) as OneDimensionalArcTrack,
       trackConfig
     );
     getUpdatedEnhancerRegionBarTrack(
-      getTrackByUid(viewConfig, 'stacked-bars') as StackedBarTrack,
+      getTrackByUid(viewConfig, TrackUidPrefix.STACKED_BAR) as StackedBarTrack,
       trackConfig
     );
     getUpdatedEnhancerStratifiedBedTrack(
-      getTrackByUid(viewConfig, 'indicatorByCellTypes') as StratifiedBedTrack,
+      viewConfig,
+      getTrackByUid(
+        viewConfig,
+        TrackUidPrefix.STRATIFIED_BED
+      ) as StratifiedBedTrack,
       trackConfig
     );
     return viewConfig;
@@ -182,7 +192,7 @@ function getUpdatedEnhancerRegionArcTrack(
 ) {
   track.server = trackConfig.server;
   track.tilesetUid = trackConfig.tilesetUid;
-  track.uid = `arcs-${trackConfig.tilesetUid}`;
+  track.uid = `${TrackUidPrefix.ARCS}-${trackConfig.tilesetUid}`;
   track.options.startField = trackConfig.enhancerStartField;
   track.options.endField = trackConfig.tssStartField;
   return track;
@@ -194,7 +204,7 @@ function getUpdatedEnhancerRegionBarTrack(
 ) {
   track.server = trackConfig.server;
   track.tilesetUid = trackConfig.tilesetUid;
-  // track.uid = `stacked-bars-${trackConfig.tilesetUid}`;
+  track.uid = `${TrackUidPrefix.STACKED_BAR}-${trackConfig.tilesetUid}`;
   track.options.offsetField = trackConfig.offsetField;
   track.options.startField = trackConfig.tssStartField;
   track.options.endField = trackConfig.tssEndField;
@@ -203,13 +213,24 @@ function getUpdatedEnhancerRegionBarTrack(
 }
 
 function getUpdatedEnhancerStratifiedBedTrack(
+  viewConfig: ViewConfig,
   track: StratifiedBedTrack,
   trackConfig: EnhancerGeneTrackInfo
 ) {
+  const regionFocusOverlay = getOverlayByUid(
+    viewConfig,
+    TrackOverlayUid.REGION_FOCUS
+  );
+  const tssOverlay = getOverlayByUid(viewConfig, TrackOverlayUid.TSS);
+  const oldUid = track.uid;
+  const newUid = `${TrackUidPrefix.STRATIFIED_BED}-${trackConfig.tilesetUid}`;
   track.server = trackConfig.server;
   track.tilesetUid = trackConfig.tilesetUid;
+  track.uid = newUid;
   track.options.geneField = trackConfig.geneNameField;
   track.options.importanceField = trackConfig.importanceField;
+  replaceUidInOverlayIncludes(regionFocusOverlay, oldUid, newUid);
+  replaceUidInOverlayIncludes(tssOverlay, oldUid, newUid);
   return track;
 }
 
@@ -217,7 +238,7 @@ const updateViewConfigFocusStyle =
   (hideUnfocused: boolean) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
-      'indicatorByCellTypes'
+      TrackUidPrefix.STRATIFIED_BED
     ) as StratifiedBedTrack;
     track.options.focusStyle = hideUnfocused
       ? FocusStyle.FILTERING
@@ -230,7 +251,7 @@ const updateViewConfigColorEncoding =
   (coloring: OpacityEncoding) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
-      'indicatorByCellTypes'
+      TrackUidPrefix.STRATIFIED_BED
     ) as StratifiedBedTrack;
     track.options.opacityEncoding = coloring;
     return viewConfig;
@@ -241,7 +262,7 @@ const updateViewConfigFilter =
   (viewConfig: ViewConfig) => {
     const arcTrack = getTrackByUid(
       viewConfig,
-      'arcs'
+      TrackUidPrefix.ARCS
     ) as OneDimensionalArcTrack;
     arcTrack.options.filter = {
       set: selectedSamples,
@@ -249,7 +270,7 @@ const updateViewConfigFilter =
     };
     const barTrack = getTrackByUid(
       viewConfig,
-      'stacked-bars'
+      TrackUidPrefix.STACKED_BAR
     ) as StackedBarTrack;
     barTrack.options.filter = {
       set: selectedSamples,
@@ -257,7 +278,7 @@ const updateViewConfigFilter =
     };
     const stratifiedBedTrack = getTrackByUid(
       viewConfig,
-      'indicatorByCellTypes'
+      TrackUidPrefix.STRATIFIED_BED
     ) as StratifiedBedTrack;
     stratifiedBedTrack.options.filter = {
       set: selectedSamples,
@@ -270,7 +291,7 @@ const updateViewConfigMatrixHeight =
   (numSamples: number) => (viewConfig: ViewConfig) => {
     const track = getTrackByUid(
       viewConfig,
-      'indicatorByCellTypes'
+      TrackUidPrefix.STRATIFIED_BED
     ) as StratifiedBedTrack;
     // TODO: come back to this number -- is it sufficient?
     track.height = numSamples * track.options.markHeight + 14;
@@ -281,7 +302,7 @@ const updateViewConfigArcTrackOpacity =
   (opacity: number) => (viewConfig: ViewConfig) => {
     const arcTrack = getTrackByUid(
       viewConfig,
-      'arcs'
+      TrackUidPrefix.ARCS
     ) as OneDimensionalArcTrack;
     arcTrack.options.strokeOpacity = opacity;
     return viewConfig;
@@ -291,13 +312,13 @@ const updateViewConfigStratification =
   (stratification: Stratification) => (viewConfig: ViewConfig) => {
     const stratifiedTrack = getTrackByUid(
       viewConfig,
-      'indicatorByCellTypes'
+      TrackUidPrefix.STRATIFIED_BED
     ) as StratifiedBedTrack;
     stratifiedTrack.options.stratification = stratification;
 
     const stackedBarTrack = getTrackByUid(
       viewConfig,
-      'stacked-bars'
+      TrackUidPrefix.STACKED_BAR
     ) as StackedBarTrack;
     stackedBarTrack.options.stratification = stratification;
     return viewConfig;
