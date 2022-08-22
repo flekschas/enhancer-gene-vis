@@ -3,11 +3,8 @@ import yaml from 'js-yaml';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
-import createLocalBedDataServer, {
-  LocalBedDataServer,
-} from '../../local-data-handlers/local-bed-data-server';
+import { LocalBedDataServer } from '../../local-data-handlers/local-bed-data-server';
 import {
-  EnhancerGeneTrackInfo,
   ENHANCER_START_COLUMN,
   TSS_CHROM_COLUMN,
   TSS_END_COLUMN,
@@ -19,7 +16,7 @@ import {
   TrackSettingsFieldSet,
   TrackSettingsState,
 } from './TrackSettingsFieldSet';
-import { ABC_SCORE_COLUMN, LOCAL_BED_TILESET_INFO_HG19 } from '../../constants';
+import { ABC_SCORE_COLUMN } from '../../constants';
 import { deepClone } from '@flekschas/utils';
 import { useChromInfo } from '../../ChromInfoProvider';
 import { useRecoilState } from 'recoil';
@@ -293,9 +290,18 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
           allowLocalFile={false}
         />
       </div>
+      <h3>Cell Type Stratification</h3>
       <p>
         Upload a cell stratification file to categorize cell types. YAML files
-        are currently accepted.
+        are currently accepted. Please see{' '}
+        <a
+          href="https://gist.github.com/riyavsinha/720d22d18e879884eb7f519fec45c736"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          this example
+        </a>{' '}
+        for how to format the file.
       </p>
       <FileInput
         file={stratificationConfig}
