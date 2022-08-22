@@ -5,27 +5,44 @@
   },
   "extends": [
     "eslint:recommended",
-    "airbnb/base",
+    "airbnb",
+    "airbnb-typescript",
     "airbnb/hooks",
     "prettier",
-    "prettier/react",
     "plugin:prettier/recommended",
-    "react-app",
+    "react-app"
   ],
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 6
+    "ecmaVersion": 6,
+    "project": "./tsconfig.json"
   },
   "plugins": ["prettier"],
   "rules": {
-    "prettier/prettier": "error",
+    "prettier/prettier": "warn",
     "class-methods-use-this": 0,
     "no-bitwise": 0,
     "no-plusplus": 0,
     "no-restricted-syntax": 0,
     "no-mixed-operators": 0,
-    "no-multi-spaces": ["error", { "ignoreEOLComments": true }],
-    "no-param-reassign": ["error", { "props": false }],
-    "no-underscore-dangle": 0,
+    "no-multi-spaces": [
+      "error",
+      {
+        "ignoreEOLComments": true
+      }
+    ],
+    "no-param-reassign": [
+      "error",
+      {
+        "props": false
+      }
+    ],
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "no-underscore-dangle": 0
   }
 }
