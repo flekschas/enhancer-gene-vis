@@ -470,7 +470,7 @@ const AppSidebar = React.memo(function AppSidebar() {
                 startIcon={<SettingsIcon />}
                 onClick={openEnhancerRegionsSettings}
               >
-                Edit Enhancer Regions
+                Edit Data Tracks
               </Button>
             </Box>
             <Divider />
