@@ -19,6 +19,7 @@
   },
   "plugins": ["prettier"],
   "rules": {
+    "react/jsx-props-no-spreading": "off",
     "prettier/prettier": "warn",
     "class-methods-use-this": 0,
     "no-bitwise": 0,
