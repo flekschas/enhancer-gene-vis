@@ -8,7 +8,7 @@ import AppInitializing from './AppInitializing';
 import AppError from './AppError';
 import ChromInfoProvider from '../../ChromInfoProvider';
 import AppMain from './AppMain';
-import withEither from '../../utils/with-either';
+import withEither from '../../with-either';
 
 import './App.css';
 
