@@ -3,15 +3,15 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import 'higlass-arcs';
 
-import App from './components/app/App';
+import App from './App';
 import * as serviceWorker from './serviceWorker';
 
-import createAnnotationOverlayMetaTrack from './components/custom-tracks/annotation-overlay-meta-track';
-import createRidgePlotTrack from './components/custom-tracks/ridge-plot-track';
-import createStratifiedBedTrack from './components/custom-tracks/stratified-bed-track';
-import createSnpTrack from './components/custom-tracks/snp-track';
-import createStackedBarTrack from './components/custom-tracks/stacked-bar-track';
-import createTssTrack from './components/custom-tracks/tss-track';
+import createAnnotationOverlayMetaTrack from './annotation-overlay-meta-track';
+import createRidgePlotTrack from './ridge-plot-track';
+import createStratifiedBedTrack from './stratified-bed-track';
+import createSnpTrack from './snp-track';
+import createStackedBarTrack from './stacked-bar-track';
+import createTssTrack from './tss-track';
 
 import createLocalBedDataFetcher from './local-bed-data-fetcher';
 

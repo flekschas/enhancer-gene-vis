@@ -1,4 +1,5 @@
 import { identity } from '@flekschas/utils';
+import queryString from 'query-string';
 
 export const contains = (a, b) => a[0] <= b[0] && a[1] >= b[1];
 
@@ -49,6 +50,33 @@ export const download = (filename, stringOrBlob) => {
   }
 };
 
+export const getQueryStringValue = (key, decoder = identity) =>
+  decoder(queryString.parse(window.location.search)[key]);
+
+export const setQueryStringValue = (key, value, encoder = identity) => {
+  const values = queryString.parse(window.location.search);
+  const newQsValue = queryString.stringify(
+    {
+      ...values,
+      [key]: encoder(value),
+    },
+    { strict: false }
+  );
+  const url = `${window.location.origin}${window.location.pathname}?${newQsValue}`;
+  window.history.pushState({ path: url }, '', url);
+};
+
+export const toAbsPosition = (position, chromInfo) => {
+  let absPosition;
+  if (position.indexOf && position.indexOf(':') >= 0) {
+    const [chrom, pos] = position.split(':');
+    absPosition = chromInfo.chrPositions[chrom].pos + +pos;
+  } else {
+    absPosition = +position;
+  }
+  return absPosition;
+};
+
 export const toFixed = (number, decimals, forced) => {
   let string = number.toFixed(decimals);
   if (!forced) {
@@ -62,11 +90,114 @@ export const toFixed = (number, decimals, forced) => {
   return string;
 };
 
+export const scaleBand = () => {
+  let domain = [];
+  let fixedBandwidth = null;
+  let bandwidth = 1;
+  let range = [0, 1];
+  let rangeSize = range[1] - range[0];
+  let paddingInner = [];
+  // If `true` the padding will begin before the first bar!
+  let paddingInnerZeroBased = false;
+  let totalWidth = 0;
+
+  const sum = (a, b) => a + b;
+  const getBandwidth = () => fixedBandwidth || bandwidth;
+
+  const update = () => {
+    rangeSize = range[1] - range[0];
+
+    const totalPaddingInner = paddingInner.reduce(sum, 0);
+    bandwidth = (rangeSize - totalPaddingInner) / domain.length;
+    totalWidth = totalPaddingInner + domain.length * getBandwidth();
+  };
+
+  const scale = (v) => {
+    const idx = domain.indexOf(v);
+
+    if (idx === -1) return undefined;
+
+    return (
+      idx * getBandwidth() +
+      paddingInner.slice(0, idx + paddingInnerZeroBased).reduce(sum, 0)
+    );
+  };
+
+  scale.domain = (newDomain) => {
+    if (newDomain) {
+      domain = [...newDomain];
+      update();
+      return scale;
+    }
+
+    return domain;
+  };
+
+  scale.range = (newRange) => {
+    if (newRange) {
+      range = [...newRange];
+      update();
+      return scale;
+    }
+
+    return range;
+  };
+
+  scale.bandwidth = () => getBandwidth();
+
+  scale.fixedBandwidth = (newFixedBandwidth) => {
+    if (newFixedBandwidth) {
+      fixedBandwidth = newFixedBandwidth;
+      update();
+      return scale;
+    }
+
+    return newFixedBandwidth;
+  };
+
+  scale.totalWidth = () => totalWidth;
+
+  scale.rangeSize = () => rangeSize;
+
+  scale.paddingInner = (newPaddingInner) => {
+    if (newPaddingInner) {
+      paddingInner = newPaddingInner;
+      update();
+      return scale;
+    }
+
+    return paddingInner;
+  };
+
+  scale.paddingInnerZeroBased = (newPaddingInnerZeroBased) => {
+    if (newPaddingInnerZeroBased) {
+      paddingInnerZeroBased = newPaddingInnerZeroBased;
+      update();
+      return scale;
+    }
+
+    return paddingInnerZeroBased;
+  };
+
+  return scale;
+};
+
 export const stringifySvg = (svg) =>
   new window.XMLSerializer().serializeToString(svg);
 
 export const booleanQueryStringDecoder = (v) =>
   v === undefined ? undefined : v === 'true';
+
+export const customBooleanQueryStringDecoder = (excluded = []) => {
+  const s = excluded.reduce((_s, v) => {
+    _s.add(v);
+    return _s;
+  }, new Set());
+  return (v) => {
+    if (v === undefined || s.has(v)) return v;
+    return v === 'true';
+  };
+};
 
 export const isChrRange = (chrRange) =>
   chrRange.match(/^chr(\d+)[:.](\d+)(([-~+])(\d+))?(-chr(\d+)[:.](\d+))?$/);
