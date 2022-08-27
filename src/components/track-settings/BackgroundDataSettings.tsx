@@ -25,7 +25,7 @@ import { Stratification } from '../../view-config-types';
 import FileInput from '../FileInput';
 import {
   DnaAccessibilityTrackInfo,
-  useDnaAccessibilityTrack,
+  useDnaAccessibilityExperimentalTrack,
 } from '../../state/dna-accessibility-state';
 
 const enum BeddbFileField {
@@ -120,7 +120,7 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   const currEnhancerRegionTracks = useRef(enhancerRegionTrack);
 
   const [dnaAccessibilityTrack, setDnaAccessibilityTrack] =
-    useDnaAccessibilityTrack();
+    useDnaAccessibilityExperimentalTrack();
   const [tmpDnaAccessibilityTrack, setTmpDnaAccessibilityTrack] = useState(() =>
     deepClone(dnaAccessibilityTrack)
   );

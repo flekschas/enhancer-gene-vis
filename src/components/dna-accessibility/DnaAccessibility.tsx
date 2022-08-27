@@ -28,7 +28,7 @@ import {
 import { sampleSelectionState } from '../../state/filter-state';
 import {
   DnaAccessibilityTrackInfo,
-  dnaAccessibilityTrackState,
+  dnaAccessibilityExperimentalTrackState,
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,
   useDnaAccessShowInfos,
@@ -141,7 +141,9 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
 
   const setHiglassDnaAccess = useSetRecoilState(higlassDnaAccessState);
 
-  const dnaAccessibilityTrackInfo = useRecoilValue(dnaAccessibilityTrackState);
+  const dnaAccessibilityTrackInfo = useRecoilValue(
+    dnaAccessibilityExperimentalTrackState
+  );
   const sampleSelection = useRecoilValue(sampleSelectionState);
   const labelStyle = useRecoilValue(dnaAccessLabelStyleState);
   const rowNorm = useRecoilValue(dnaAccessRowNormState);

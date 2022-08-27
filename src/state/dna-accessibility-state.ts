@@ -18,6 +18,7 @@ import {
 
 const enum DnaAccessibilityQueryKey {
   EXP_TRACK = 'daet',
+  PRED_TRACK = 'dapt',
   LABEL_STYLE = 'dals',
   ROW_NORM = 'darn',
   SHOW_INFO = 'dasi',
@@ -73,11 +74,22 @@ function dnaAccessibilityTrackInfoDecoder(
   } as DnaAccessibilityTrackInfo;
 }
 
-export const dnaAccessibilityTrackState: RecoilState<DnaAccessibilityTrackInfo> =
+export const dnaAccessibilityExperimentalTrackState: RecoilState<DnaAccessibilityTrackInfo> =
   atom({
     key: DnaAccessibilityQueryKey.EXP_TRACK,
     default: getDefault(
       DnaAccessibilityQueryKey.EXP_TRACK,
+      DEFAULT_DNA_ACCESSIBILITY_TRACK_INFO,
+      dnaAccessibilityTrackInfoDecoder
+    ),
+  });
+
+export const dnaAccessibilityPredictedTrackState: RecoilState<DnaAccessibilityTrackInfo> =
+  atom({
+    key: DnaAccessibilityQueryKey.PRED_TRACK,
+    default: getDefault(
+      DnaAccessibilityQueryKey.PRED_TRACK,
+      // TODO: Replace when we have a default BPNet prediction track for sample data
       DEFAULT_DNA_ACCESSIBILITY_TRACK_INFO,
       dnaAccessibilityTrackInfoDecoder
     ),
@@ -111,16 +123,29 @@ export const dnaAccessLabelShowInfoState: RecoilState<boolean> = atom({
   ),
 });
 
-export const useDnaAccessibilityTrack = () =>
+export const useDnaAccessibilityExperimentalTrack = () =>
   useRecoilQueryString(
     DnaAccessibilityQueryKey.EXP_TRACK,
-    dnaAccessibilityTrackState,
+    dnaAccessibilityExperimentalTrackState,
     dnaAccessibilityTrackInfoEncoder
   );
-export const useDnaAccessibilityTrackSyncher = () =>
+export const useDnaAccessibilityExperimentalTrackSyncher = () =>
   useRecoilQueryStringSyncher(
     DnaAccessibilityQueryKey.EXP_TRACK,
-    dnaAccessibilityTrackState,
+    dnaAccessibilityExperimentalTrackState,
+    dnaAccessibilityTrackInfoEncoder
+  );
+
+export const useDnaAccessibilityPredictionTrack = () =>
+  useRecoilQueryString(
+    DnaAccessibilityQueryKey.PRED_TRACK,
+    dnaAccessibilityExperimentalTrackState,
+    dnaAccessibilityTrackInfoEncoder
+  );
+export const useDnaAccessibilityPredictionTrackSyncher = () =>
+  useRecoilQueryStringSyncher(
+    DnaAccessibilityQueryKey.PRED_TRACK,
+    dnaAccessibilityExperimentalTrackState,
     dnaAccessibilityTrackInfoEncoder
   );
 
