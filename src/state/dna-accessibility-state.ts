@@ -16,6 +16,13 @@ import {
   TRACK_SOURCE_ABBR_TO_SERVER_URL,
 } from './utils';
 
+const enum DnaAccessibilityQueryKey {
+  EXP_TRACK = 'daet',
+  LABEL_STYLE = 'dals',
+  ROW_NORM = 'darn',
+  SHOW_INFO = 'dasi',
+}
+
 export type DnaAccessibilityTrackInfo = {
   server: string;
   tilesetUid: string;
@@ -59,8 +66,6 @@ function dnaAccessibilityTrackInfoDecoder(
 
   const server = TRACK_SOURCE_ABBR_TO_SERVER_URL[serverAbbr as TrackSourceAbbr];
 
-  if (tilesetUid === undefined) return tilesetUid;
-
   return {
     server,
     tilesetUid,
@@ -70,9 +75,9 @@ function dnaAccessibilityTrackInfoDecoder(
 
 export const dnaAccessibilityTrackState: RecoilState<DnaAccessibilityTrackInfo> =
   atom({
-    key: 'dats',
+    key: DnaAccessibilityQueryKey.EXP_TRACK,
     default: getDefault(
-      'dats',
+      DnaAccessibilityQueryKey.EXP_TRACK,
       DEFAULT_DNA_ACCESSIBILITY_TRACK_INFO,
       dnaAccessibilityTrackInfoDecoder
     ),
@@ -80,64 +85,80 @@ export const dnaAccessibilityTrackState: RecoilState<DnaAccessibilityTrackInfo> 
 
 export const dnaAccessLabelStyleState: RecoilState<RidgePlotTrackLabelStyle> =
   atom({
-    key: 'dnaAccessLabelStyle',
+    key: DnaAccessibilityQueryKey.LABEL_STYLE,
     default: getDefault<RidgePlotTrackLabelStyle>(
-      'dal',
+      DnaAccessibilityQueryKey.LABEL_STYLE,
       RidgePlotTrackLabelStyle.INDICATOR,
       identity
     ),
   });
 
 export const dnaAccessRowNormState: RecoilState<boolean> = atom({
-  key: 'dnaAccessRowNorm',
-  default: getDefault('darn', true, booleanQueryStringDecoder),
+  key: DnaAccessibilityQueryKey.ROW_NORM,
+  default: getDefault(
+    DnaAccessibilityQueryKey.ROW_NORM,
+    true,
+    booleanQueryStringDecoder
+  ),
 });
 
 export const dnaAccessLabelShowInfoState: RecoilState<boolean> = atom({
-  key: 'dnaAccessLabelShowInfos',
-  default: getDefault('dai', true, booleanQueryStringDecoder),
+  key: DnaAccessibilityQueryKey.SHOW_INFO,
+  default: getDefault(
+    DnaAccessibilityQueryKey.SHOW_INFO,
+    true,
+    booleanQueryStringDecoder
+  ),
 });
 
 export const useDnaAccessibilityTrack = () =>
   useRecoilQueryString(
-    'dats',
+    DnaAccessibilityQueryKey.EXP_TRACK,
     dnaAccessibilityTrackState,
     dnaAccessibilityTrackInfoEncoder
   );
 export const useDnaAccessibilityTrackSyncher = () =>
   useRecoilQueryStringSyncher(
-    'dats',
+    DnaAccessibilityQueryKey.EXP_TRACK,
     dnaAccessibilityTrackState,
     dnaAccessibilityTrackInfoEncoder
   );
 
 export const useDnaAccessLabelStyle = () =>
-  useRecoilQueryString('dal', dnaAccessLabelStyleState, identity);
+  useRecoilQueryString(
+    DnaAccessibilityQueryKey.LABEL_STYLE,
+    dnaAccessLabelStyleState,
+    identity
+  );
 export const useDnaAccessLabelStyleSyncher = () =>
-  useRecoilQueryStringSyncher('dal', dnaAccessLabelStyleState, identity);
+  useRecoilQueryStringSyncher(
+    DnaAccessibilityQueryKey.LABEL_STYLE,
+    dnaAccessLabelStyleState,
+    identity
+  );
 
 export const useDnaAccessRowNorm = () =>
   useRecoilQueryString(
-    'darn',
+    DnaAccessibilityQueryKey.ROW_NORM,
     dnaAccessRowNormState,
     booleanQueryStringEncoder
   );
 export const useDnaAccessRowNormSyncher = () =>
   useRecoilQueryStringSyncher(
-    'darn',
+    DnaAccessibilityQueryKey.ROW_NORM,
     dnaAccessRowNormState,
     booleanQueryStringEncoder
   );
 
 export const useDnaAccessShowInfos = () =>
   useRecoilQueryString(
-    'dai',
+    DnaAccessibilityQueryKey.SHOW_INFO,
     dnaAccessLabelShowInfoState,
     booleanQueryStringEncoder
   );
 export const useDnaAccessShowInfosSyncher = () =>
   useRecoilQueryStringSyncher(
-    'dai',
+    DnaAccessibilityQueryKey.SHOW_INFO,
     dnaAccessLabelShowInfoState,
     booleanQueryStringEncoder
   );
