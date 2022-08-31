@@ -26,6 +26,7 @@ import FileInput from '../FileInput';
 import {
   DnaAccessibilityTrackInfo,
   useDnaAccessibilityExperimentalTrack,
+  useDnaAccessibilityPredictionTrack,
 } from '../../state/dna-accessibility-state';
 
 const enum BeddbFileField {
@@ -119,12 +120,17 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   const enhancerRegionTrackServer = useRef<LocalBedDataServer | null>(null);
   const currEnhancerRegionTracks = useRef(enhancerRegionTrack);
 
-  const [dnaAccessibilityTrack, setDnaAccessibilityTrack] =
+  const [dnaAccessibilityExpTrack, setDnaAccessibilityExpTrack] =
     useDnaAccessibilityExperimentalTrack();
-  const [tmpDnaAccessibilityTrack, setTmpDnaAccessibilityTrack] = useState(() =>
-    deepClone(dnaAccessibilityTrack)
-  );
-  const currDnaAccessibilityTrack = useRef(dnaAccessibilityTrack);
+  const [tmpDnaAccessibilityExpTrack, setTmpDnaAccessibilityExpTrack] =
+    useState(() => deepClone(dnaAccessibilityExpTrack));
+  const currDnaAccessibilityExpTrack = useRef(dnaAccessibilityExpTrack);
+
+  const [dnaAccessibilityPredTrack, setDnaAccessibilityPredTrack] =
+    useDnaAccessibilityPredictionTrack();
+  const [tmpDnaAccessibilityPredTrack, setTmpDnaAccessibilityPredTrack] =
+    useState(() => deepClone(dnaAccessibilityPredTrack));
+  const currDnaAccessibilityPredTrack = useRef(dnaAccessibilityPredTrack);
 
   const [stratificationConfig, setStratificationConfig] = useState<File>();
   const [stratification, setStratification] =
@@ -136,8 +142,8 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
     saveNewStratification();
     const newEnhancerRegionTrack = deepClone(tmpEnhancerRegionTrack);
     setEnhancerRegionTrack(newEnhancerRegionTrack);
-    const newDnaAccessibilityTrack = deepClone(tmpDnaAccessibilityTrack);
-    setDnaAccessibilityTrack(newDnaAccessibilityTrack);
+    const newDnaAccessibilityTrack = deepClone(tmpDnaAccessibilityExpTrack);
+    setDnaAccessibilityExpTrack(newDnaAccessibilityTrack);
     closeHandler();
   }
 
@@ -146,8 +152,8 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   }, [enhancerRegionTrack]);
 
   useEffect(() => {
-    currDnaAccessibilityTrack.current = dnaAccessibilityTrack;
-  }, [dnaAccessibilityTrack]);
+    currDnaAccessibilityExpTrack.current = dnaAccessibilityExpTrack;
+  }, [dnaAccessibilityExpTrack]);
 
   const changeTmpEnhancerRegionTracks = useCallback(
     (newTrackConfig: BeddbFile) => {
@@ -158,12 +164,23 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
     []
   );
 
-  const changeTmpDnaAccessibilityTrack = useCallback(
+  const changeTmpDnaAccessibilityExpTrack = useCallback(
     (newTrackConfig: TrackSettingsState) => {
       const newDnaAccessibilityTrack =
         multivecToDnaAccessibilityTrackInfo(newTrackConfig);
       if (!newDnaAccessibilityTrack) return;
-      setTmpDnaAccessibilityTrack(newDnaAccessibilityTrack);
+      setTmpDnaAccessibilityExpTrack(newDnaAccessibilityTrack);
+      setChanged(true);
+    },
+    []
+  );
+
+  const changeTmpDnaAccessibilityPredTrack = useCallback(
+    (newTrackConfig: TrackSettingsState) => {
+      const newDnaAccessibilityTrack =
+        multivecToDnaAccessibilityTrackInfo(newTrackConfig);
+      if (!newDnaAccessibilityTrack) return;
+      setTmpDnaAccessibilityPredTrack(newDnaAccessibilityTrack);
       setChanged(true);
     },
     []
@@ -174,7 +191,7 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   ): DnaAccessibilityTrackInfo | null {
     const { server, tilesetUid, label } = newTrackConfig;
     if (!server || !tilesetUid || !label) return null;
-    const track = deepClone(dnaAccessibilityTrack);
+    const track = deepClone(dnaAccessibilityExpTrack);
     track.server = server;
     track.tilesetUid = tilesetUid;
     track.label = label;
@@ -282,11 +299,38 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
         </a>{' '}
         and the track ID.
       </p>
+      <h4>Experimental Data Track</h4>
       <div className={classes.trackList}>
         <TrackSettingsFieldSet
           additionalFields={{}}
-          config={currDnaAccessibilityTrack.current}
-          onChange={changeTmpDnaAccessibilityTrack}
+          config={currDnaAccessibilityExpTrack.current}
+          onChange={changeTmpDnaAccessibilityExpTrack}
+          allowLocalFile={false}
+        />
+      </div>
+      <h4>(Optional) Predicted Results Track</h4>
+      <p>
+        This section allows uploading a second multivec DNA accessibility track
+        corresponding to predicted DNA accessibility results from machine
+        learning tools such as
+        <a
+          href="https://github.com/kundajelab/chrombpnet"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          BPNet
+        </a>{' '}
+        .
+      </p>
+      <p>
+        This secondary track can be viewed by enabling the "Showing Predicted
+        Track" setting from the DNA Accessibility section settings.
+      </p>
+      <div className={classes.trackList}>
+        <TrackSettingsFieldSet
+          additionalFields={{}}
+          config={currDnaAccessibilityPredTrack.current}
+          onChange={changeTmpDnaAccessibilityPredTrack}
           allowLocalFile={false}
         />
       </div>
