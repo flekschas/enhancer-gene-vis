@@ -14,6 +14,7 @@ import AntSwitch from '../../AntSwitch';
 import {
   useDnaAccessLabelStyle,
   useDnaAccessRowNorm,
+  useDnaAccessShowPredTrack,
 } from '../../state/dna-accessibility-state';
 import { capitalizeFirstLetter } from '../../utils/string';
 import { RidgePlotTrackLabelStyle } from '../../view-config-types';
@@ -31,6 +32,8 @@ const DnaAccessibilitySettings = React.memo(
   function DnaAccessibilitySettings() {
     const [dnaAccessLabelStyle, setDnaAccessLabelStyle] =
       useDnaAccessLabelStyle();
+    const [dnaAccessShowPredTrack, setDnaAccessShowPredTrack] =
+      useDnaAccessShowPredTrack();
     const [dnaAccessRowNorm, setDnaAccessRowNorm] = useDnaAccessRowNorm();
 
     const changeDnaAccessLabelStyle =
@@ -44,11 +47,30 @@ const DnaAccessibilitySettings = React.memo(
       setDnaAccessRowNorm(event.target.checked);
     };
 
+    const changeDnaAccessShowPredTrack = (
+      event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+      setDnaAccessShowPredTrack(event.target.checked);
+    };
+
     // On every render
     const classes = useStyles();
 
     return (
       <>
+        <Box m={1}>
+          <FormControlLabel
+            className={classes.switch}
+            control={
+              <AntSwitch
+                checked={dnaAccessShowPredTrack}
+                onChange={changeDnaAccessShowPredTrack}
+                name="true"
+              />
+            }
+            label="Show Prediction Track"
+          />
+        </Box>
         <Box m={1}>
           <FormControlLabel
             className={classes.switch}
