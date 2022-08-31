@@ -150,13 +150,13 @@ export const useDnaAccessibilityExperimentalTrackSyncher = () =>
 export const useDnaAccessibilityPredictionTrack = () =>
   useRecoilQueryString(
     DnaAccessibilityQueryKey.PRED_TRACK,
-    dnaAccessibilityExperimentalTrackState,
+    dnaAccessibilityPredictedTrackState,
     dnaAccessibilityTrackInfoEncoder
   );
 export const useDnaAccessibilityPredictionTrackSyncher = () =>
   useRecoilQueryStringSyncher(
     DnaAccessibilityQueryKey.PRED_TRACK,
-    dnaAccessibilityExperimentalTrackState,
+    dnaAccessibilityPredictedTrackState,
     dnaAccessibilityTrackInfoEncoder
   );
 

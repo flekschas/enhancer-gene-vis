@@ -142,8 +142,12 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
     saveNewStratification();
     const newEnhancerRegionTrack = deepClone(tmpEnhancerRegionTrack);
     setEnhancerRegionTrack(newEnhancerRegionTrack);
-    const newDnaAccessibilityTrack = deepClone(tmpDnaAccessibilityExpTrack);
-    setDnaAccessibilityExpTrack(newDnaAccessibilityTrack);
+    const newDnaAccessibilityExpTrack = deepClone(tmpDnaAccessibilityExpTrack);
+    setDnaAccessibilityExpTrack(newDnaAccessibilityExpTrack);
+    const newDnaAccessibilityPredTrack = deepClone(
+      tmpDnaAccessibilityPredTrack
+    );
+    setDnaAccessibilityPredTrack(newDnaAccessibilityPredTrack);
     closeHandler();
   }
 
@@ -154,6 +158,10 @@ const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   useEffect(() => {
     currDnaAccessibilityExpTrack.current = dnaAccessibilityExpTrack;
   }, [dnaAccessibilityExpTrack]);
+
+  useEffect(() => {
+    currDnaAccessibilityPredTrack.current = dnaAccessibilityPredTrack;
+  }, [dnaAccessibilityPredTrack]);
 
   const changeTmpEnhancerRegionTracks = useCallback(
     (newTrackConfig: BeddbFile) => {

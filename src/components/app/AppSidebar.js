@@ -24,7 +24,8 @@ import { useShowModal } from '../../ModalProvider';
 
 import {
   higlassEnhancerRegionsState,
-  higlassDnaAccessState,
+  higlassDnaAccessExpState,
+  higlassDnaAccessPredState,
   useXDomainStartWithAssembly,
   useXDomainEndWithAssembly,
 } from '../../state';
@@ -181,7 +182,8 @@ const AppSidebar = React.memo(function AppSidebar() {
   const stratification = useRecoilValue(stratificationState);
 
   const higlassEnhancerRegions = useRecoilValue(higlassEnhancerRegionsState);
-  const higlassDnaAccess = useRecoilValue(higlassDnaAccessState);
+  const higlassDnaAccessExp = useRecoilValue(higlassDnaAccessExpState);;
+  const higlassDnaAccessPred = useRecoilValue(higlassDnaAccessPredState);
   const enhancerGenesSvg = useRecoilValue(enhancerGenesSvgState);
 
   const [userChangedDomain, setUserChangedDomain] = useState(0);
@@ -364,14 +366,14 @@ const AppSidebar = React.memo(function AppSidebar() {
   };
 
   const higlassExportAsSvg = () => {
-    if (!higlassEnhancerRegions || !higlassDnaAccess) {
+    if (!higlassEnhancerRegions || !higlassDnaAccessExp) {
       console.warn('One of the HiGlass instances is not available');
       return;
     }
 
     const mergedSvg = mergeSvgs(
       higlassEnhancerRegions.exportAsSvg(),
-      higlassDnaAccess.exportAsSvg(),
+      higlassDnaAccessExp.exportAsSvg(),
       enhancerGenesSvg ? stringifySvg(enhancerGenesSvg) : null
     );
 
