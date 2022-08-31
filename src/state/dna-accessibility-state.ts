@@ -22,6 +22,7 @@ const enum DnaAccessibilityQueryKey {
   LABEL_STYLE = 'dals',
   ROW_NORM = 'darn',
   SHOW_INFO = 'dasi',
+  SHOW_PRED_TRACK = 'dasp',
 }
 
 export type DnaAccessibilityTrackInfo = {
@@ -123,6 +124,16 @@ export const dnaAccessLabelShowInfoState: RecoilState<boolean> = atom({
   ),
 });
 
+export const dnaAccessShowPredTrack: RecoilState<boolean> = atom({
+  key: DnaAccessibilityQueryKey.SHOW_PRED_TRACK,
+  default: getDefault(
+    DnaAccessibilityQueryKey.SHOW_PRED_TRACK,
+    // TODO: maybe switch to true by default?
+    false,
+    booleanQueryStringDecoder
+  ),
+});
+
 export const useDnaAccessibilityExperimentalTrack = () =>
   useRecoilQueryString(
     DnaAccessibilityQueryKey.EXP_TRACK,
@@ -185,5 +196,18 @@ export const useDnaAccessShowInfosSyncher = () =>
   useRecoilQueryStringSyncher(
     DnaAccessibilityQueryKey.SHOW_INFO,
     dnaAccessLabelShowInfoState,
+    booleanQueryStringEncoder
+  );
+
+export const useDnaAccessShowPredTrack = () =>
+  useRecoilQueryString(
+    DnaAccessibilityQueryKey.SHOW_PRED_TRACK,
+    dnaAccessShowPredTrack,
+    booleanQueryStringEncoder
+  );
+export const useDnaAccessShowPredTrackSyncher = () =>
+  useRecoilQueryStringSyncher(
+    DnaAccessibilityQueryKey.SHOW_PRED_TRACK,
+    dnaAccessShowPredTrack,
     booleanQueryStringEncoder
   );
