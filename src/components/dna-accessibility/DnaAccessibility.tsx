@@ -32,6 +32,7 @@ import {
   dnaAccessLabelStyleState,
   dnaAccessRowNormState,
   useDnaAccessShowInfos,
+  dnaAccessShowPredTrack,
 } from '../../state/dna-accessibility-state';
 import { focusRegionAbsWithAssembly } from '../../state/focus-state';
 import { variantTracksState } from '../../state/variant-track-state';
@@ -151,6 +152,7 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
   const variantTracks = useRecoilValue(variantTracksState);
   const focusRegionAbs = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
   const stratification = useRecoilValue(stratificationState);
+  const shouldShowPredTrack = useRecoilValue(dnaAccessShowPredTrack);
 
   const higlassApi = useRef<HiGlassApi | null>(null);
 
@@ -212,6 +214,49 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
 
   // On every render
   const classes = useStyles();
+  const experimentalTrackFragment = (
+    <HiGlassComponent
+      ref={higlassInitHandler}
+      viewConfig={viewConfig}
+      options={{
+        sizeMode: 'scroll',
+        pixelPreciseMarginPadding: true,
+        containerPaddingX: 0,
+        containerPaddingY: 0,
+        viewMarginTop: 0,
+        viewMarginBottom: 0,
+        viewMarginLeft: 0,
+        viewMarginRight: 0,
+        viewPaddingTop: 0,
+        viewPaddingBottom: 0,
+        viewPaddingLeft: 0,
+        viewPaddingRight: 16,
+        globalMousePosition: true,
+      }}
+    />
+  );
+
+  const predictionTrackFragment = (
+    <HiGlassComponent
+      ref={higlassInitHandler}
+      viewConfig={viewConfig}
+      options={{
+        sizeMode: 'scroll',
+        pixelPreciseMarginPadding: true,
+        containerPaddingX: 0,
+        containerPaddingY: 0,
+        viewMarginTop: 0,
+        viewMarginBottom: 0,
+        viewMarginLeft: 0,
+        viewMarginRight: 0,
+        viewPaddingTop: 0,
+        viewPaddingBottom: 0,
+        viewPaddingLeft: 0,
+        viewPaddingRight: 16,
+        globalMousePosition: true,
+      }}
+    />
+  );
   return (
     <Grid container direction="column" className={classes.root}>
       <TitleBar
@@ -222,27 +267,21 @@ const DnaAccessibility = React.memo(function DnaAccessibility() {
         Help={DnaAccessibilityHelp}
         Settings={DnaAccessibilitySettings}
       />
-      <Grid item container direction="column" className={classes.grow}>
-        <HiGlassComponent
-          ref={higlassInitHandler}
-          viewConfig={viewConfig}
-          options={{
-            sizeMode: 'scroll',
-            pixelPreciseMarginPadding: true,
-            containerPaddingX: 0,
-            containerPaddingY: 0,
-            viewMarginTop: 0,
-            viewMarginBottom: 0,
-            viewMarginLeft: 0,
-            viewMarginRight: 0,
-            viewPaddingTop: 0,
-            viewPaddingBottom: 0,
-            viewPaddingLeft: 0,
-            viewPaddingRight: 16,
-            globalMousePosition: true,
-          }}
-        />
-      </Grid>
+
+      {shouldShowPredTrack ? (
+        <Grid item container className={classes.grow}>
+          <Grid item container direction="column" className={classes.grow} md>
+            {experimentalTrackFragment}
+          </Grid>
+          <Grid item container direction="column" className={classes.grow} md>
+            {predictionTrackFragment}
+          </Grid>
+        </Grid>
+      ) : (
+        <Grid item container direction="column" className={classes.grow}>
+          {experimentalTrackFragment}
+        </Grid>
+      )}
     </Grid>
   );
 });

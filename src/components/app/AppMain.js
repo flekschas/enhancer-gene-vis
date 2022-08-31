@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
@@ -21,10 +21,12 @@ import {
   useVariantYScaleSyncher,
 } from '../../state';
 import {
+  dnaAccessShowPredTrack,
   useDnaAccessibilityExperimentalTrackSyncher,
   useDnaAccessLabelStyleSyncher,
   useDnaAccessRowNormSyncher,
   useDnaAccessShowInfosSyncher,
+  useDnaAccessShowPredTrackSyncher,
 } from '../../state/dna-accessibility-state';
 import {
   focusGeneOptionState,
@@ -103,6 +105,11 @@ const useStyles = makeStyles((theme) => ({
     width: '20rem',
     margin: '-8px -8px -8px 0',
   },
+  dnaAccessibilityExtended: {
+    position: 'relative',
+    width: '25rem',
+    margin: '-8px -8px -8px 0',
+  },
 }));
 
 const AppMain = React.memo(function AppMain() {
@@ -117,6 +124,7 @@ const AppMain = React.memo(function AppMain() {
   useDnaAccessLabelStyleSyncher();
   useDnaAccessRowNormSyncher();
   useDnaAccessShowInfosSyncher();
+  useDnaAccessShowPredTrackSyncher();
   useEnhancerRegionsTrackSyncher();
   useEnhancerRegionsShowInfosSyncher();
   useEnhancerRegionsHideUnfocusedSyncher();
@@ -136,6 +144,9 @@ const AppMain = React.memo(function AppMain() {
     useRecoilState(focusGeneOptionState);
   const [focusRegionOption, setFocusRegionOption] = useRecoilState(
     focusRegionOptionState
+  );
+  const isDnaAccessibilityPredTrackShown = useRecoilValue(
+    dnaAccessShowPredTrack
   );
 
   const clearFocusGene = () => {
@@ -225,7 +236,13 @@ const AppMain = React.memo(function AppMain() {
                 </div>
               </div>
               <div className={classes.separator} />
-              <div className={classes.dnaAccessibility}>
+              <div
+                className={
+                  isDnaAccessibilityPredTrackShown
+                    ? classes.dnaAccessibilityExtended
+                    : classes.dnaAccessibility
+                }
+              >
                 <DnaAccessibility />
               </div>
             </Grid>
