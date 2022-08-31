@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/enhancer-gene-vis/static/css/main.9fa36715.css",
+    "main.js": "/enhancer-gene-vis/static/js/main.a7d1e4aa.js",
+    "static/media/gene-view-1.png": "/enhancer-gene-vis/static/media/gene-view-1.85c9384e78787e94e511.png",
+    "static/media/enhancer-view-3.png": "/enhancer-gene-vis/static/media/enhancer-view-3.6005f78f0870f66a11e4.png",
+    "static/media/enhancer-view-5.png": "/enhancer-gene-vis/static/media/enhancer-view-5.0cc93a2bf67d386ee25b.png",
+    "static/media/enhancer-view-2.png": "/enhancer-gene-vis/static/media/enhancer-view-2.4c18a71a63775cec354f.png",
+    "static/media/gene-view-2.png": "/enhancer-gene-vis/static/media/gene-view-2.852af283e9887faf4b94.png",
+    "index.html": "/enhancer-gene-vis/index.html",
+    "main.9fa36715.css.map": "/enhancer-gene-vis/static/css/main.9fa36715.css.map",
+    "main.a7d1e4aa.js.map": "/enhancer-gene-vis/static/js/main.a7d1e4aa.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9fa36715.css",
+    "static/js/main.a7d1e4aa.js"
+  ]
+}
