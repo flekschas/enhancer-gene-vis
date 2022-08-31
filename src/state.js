@@ -46,8 +46,13 @@ export const higlassEnhancerRegionsState = atom({
   default: null,
 });
 
-export const higlassDnaAccessState = atom({
-  key: 'higlassDnaAccess',
+export const higlassDnaAccessExpState = atom({
+  key: 'higlassDnaAccessExp',
+  default: null,
+});
+
+export const higlassDnaAccessPredState = atom({
+  key: 'higlassDnaAccessPred',
   default: null,
 });
 

@@ -6,14 +6,10 @@
  * Modifications to the RidgePlotTrack are done by editing the track's options
  * in the ViewConfig.
  */
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import React from 'react';
+import { useRecoilValue } from 'recoil';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
-import { deepClone, pipe } from '@flekschas/utils';
-import { HiGlassApi, HiGlassComponent } from 'higlass';
-
-import { useChromInfo } from '../../ChromInfoProvider';
 import DnaAccessibilityInfo from './DnaAccessibilityInfo';
 import DnaAccessibilityHelp from './DnaAccessibilityHelp';
 import DnaAccessibilitySettings from './DnaAccessibilitySettings';
@@ -21,50 +17,19 @@ import DnaAccessibilitySettings from './DnaAccessibilitySettings';
 import TitleBar from '../../TitleBar';
 
 import {
-  higlassDnaAccessState,
-  variantYScaleState,
-  dnaAccessXDomainWithAssembly,
+  higlassDnaAccessExpState,
+  higlassDnaAccessPredState,
 } from '../../state';
-import { sampleSelectionState } from '../../state/filter-state';
 import {
-  DnaAccessibilityTrackInfo,
   dnaAccessibilityExperimentalTrackState,
-  dnaAccessLabelStyleState,
-  dnaAccessRowNormState,
   useDnaAccessShowInfos,
   dnaAccessShowPredTrack,
+  dnaAccessibilityPredictedTrackState,
 } from '../../state/dna-accessibility-state';
-import { focusRegionAbsWithAssembly } from '../../state/focus-state';
-import { variantTracksState } from '../../state/variant-track-state';
-
-import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from './constants-dna-accessibility';
-import useDebounce from '../../hooks/use-debounce';
-
-import {
-  updateViewConfigFocusRegion,
-  updateViewConfigVariantYScale,
-  updateViewConfigXDomain,
-  updateViewConfigVariantTracks,
-} from '../../view-config';
 
 import 'higlass/dist/hglib.css';
-import {
-  RidgePlotTrackLabelStyle,
-  RidgePlotTrack,
-  ViewConfig,
-} from '../../view-config-types';
-import {
-  Stratification,
-  stratificationState,
-} from '../../state/stratification-state';
-import { createCategoryMap } from './dna-accessibility-fns';
-import {
-  getOverlayByUid,
-  replaceUidInOverlayIncludes,
-  TrackOverlayUid,
-  TrackUidPrefix,
-  getTrackByUid,
-} from '../../utils/view-config';
+import DnaAccessibilityHiglassComponent from './DnaAccessibilityHiglassComponent';
+import { DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY } from './constants-dna-accessibility';
 
 const useStyles = makeStyles((_theme) => ({
   root: {
@@ -79,182 +44,23 @@ const useStyles = makeStyles((_theme) => ({
   },
 }));
 
-const updateViewConfigDnaAccessibilityTrack =
-  (trackInfo: DnaAccessibilityTrackInfo) => (viewConfig: ViewConfig) => {
-    const track = getTrackByUid(
-      viewConfig,
-      TrackUidPrefix.DNA_ACCESSIBILITY
-    ) as RidgePlotTrack;
-    const overlay = getOverlayByUid(viewConfig, TrackOverlayUid.REGION_FOCUS);
-    const oldUid = track.uid;
-    const newUid = `${TrackUidPrefix.DNA_ACCESSIBILITY}-${trackInfo.tilesetUid}`;
-    track.server = trackInfo.server;
-    track.tilesetUid = trackInfo.tilesetUid;
-    track.options.name = trackInfo.label;
-    track.uid = newUid;
-    replaceUidInOverlayIncludes(overlay, oldUid, newUid);
-    return viewConfig;
-  };
-
-const updateViewConfigDnaAccessLabelStyle =
-  (labelStyle: RidgePlotTrackLabelStyle) => (viewConfig: ViewConfig) => {
-    const track = getTrackByUid(
-      viewConfig,
-      TrackUidPrefix.DNA_ACCESSIBILITY
-    ) as RidgePlotTrack;
-    track.options.showRowLabels = labelStyle;
-    return viewConfig;
-  };
-
-const updateViewConfigDnaAccessRowNorm =
-  (rowNorm: boolean) => (viewConfig: ViewConfig) => {
-    const track = getTrackByUid(
-      viewConfig,
-      TrackUidPrefix.DNA_ACCESSIBILITY
-    ) as RidgePlotTrack;
-    track.options.rowNormalization = rowNorm;
-    return viewConfig;
-  };
-
-const updateViewConfigRowSelection =
-  (selection: string[]) => (viewConfig: ViewConfig) => {
-    const track = getTrackByUid(
-      viewConfig,
-      TrackUidPrefix.DNA_ACCESSIBILITY
-    ) as RidgePlotTrack;
-    track.options.rowSelections = selection;
-    return viewConfig;
-  };
-
-const updateViewConfigStratification =
-  (stratification: Stratification) => (viewConfig: ViewConfig) => {
-    const track = getTrackByUid(
-      viewConfig,
-      TrackUidPrefix.DNA_ACCESSIBILITY
-    ) as RidgePlotTrack;
-    const categoryMap = createCategoryMap(stratification);
-    track.options.rowCategories = categoryMap;
-    return viewConfig;
-  };
-
 const DnaAccessibility = React.memo(function DnaAccessibility() {
-  const chromInfo = useChromInfo();
-
-  const setHiglassDnaAccess = useSetRecoilState(higlassDnaAccessState);
-
-  const dnaAccessibilityTrackInfo = useRecoilValue(
-    dnaAccessibilityExperimentalTrackState
-  );
-  const sampleSelection = useRecoilValue(sampleSelectionState);
-  const labelStyle = useRecoilValue(dnaAccessLabelStyleState);
-  const rowNorm = useRecoilValue(dnaAccessRowNormState);
-  const variantYScale = useRecoilValue(variantYScaleState);
-  const variantTracks = useRecoilValue(variantTracksState);
-  const focusRegionAbs = useRecoilValue(focusRegionAbsWithAssembly(chromInfo));
-  const stratification = useRecoilValue(stratificationState);
   const shouldShowPredTrack = useRecoilValue(dnaAccessShowPredTrack);
-
-  const higlassApi = useRef<HiGlassApi | null>(null);
-
-  const xDomainAbsDb = useDebounce(
-    useRecoilValue(dnaAccessXDomainWithAssembly(chromInfo)),
-    500
-  );
-
-  const higlassInitHandler = useCallback(
-    (higlassInstance) => {
-      if (higlassInstance !== null) {
-        setHiglassDnaAccess(higlassInstance.api);
-        higlassApi.current = higlassInstance.api;
-      }
-    },
-    [setHiglassDnaAccess]
-  );
-
-  const viewConfig = useMemo(
-    () =>
-      pipe(
-        updateViewConfigDnaAccessibilityTrack(dnaAccessibilityTrackInfo),
-        updateViewConfigVariantTracks(variantTracks),
-        updateViewConfigFocusRegion(focusRegionAbs, [2]),
-        updateViewConfigVariantYScale(variantYScale),
-        updateViewConfigDnaAccessLabelStyle(labelStyle),
-        updateViewConfigDnaAccessRowNorm(rowNorm),
-        updateViewConfigXDomain(...xDomainAbsDb, { force: true }),
-        updateViewConfigRowSelection(sampleSelection),
-        updateViewConfigStratification(stratification)
-      )(deepClone(DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      // `xDomainStartAbs` and `xDomainEndAbs` are ommitted on purpose to avoid
-      // updating the view-config on every pan or zoom event.
-      variantTracks,
-      focusRegionAbs,
-      xDomainAbsDb,
-      variantYScale,
-      labelStyle,
-      sampleSelection,
-      rowNorm,
-      stratification,
-      dnaAccessibilityTrackInfo,
-    ]
-  );
-
-  // Unmount
-  useEffect(
-    () => () => {
-      if (higlassApi.current) {
-        higlassApi.current.destroy();
-      }
-    },
-    // Execute only once on initialization
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
 
   // On every render
   const classes = useStyles();
   const experimentalTrackFragment = (
-    <HiGlassComponent
-      ref={higlassInitHandler}
-      viewConfig={viewConfig}
-      options={{
-        sizeMode: 'scroll',
-        pixelPreciseMarginPadding: true,
-        containerPaddingX: 0,
-        containerPaddingY: 0,
-        viewMarginTop: 0,
-        viewMarginBottom: 0,
-        viewMarginLeft: 0,
-        viewMarginRight: 0,
-        viewPaddingTop: 0,
-        viewPaddingBottom: 0,
-        viewPaddingLeft: 0,
-        viewPaddingRight: 16,
-        globalMousePosition: true,
-      }}
+    <DnaAccessibilityHiglassComponent
+      trackState={dnaAccessibilityExperimentalTrackState}
+      higlassState={higlassDnaAccessExpState}
+      defaultViewConfig={DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY}
     />
   );
-
   const predictionTrackFragment = (
-    <HiGlassComponent
-      ref={higlassInitHandler}
-      viewConfig={viewConfig}
-      options={{
-        sizeMode: 'scroll',
-        pixelPreciseMarginPadding: true,
-        containerPaddingX: 0,
-        containerPaddingY: 0,
-        viewMarginTop: 0,
-        viewMarginBottom: 0,
-        viewMarginLeft: 0,
-        viewMarginRight: 0,
-        viewPaddingTop: 0,
-        viewPaddingBottom: 0,
-        viewPaddingLeft: 0,
-        viewPaddingRight: 16,
-        globalMousePosition: true,
-      }}
+    <DnaAccessibilityHiglassComponent
+      trackState={dnaAccessibilityPredictedTrackState}
+      higlassState={higlassDnaAccessPredState}
+      defaultViewConfig={DEFAULT_VIEW_CONFIG_DNA_ACCESSIBILITY}
     />
   );
   return (
