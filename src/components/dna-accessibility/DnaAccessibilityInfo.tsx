@@ -3,12 +3,13 @@ import { useRecoilValue } from 'recoil';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useChromInfo } from '../../ChromInfoProvider';
+import { useChromInfo } from '../../contexts/ChromInfoProvider';
 
 import { dnaAccessXDomainWithAssembly } from '../../state';
 import { dnaAccessLabelShowInfoState } from '../../state/dna-accessibility-state';
 
 import { toFixed } from '../../utils';
+import { chromosomeInfoResultState } from '../../state/chromosome-state';
 
 const useStyles = makeStyles((_theme) => ({
   root: {
@@ -21,7 +22,7 @@ const useStyles = makeStyles((_theme) => ({
 }));
 
 const DnaAccessibilityInfo = React.memo(function DnaAccessibilityInfo() {
-  const chromInfo = useChromInfo();
+  const chromInfo = useRecoilValue(chromosomeInfoResultState);
 
   const showInfo = useRecoilValue(dnaAccessLabelShowInfoState);
   const xDomainAbs = useRecoilValue(dnaAccessXDomainWithAssembly(chromInfo));

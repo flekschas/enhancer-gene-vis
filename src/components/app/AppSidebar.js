@@ -19,7 +19,6 @@ import Logo from '../../Logo';
 import VariantsSettings from '../track-settings/VariantsSettings';
 import BackgroundDataSettings from '../track-settings/BackgroundDataSettings';
 import Welcome from '../../Welcome';
-import { useChromInfo } from '../../ChromInfoProvider';
 import { useShowModal } from '../../ModalProvider';
 
 import {
@@ -54,6 +53,7 @@ import {
   stratificationState,
 } from '../../state/stratification-state';
 import { DEFAULT_VIEW_CONFIG_ENHANCER } from '../../view-config-typed';
+import { chromosomeInfoResultState } from '../../state/chromosome-state';
 
 const useStyles = makeStyles((theme) => ({
   h1: {
@@ -167,7 +167,7 @@ const extractCoreFromStringifiedSvg = (svg) => {
 };
 
 const AppSidebar = React.memo(function AppSidebar() {
-  const chromInfo = useChromInfo();
+  const chromInfo = useRecoilValue(chromosomeInfoResultState);
   const showModal = useShowModal();
 
   const [xDomainStart, setXDomainStart] =

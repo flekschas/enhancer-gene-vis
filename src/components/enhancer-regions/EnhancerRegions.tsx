@@ -26,7 +26,7 @@ import { debounce, deepClone, isParentOf, pipe, sum } from '@flekschas/utils';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useChromInfo } from '../../ChromInfoProvider';
+import { useChromInfo } from '../../contexts/ChromInfoProvider';
 import EnhancerRegionsInfo from './EnhancerRegionsInfo';
 import EnhancerRegionsHelp from './EnhancerRegionsHelp';
 import EnhancerRegionsSettings from './EnhancerRegionsSettings';
@@ -96,6 +96,7 @@ import {
   StratifiedBedTrack,
   ViewConfig,
 } from '../../view-config-types';
+import { chromosomeInfoResultState } from '../../state/chromosome-state';
 
 const useStyles = makeStyles((theme) => ({
   grow: {
@@ -323,7 +324,7 @@ const updateViewConfigStratification =
   };
 
 const EnhancerRegion = React.memo((_props) => {
-  const chromInfo = useChromInfo();
+  const chromInfo = useRecoilValue(chromosomeInfoResultState);
 
   const [focusGeneOption, setFocusGeneOption] =
     useRecoilState(focusGeneOptionState);
@@ -495,7 +496,7 @@ const EnhancerRegion = React.memo((_props) => {
   };
 
   const higlassLocationChangeHandler = (event: HiGlassApiLocationEventData) => {
-    if (chromInfo === null || typeof chromInfo === 'boolean') {
+    if (!chromInfo || typeof chromInfo === 'boolean') {
       throw new Error();
     }
     const [newXDomainStart, newXDomainEnd] = event.xDomain.map((absPos) =>

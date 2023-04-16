@@ -13,8 +13,6 @@ import DnaAccessibility from '../dna-accessibility/DnaAccessibility';
 import ModalProvider from '../../ModalProvider';
 import TooltipProvider from '../../TooltipProvider';
 
-import { useChromInfo } from '../../ChromInfoProvider';
-
 import {
   useXDomainStartWithAssemblySyncher,
   useXDomainEndWithAssemblySyncher,
@@ -39,6 +37,12 @@ import {
 import { useShowWelcomeSyncher } from '../../state/app-settings-state';
 import { useVariantTracksSyncher } from '../../state/variant-track-state';
 import {
+  chromosomeInfoResultState,
+  RefGenomeSrc,
+  useRefGenomeState,
+  useRefGenomeStateSyncher,
+} from '../../state/chromosome-state';
+import {
   useEnhancerRegionsShowInfosSyncher,
   useEnhancerRegionsHideUnfocusedSyncher,
   useEnhancerRegionsColorEncodingSyncher,
@@ -52,6 +56,8 @@ import {
 } from '../../state/enhancer-gene-track-state';
 
 import { GENE_SEARCH_URL, VARIANT_SEARCH_URL } from '../../constants';
+import { ChromosomeInfo } from 'higlass';
+import AppInitializing from './AppInitializing';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -113,9 +119,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const AppMain = React.memo(function AppMain() {
-  const chromInfo = useChromInfo();
+  const chromInfo = useRecoilValue(chromosomeInfoResultState);
 
   // Initialize query strings
+  useRefGenomeStateSyncher();
   useVariantTracksSyncher();
   useShowWelcomeSyncher();
   useFocusGeneSyncher();

@@ -18,8 +18,8 @@ import {
 } from './TrackSettingsFieldSet';
 import { ABC_SCORE_COLUMN } from '../../constants';
 import { deepClone } from '@flekschas/utils';
-import { useChromInfo } from '../../ChromInfoProvider';
-import { useRecoilState } from 'recoil';
+import { useChromInfo } from '../../contexts/ChromInfoProvider';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { stratificationState } from '../../state/stratification-state';
 import { Stratification } from '../../view-config-types';
 import FileInput from '../FileInput';
@@ -28,6 +28,7 @@ import {
   useDnaAccessibilityExperimentalTrack,
   useDnaAccessibilityPredictionTrack,
 } from '../../state/dna-accessibility-state';
+import { chromosomeInfoResultState } from '../../state/chromosome-state';
 
 const enum BeddbFileField {
   ENHANCER_START_FIELD = 'enhancerStartField',
@@ -108,7 +109,7 @@ type BackgroundDataSettingsProps = {
 const BackgroundDataSettings = React.memo(function BackgroundDataSettings({
   closeHandler,
 }: BackgroundDataSettingsProps) {
-  const chromInfo = useChromInfo();
+  const chromInfo = useRecoilValue(chromosomeInfoResultState);
   const [changed, setChanged] = useState(false);
   const classes = useStyles();
 

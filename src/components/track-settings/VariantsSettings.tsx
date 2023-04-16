@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { deepClone, isString } from '@flekschas/utils';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useChromInfo } from '../../ChromInfoProvider';
+import { useChromInfo } from '../../contexts/ChromInfoProvider';
 import createLocalBedDataServer, {
   LocalBedDataServer,
 } from '../../local-data-handlers/local-bed-data-server';
@@ -26,6 +26,7 @@ import {
   TrackSettingsFieldSet,
   TrackSettingsState,
 } from './TrackSettingsFieldSet';
+import { chromosomeInfoResultState } from '../../state/chromosome-state';
 
 const enum VariantTrackSettingsStateProperty {
   COLUMN_P_VALUE = 'columnPvalue',
@@ -87,7 +88,7 @@ type VariantsSettingsProps = {
 const VariantsSettings = React.memo(function VariantsSettings({
   closeHandler,
 }: VariantsSettingsProps) {
-  const chromInfo = useChromInfo();
+  const chromInfo = useRecoilValue(chromosomeInfoResultState);
 
   const [focusRegion, setFocusRegion] = useFocusRegion();
   const [variantTracks, setVariantTracks] = useVariantTracks();

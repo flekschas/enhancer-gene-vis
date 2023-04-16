@@ -11,7 +11,7 @@ import { RecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { deepClone, pipe } from '@flekschas/utils';
 import { HiGlassApi, HiGlassComponent } from 'higlass';
 
-import { useChromInfo } from '../../ChromInfoProvider';
+import { useChromInfo } from '../../contexts/ChromInfoProvider';
 
 import { variantYScaleState, dnaAccessXDomainWithAssembly } from '../../state';
 import { sampleSelectionState } from '../../state/filter-state';
@@ -50,6 +50,7 @@ import {
   TrackUidPrefix,
   getTrackByUid,
 } from '../../utils/view-config';
+import { chromosomeInfoResultState } from '../../state/chromosome-state';
 
 const updateViewConfigDnaAccessibilityTrack =
   (trackInfo: DnaAccessibilityTrackInfo) => (viewConfig: ViewConfig) => {
@@ -121,7 +122,7 @@ const DnaAccessibilityHiglassComponent = React.memo(
     defaultViewConfig,
     higlassState,
   }: DnaAccessibilityHiglassComponentProps) {
-    const chromInfo = useChromInfo();
+    const chromInfo = useRecoilValue(chromosomeInfoResultState);
 
     const setHiglassDnaAccess = useSetRecoilState(higlassState);
 

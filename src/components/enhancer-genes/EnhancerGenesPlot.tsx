@@ -22,7 +22,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Grid from '@material-ui/core/Grid';
 import { makeStyles } from '@material-ui/core/styles';
 
-import { useChromInfo } from '../../ChromInfoProvider';
+import { useChromInfo } from '../../contexts/ChromInfoProvider';
 import { useShowTooltip } from '../../TooltipProvider';
 import {
   Category,
@@ -64,6 +64,7 @@ import { BeddbTile, TilesetInfo } from '@higlass/common';
 import { ClassNameMap } from '@material-ui/styles';
 import { dodge } from './beeswarm';
 import { enhancerRegionsTrackState } from '../../state/enhancer-region-state';
+import { chromosomeInfoResultState } from '../../state/chromosome-state';
 
 type EgPlotData = {
   categoryAggregation: EgPlotCategoryAggregationData;
@@ -942,7 +943,7 @@ const plotEnhancerGeneConnections = (
 };
 
 const EnhancerGenesPlot = React.memo(function EnhancerGenesPlot() {
-  const chromInfo = useChromInfo();
+  const chromInfo = useRecoilValue(chromosomeInfoResultState);
   const showTooltip = useShowTooltip();
 
   const enhancerTrackConfig = useRecoilValue(enhancerRegionsTrackState);
